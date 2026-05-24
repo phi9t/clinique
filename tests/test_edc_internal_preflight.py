@@ -73,3 +73,15 @@ def test_preflight_internal_manifest_rejects_missing_source_and_unblinded_data(t
     assert result.missing_required_sources == ("query_logs", "edit_check_history")
     assert result.unblinded_sources == ("edc_snapshots",)
     assert result.non_read_only_sources == ("edc_snapshots",)
+
+
+def test_preflight_internal_manifest_rejects_duplicate_source_types(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"] = [*manifest["sources"], manifest["sources"][0]]
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.duplicate_sources == ("edc_snapshots",)

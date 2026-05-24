@@ -35,8 +35,9 @@ uv run clinique edc-query preflight-internal-data \
   --manifest .workstreams/edc-query-validation/internal-data-manifest.template.json
 ```
 
-The command requires `edc_snapshots`, `query_logs`, and `edit_check_history`, and it fails if any
-required source is missing, unblinded, incomplete, or not explicitly read-only.
+The command requires exactly one each of `edc_snapshots`, `query_logs`, and `edit_check_history`,
+and it fails if any required source is missing, duplicated, unblinded, incomplete, or not
+explicitly read-only.
 
 ## Internal Export Validation Entry Point
 

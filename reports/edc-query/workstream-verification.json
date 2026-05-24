@@ -30,6 +30,7 @@
       "timestamped_replay": true
     },
     "internal_preflight": {
+      "duplicate_sources": [],
       "incomplete_sources": [],
       "missing_required_sources": [],
       "non_read_only_sources": [],
