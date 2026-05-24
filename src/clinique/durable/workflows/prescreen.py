@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -27,17 +25,7 @@ with workflow.unsafe.imports_passed_through():
         LEDGER_RETRY_MAX,
         LEDGER_TIMEOUT,
     )
-
-
-def _tool_fingerprint() -> str:
-    tools = [
-        {"name": "reference-atomizer", "version": "0.1.0"},
-        {"name": "rule-judge", "version": "0.1.0"},
-        {"name": "aggregator", "version": "0.1.0"},
-        {"name": "evidence-gate", "version": "0.1.0"},
-    ]
-    payload = json.dumps(tools, sort_keys=True)
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+    from clinique.prescreen.orchestrator import tool_fingerprint
 
 
 @dataclass
@@ -123,7 +111,7 @@ class ScreenPatientWorkflow:
 
 def screen_workflow_id(trial_id: str, patient_id: str, snapshot_date: str | None) -> str:
     snap = snapshot_date or "none"
-    return f"prescreen/{trial_id}/{patient_id}/{snap}/{_tool_fingerprint()}"
+    return f"prescreen/{trial_id}/{patient_id}/{snap}/{tool_fingerprint()}"
 
 
 __all__ = ["ScreenPatientInput", "ScreenPatientWorkflow", "screen_workflow_id"]

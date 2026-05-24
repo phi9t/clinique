@@ -97,6 +97,7 @@ class BatchEvalWorkflow:
                 "case_id": case_id,
                 "gold_judgments": resolved.get("gold_judgments", case.get("gold_judgments", [])),
                 "packet": packet,
+                "corpus": resolved["corpus"],
             }
         except Exception as exc:  # noqa: BLE001 — collect per-case errors for eval report
             return {"case_id": case_id, "error": str(exc)}

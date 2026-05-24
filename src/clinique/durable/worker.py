@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import os
 
 from temporalio.client import Client
 from temporalio.worker import Worker
@@ -27,7 +28,8 @@ async def run_worker(*, host: str = DEFAULT_HOST, task_queue: str = PRESCREEN_TA
 
 
 def main() -> None:
-    asyncio.run(run_worker())
+    host = os.environ.get("CLINIQUE_DURABLE_HOST", DEFAULT_HOST)
+    asyncio.run(run_worker(host=host))
 
 
 if __name__ == "__main__":

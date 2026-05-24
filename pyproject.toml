@@ -43,11 +43,12 @@ temporal = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = ["src", "tests"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 markers = [
     "temporal: durable prescreen tests (requires uv sync --group temporal)",
+    "temporal_e2e: prescreen durable tests against real temporal server start-dev",
 ]
 
 [tool.ruff]

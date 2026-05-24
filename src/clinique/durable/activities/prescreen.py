@@ -18,59 +18,17 @@ from clinique.prescreen.aggregator import aggregate
 from clinique.prescreen.atomizer import ReferenceAtomizer
 from clinique.prescreen.evidence_gate import EvidenceProvenanceError, assert_evidence_provenance
 from clinique.prescreen.judge import RuleJudge
-from clinique.prescreen.orchestrator import _packet_fingerprint
+from clinique.prescreen.orchestrator import default_prescreen_tools, packet_fingerprint
 from clinique.prescreen.retrieval import retrieve
 from clinique.prescreen.schemas import PrescreeningPacket
 from clinique.prescreen.validation import corpus_from_dict
 from clinique.substrate.provenance import HumanReview, LedgerRecord, ProvenanceLedger
 
 
-def _tool_meta(component: object) -> dict[str, str]:
-    return {
-        "name": getattr(component, "name", type(component).__name__),
-        "version": getattr(component, "version", "0.0.0"),
-    }
-
-
-def _default_tools() -> list[dict[str, str]]:
-    return [
-        _tool_meta(ReferenceAtomizer()),
-        _tool_meta(RuleJudge()),
-        {"name": "aggregator", "version": "0.1.0"},
-        {"name": "evidence-gate", "version": "0.1.0"},
-    ]
-
-
 @activity.defn
 def atomize_trial(trial_dict: dict[str, Any]) -> list[dict[str, Any]]:
     trial = trial_from_dict(trial_dict)
-    atomizer = ReferenceAtomizer()
-    return [c.to_dict() for c in atomizer.atomize(trial)]
-
-
-@activity.defn
-def retrieve_evidence(
-    criterion_dict: dict[str, Any],
-    corpus_dict: dict[str, Any],
-) -> list[dict[str, Any]]:
-    criterion = criterion_from_dict(criterion_dict)
-    corpus = corpus_from_dict(corpus_dict)
-    return [e.to_dict() for e in retrieve(criterion, corpus)]
-
-
-@activity.defn
-def judge_criterion(
-    criterion_dict: dict[str, Any],
-    evidence_list: list[dict[str, Any]],
-    corpus_dict: dict[str, Any],
-) -> dict[str, Any]:
-    criterion = criterion_from_dict(criterion_dict)
-    corpus = corpus_from_dict(corpus_dict)
-    from clinique.durable.serde import evidence_from_dict
-
-    evidence = tuple(evidence_from_dict(e) for e in evidence_list)
-    judge = RuleJudge()
-    return judge.judge(criterion, evidence, corpus).to_dict()
+    return [c.to_dict() for c in ReferenceAtomizer().atomize(trial)]
 
 
 @activity.defn
@@ -81,8 +39,7 @@ def evaluate_criterion(
     criterion = criterion_from_dict(criterion_dict)
     corpus = corpus_from_dict(corpus_dict)
     evidence = retrieve(criterion, corpus)
-    judge = RuleJudge()
-    return judge.judge(criterion, evidence, corpus).to_dict()
+    return RuleJudge().judge(criterion, evidence, corpus).to_dict()
 
 
 @activity.defn
@@ -95,17 +52,14 @@ def aggregate_judgments(judgment_dicts: list[dict[str, Any]]) -> str:
 def build_packet(payload: dict[str, Any]) -> dict[str, Any]:
     trial = trial_from_dict(payload["trial_dict"])
     corpus = corpus_from_dict(payload["corpus_dict"])
-    criteria = payload["criteria"]
-    judgment_dicts = payload["judgment_dicts"]
-    recommendation = payload["recommendation"]
-    tools = _default_tools()
+    tools = default_prescreen_tools()
     packet = PrescreeningPacket(
         trial_id=trial.trial_id,
         patient_id=corpus.patient_id,
         snapshot_date=corpus.snapshot_date,
-        criteria=tuple(criterion_from_dict(c) for c in criteria),
-        judgments=tuple(judgment_from_dict(j) for j in judgment_dicts),
-        recommendation=recommendation,
+        criteria=tuple(criterion_from_dict(c) for c in payload["criteria"]),
+        judgments=tuple(judgment_from_dict(j) for j in payload["judgment_dicts"]),
+        recommendation=payload["recommendation"],
         model={"atomizer": tools[0], "judge": tools[1]},
         tools=tuple(tools),
     )
@@ -133,7 +87,7 @@ def assert_evidence_provenance_activity(
 def append_ledger(packet_dict: dict[str, Any], ledger_path: str) -> str:
     packet = packet_from_dict(packet_dict)
     ledger = ProvenanceLedger(ledger_path)
-    ref = _packet_fingerprint(packet)
+    ref = packet_fingerprint(packet)
     ledger.append(
         LedgerRecord(
             capability="prescreen",

@@ -66,8 +66,8 @@ def test_prescreen_atomize_exits_zero(capsys):
 
 
 def test_prescreen_screen_exits_zero(tmp_path, capsys):
-    from prescreen_helpers import TABLES
     from clinique.prescreen.normalizer import normalize_synthea
+    from prescreen_helpers import TABLES
 
     corpus = normalize_synthea(TABLES, patient_id="P1", snapshot_date="2026-03-01")
     patients = tmp_path / "patients.jsonl"
@@ -91,8 +91,8 @@ def test_prescreen_screen_exits_zero(tmp_path, capsys):
 
 
 def test_prescreen_eval_exits_zero(tmp_path, capsys):
-    from prescreen_helpers import TABLES
     from clinique.prescreen.normalizer import normalize_synthea
+    from prescreen_helpers import TABLES
 
     corpus = normalize_synthea(TABLES, patient_id="P1", snapshot_date="2026-03-01")
     patients = tmp_path / "patients.jsonl"

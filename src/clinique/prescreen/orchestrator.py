@@ -15,6 +15,25 @@ from .retrieval import retrieve
 from .schemas import PatientCorpus, PrescreeningPacket, Trial
 
 
+def default_prescreen_tools(
+    atomizer: Atomizer | None = None,
+    judge: Judge | None = None,
+) -> list[dict[str, str]]:
+    atomizer = atomizer or ReferenceAtomizer()
+    judge = judge or RuleJudge()
+    return [
+        {"name": atomizer.name, "version": atomizer.version},
+        {"name": judge.name, "version": judge.version},
+        {"name": "aggregator", "version": "0.1.0"},
+        {"name": "evidence-gate", "version": "0.1.0"},
+    ]
+
+
+def tool_fingerprint(tools: list[dict[str, str]] | None = None) -> str:
+    payload = json.dumps(tools or default_prescreen_tools(), sort_keys=True)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
 def _packet_fingerprint(packet: PrescreeningPacket) -> str:
     payload = json.dumps(packet.to_dict(), sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -36,16 +55,7 @@ class PrescreenOrchestrator:
 
     @property
     def tools(self) -> list[dict[str, str]]:
-        atom = getattr(self._atomizer, "name", type(self._atomizer).__name__)
-        atom_v = getattr(self._atomizer, "version", "0.0.0")
-        judge = getattr(self._judge, "name", type(self._judge).__name__)
-        judge_v = getattr(self._judge, "version", "0.0.0")
-        return [
-            {"name": atom, "version": atom_v},
-            {"name": judge, "version": judge_v},
-            {"name": "aggregator", "version": "0.1.0"},
-            {"name": "evidence-gate", "version": "0.1.0"},
-        ]
+        return default_prescreen_tools(self._atomizer, self._judge)
 
     def screen(self, trial: Trial, corpus: PatientCorpus) -> PrescreeningPacket:
         criteria = self._atomizer.atomize(trial)

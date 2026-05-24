@@ -10,7 +10,6 @@ from clinique.prescreen.schemas import (
     CriterionJudgment,
     Evidence,
     PatientCorpus,
-    PatientDocument,
     PrescreeningPacket,
     TemporalConstraint,
     Threshold,
@@ -125,14 +124,3 @@ def packet_from_dict(raw: dict[str, Any]) -> PrescreeningPacket:
 
 def packet_to_dict(packet: PrescreeningPacket) -> dict[str, Any]:
     return packet.to_dict()
-
-
-def patient_document_from_dict(raw: dict[str, Any]) -> PatientDocument:
-    return PatientDocument(
-        doc_id=raw.get("doc_id", ""),
-        patient_id=raw.get("patient_id", ""),
-        date=raw.get("date"),
-        source_type=raw.get("source_type", ""),
-        text=raw.get("text", ""),
-        structured=dict(raw.get("structured", {})),
-    )

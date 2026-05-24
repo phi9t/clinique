@@ -8,41 +8,14 @@ from typing import Any
 
 from temporalio import activity
 
-from clinique.durable.serde import corpus_to_dict, trial_to_dict
-from clinique.prescreen.eval import load_eval_cases
+from clinique.durable.serde import corpus_from_dict, packet_from_dict, trial_to_dict
+from clinique.prescreen.eval import EvalMetrics, load_eval_cases, load_patient_corpora
+from clinique.prescreen.evidence_gate import check_evidence_provenance
 from clinique.prescreen.ingestion import load_recorded_studies
-from clinique.prescreen.pmc_patients import load_pmc_corpora
-from clinique.prescreen.validation import corpus_from_dict
 
 
 def _load_corpora(path: str | Path, *, source: str) -> list[dict[str, Any]]:
-    if source == "pmc":
-        return [corpus_to_dict(c) for c in load_pmc_corpora(path)]
-    corpora: list[dict[str, Any]] = []
-    with Path(path).open(encoding="utf-8") as handle:
-        for line in handle:
-            line = line.strip()
-            if line:
-                corpora.append(corpus_from_dict(json.loads(line)).to_dict())
-    return corpora
-
-
-@activity.defn
-def load_trial_and_corpus(payload: dict[str, Any]) -> dict[str, Any]:
-    trials_path = payload["trials_path"]
-    patients_path = payload["patients_path"]
-    trial_id = payload["trial_id"]
-    patient_id = payload["patient_id"]
-    patient_source = payload.get("patient_source", "synthea")
-    trials = load_recorded_studies(trials_path)
-    trial = next((t for t in trials if t.trial_id == trial_id), None)
-    if trial is None:
-        raise ValueError(f"trial_id not found: {trial_id}")
-    corpora = _load_corpora(patients_path, source=patient_source)
-    corpus = next((c for c in corpora if c["patient_id"] == patient_id), None)
-    if corpus is None:
-        raise ValueError(f"patient_id not found: {patient_id}")
-    return {"trial": trial_to_dict(trial), "corpus": corpus}
+    return [c.to_dict() for c in load_patient_corpora(path, source=source)]
 
 
 @activity.defn
@@ -82,8 +55,6 @@ def load_eval_inputs(payload: dict[str, Any]) -> dict[str, Any]:
 def score_eval_results(payload: dict[str, Any]) -> dict[str, Any]:
     case_results = payload["case_results"]
     reports_dir = payload["reports_dir"]
-    from clinique.prescreen.eval import EvalMetrics
-
     metrics = EvalMetrics()
     for item in case_results:
         if item.get("error"):
@@ -94,6 +65,13 @@ def score_eval_results(payload: dict[str, Any]) -> dict[str, Any]:
             metrics.errors.append(f"missing packet for {item.get('case_id', '?')}")
             continue
         metrics.cases_run += 1
+        if corpus_dict := item.get("corpus"):
+            metrics.evidence_violations += len(
+                check_evidence_provenance(
+                    packet_from_dict(packet),
+                    corpus_from_dict(corpus_dict),
+                )
+            )
         gold = {g["criterion_id"]: g["prediction"] for g in item.get("gold_judgments", [])}
         pred_by_id = {j["criterion_id"]: j for j in packet.get("judgments", [])}
         for cid, expected in gold.items():

@@ -94,11 +94,17 @@ CLI commands that need Temporal print `uv sync --group temporal` when the SDK is
 
 ## Testing
 
-Workflow tests use Temporal's embedded `WorkflowEnvironment.start_local()` — no external dev server required in CI:
+Workflow unit tests use Temporal's embedded `WorkflowEnvironment.start_local()` — no external dev server required:
 
 ```bash
 uv sync --group temporal
 uv run pytest tests/test_durable_prescreen.py -q
+```
+
+End-to-end tests start a real `temporal server start-dev` plus `clinique.durable.worker`, execute workflows on `localhost:7233`, and cover failure injection (transient activity retry, evidence-gate non-retryable failure, batch eval error collection):
+
+```bash
+uv run pytest tests/test_durable_prescreen_e2e.py -v
 ```
 
 ## Invariants preserved
