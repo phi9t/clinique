@@ -56,9 +56,9 @@
 - [x] Internal-data manifest preflight command exists and validates readiness metadata without
       reading PHI-bearing exports.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
-      burden gate reports, rejects empty logs and unknown ground-truth labels, and exits nonzero
-      for stop criteria or uncontrolled false-positive burden; negative burden tolerances are
-      rejected as invalid input.
+      burden gate reports, rejects empty logs, evidence-free recommendations, and unknown
+      ground-truth labels, and exits nonzero for stop criteria or uncontrolled false-positive
+      burden; negative burden tolerances are rejected as invalid input.
 - [x] Controlled-rollout gate evaluator exists, rejects incomplete gate packages, and validates
       typed numeric thresholds, nonnegative safety-count endpoints, and human approval path from
       structured evidence.

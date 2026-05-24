@@ -38,6 +38,9 @@ class SilentLogEntry:
         human_action_at = parse_timestamp(raw["human_action_at"])
         if logged_at is None or human_action_at is None:
             raise ValueError("silent log timestamps are required")
+        agent_evidence = tuple(raw.get("agent_evidence", []))
+        if not agent_evidence:
+            raise ValueError("silent recommendations require evidence")
         return cls(
             recommendation_id=raw["recommendation_id"],
             logged_at=logged_at,
@@ -48,7 +51,7 @@ class SilentLogEntry:
             field=raw["field"],
             query_category=raw["query_category"],
             agent_recommendation=raw["agent_recommendation"],
-            agent_evidence=tuple(raw.get("agent_evidence", [])),
+            agent_evidence=agent_evidence,
             human_action=raw["human_action"],
             human_action_at=human_action_at,
             ground_truth=_require_one_of("ground_truth", raw["ground_truth"], ALLOWED_GROUND_TRUTH),

@@ -61,7 +61,8 @@ Evidence:
   database-lock issue ID and severity rejection, database-lock issue record-reference and
   event-chronology validation, rule-history ID, chronology, kind, and parameter validation,
   detection, metrics, CLI execution,
-  annotation-manual alignment, internal-data preflight, silent-log evaluation,
+  annotation-manual alignment, internal-data preflight, silent-log evidence enforcement and
+  evaluation,
   controlled-rollout gate evaluation, approved-export import, bundled workstream verification,
   and report serialization.
 

@@ -123,6 +123,41 @@ def test_load_silent_log_rejects_unknown_ground_truth_values(tmp_path):
         raise AssertionError("expected ground-truth enum rejection")
 
 
+def test_load_silent_log_rejects_recommendations_without_evidence(tmp_path):
+    path = tmp_path / "missing_evidence_silent_log.json"
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-NO-EVIDENCE",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": [],
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "false_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": false
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "silent recommendations require evidence" in str(exc)
+    else:
+        raise AssertionError("expected missing evidence rejection")
+
+
 def test_evaluate_silent_log_reports_burden_deltas_and_stop_criteria():
     entries = load_silent_log(SILENT_LOG)
 
