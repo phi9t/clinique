@@ -116,6 +116,18 @@ def test_preflight_internal_manifest_rejects_invalid_manifest_metadata(tmp_path)
     assert result.invalid_metadata == ("generated_at", "manifest_version")
 
 
+def test_preflight_internal_manifest_rejects_timezone_naive_generated_at(tmp_path):
+    manifest = _valid_manifest()
+    manifest["generated_at"] = "2026-05-24T00:00:00"
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.invalid_metadata == ("generated_at",)
+
+
 def test_preflight_internal_manifest_rejects_missing_source_and_unblinded_data(tmp_path):
     manifest = _valid_manifest()
     manifest["sources"] = [
