@@ -10,7 +10,7 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from clinique.durable.activities import ALL_ACTIVITIES
-from clinique.durable.config import DEFAULT_HOST, PRESCREEN_TASK_QUEUE
+from clinique.durable.config import DEFAULT_HOST, PRESCREEN_TASK_QUEUE, prescreen_task_queue
 from clinique.durable.converter import DATA_CONVERTER
 from clinique.durable.workflows import ALL_WORKFLOWS
 
@@ -30,7 +30,8 @@ async def run_worker(*, host: str = DEFAULT_HOST, task_queue: str = PRESCREEN_TA
 
 def main() -> None:
     host = os.environ.get("CLINIQUE_DURABLE_HOST", DEFAULT_HOST)
-    asyncio.run(run_worker(host=host))
+    task_queue = prescreen_task_queue()
+    asyncio.run(run_worker(host=host, task_queue=task_queue))
 
 
 if __name__ == "__main__":

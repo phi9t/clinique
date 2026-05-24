@@ -10,6 +10,8 @@ def test_keynote_produces_age_and_pd1_exclusion():
     criteria = ReferenceAtomizer().atomize(trial)
     assert criteria[0].criterion_id == "I-001"
     assert criteria[0].clinical_domain == "demographic"
+    i002 = next(c for c in criteria if c.criterion_id == "I-002")
+    assert i002.clinical_domain == "condition"
     pd1 = [c for c in criteria if "PD-1" in c.raw_text or "PD-L1" in c.raw_text]
     assert pd1
     assert any(

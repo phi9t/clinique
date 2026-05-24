@@ -1,7 +1,7 @@
 #+TITLE: Prescreen Copilot Workstream
 #+STARTUP: overview indent
 
-* Prescreen Copilot [10/10]
+* Prescreen Copilot [20/26]
 ** DONE Bootstrap workstream directory
 ** DONE Phase 0 — Record scale corpus
 Evidence :: ~/.clinique/datasets/prescreen-copilot/ (1000 trials; PMC fallback documented)
@@ -15,4 +15,30 @@ Evidence :: ~/.clinique/datasets/prescreen-copilot/ (1000 trials; PMC fallback d
 ** DONE Phase 8 — Scale verification
 Evidence :: reports/prescreen/workstream-verification.json goal_complete=True
 ** DONE Phase 9 — Durable execution (Temporal.io)
-Evidence :: tests/test_durable_*.py (15 passed); docs/design/temporal-prescreen.md
+Evidence :: tests/test_durable_*.py; docs/design/temporal-prescreen.md
+** DONE Phase 10 — Atomizer & retrieval fixes (Tier 0)
+Evidence :: tests/test_prescreen_copilot_e2e.py; rule-judge 0.2.0
+*** DONE Fix word-boundary domain classifier in atomizer
+*** DONE Attach top-k retrieved evidence to unknown judgments
+*** DONE Domain-filtered retrieval
+*** DONE Min BM25 score threshold + structured match gates
+*** DONE Expand l0_cases.jsonl + regression tests for P1
+** DONE Phase 11 — Structured clinical matching (Tier 1)
+Evidence :: vocab.py oncology synonyms; judge condition/medication/ECOG paths
+*** DONE Oncology synonym map in vocab.py
+*** DONE Structured condition matcher in judge
+*** DONE Structured medication history matcher
+*** DONE Performance status (ECOG) matcher
+*** DONE Absence exclusion handling (attach evidence on unknown)
+*** DONE Expand gold cases + eval gates for structured matchers
+** TODO Phase 12 — Retrieval upgrade (Tier 2)
+*** DONE Query expansion from criterion / atomizer metadata
+*** DONE Structured-first routing (code lookup before BM25)
+*** TODO Compound criterion splitting (e.g. E-003 sub-clauses)
+*** DONE Synthea narrative note document in normalizer
+** TODO Phase 13 — LLM judge & L1 eval (Tier 3)
+*** TODO LLMJudge behind Judge Protocol with mandatory quotes
+*** TODO --judge rule|llm CLI flag (sync + Temporal unchanged graph)
+*** TODO n2c2 2018 judge-only eval harness
+Target :: F1 ≥ 0.80 per design doc ship gate
+*** TODO Embedding retriever for PMC-Patients note-heavy sources

@@ -64,6 +64,16 @@
           "description": "Bronchoscopy"
         },
         "text": "Bronchoscopy (code 232717009)"
+      },
+      {
+        "date": "2026-03-01",
+        "doc_id": "P1:note:0000",
+        "patient_id": "P1",
+        "source_type": "note",
+        "structured": {
+          "kind": "synthea_summary"
+        },
+        "text": "Patient P1 clinical summary (snapshot 2026-03-01):\n- [condition] Non-small cell lung cancer (code 254637007)\n- [medication] metformin (code 860975)\n- [observation] Hemoglobin: 11.2 g/dL\n- [observation] Absolute Neutrophil Count: 2.1 10*3/uL\n- [procedure] Bronchoscopy (code 232717009)"
       }
     ],
     "patient_id": "P1",
@@ -87,6 +97,16 @@
           "description": "Other patient condition"
         },
         "text": "Other patient condition (code 999)"
+      },
+      {
+        "date": "2026-03-01",
+        "doc_id": "P2:note:0000",
+        "patient_id": "P2",
+        "source_type": "note",
+        "structured": {
+          "kind": "synthea_summary"
+        },
+        "text": "Patient P2 clinical summary (snapshot 2026-03-01):\n- [condition] Other patient condition (code 999)"
       }
     ],
     "patient_id": "P2",

@@ -50,12 +50,32 @@ uv run clinique prescreen eval-temporal \
 
 ## Known gaps / follow-ups
 
-| Gap | Severity | Notes |
+### L0 infrastructure (addressed)
+
+| Gap | Status | Notes |
 |---|---|---|
-| `l0_cases.jsonl` has 3 gold cases | low | Enough for CI gate; expand for richer criterion coverage |
-| `verify-workstream --temporal` | implemented | sync `goal_complete` + `temporal_goal_complete` parity |
-| No committed `l0-eval-temporal.json` | low | Generated on demand; sync `l0-eval.json` in reports is canonical |
+| `verify-workstream --temporal` | done | sync `goal_complete` + temporal parity |
+| Durable layer | done | 15 pytest; walkthrough in `temporal-prescreen.md` |
 | Human-review workflow signal | deferred | Ledger writes `pending`; no Temporal wait on reviewer |
 | Durable ingest/normalize workflows | deferred | CT.gov fetch still sync CLI |
 
+### Phase 10+ — criteria-to-context matching (active)
+
+Diagnosed on KEY-NOTE-189 (NCT02578680) + Synthea P1 (2026-05-24): 1/36 criteria resolved;
+35 `unknown` with empty evidence. See `design.md` § Phase 10+.
+
+| Gap | Severity | Phase | Notes |
+|---|---|---|---|
+| Atomizer substring domain bugs | **high** | 10 | I-002: `"age"` in `"stage"` → demographic → zero retrieval |
+| Evidence discarded on `unknown` | **high** | 10 | Retrieval hits exist (E-001 NSCLC) but packet shows `evidence: []` |
+| No domain-filtered retrieval | **high** | 10 | Metformin/ANC spurious hits for unrelated criteria |
+| `RuleJudge` covers age/labs/anti-PD-1 only | **high** | 11–13 | No condition, therapy history, ECOG, or free-text rules |
+| No oncology synonym expansion | medium | 11 | `NSCLC` vs `non-small cell lung cancer` — zero BM25 overlap |
+| `l0_cases.jsonl` has 3 gold cases | medium | 10–11 | Expand for I-002, E-001, partial-match scenarios |
+| Synthea P1 lacks staging/ECOG/notes | medium | 12 | 5 structured rows; narrative note doc would help retrieval |
+| LLM judge + n2c2 L1 eval | medium | 13 | Real clinical matching signal; credentialed corpus |
+| Embedding retriever | low | 13 | PMC-Patients free-text; deferred from L0 |
+
 Design: [`docs/design/temporal-prescreen.md`](../../docs/design/temporal-prescreen.md)
+Roadmap: [`.workstream/prescreen-copilot/design.md`](design.md) § Phase roadmap
+Tracker: [`.workstream/prescreen-copilot/tracker.org`](tracker.org)

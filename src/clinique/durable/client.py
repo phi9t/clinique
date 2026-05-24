@@ -6,7 +6,7 @@ import uuid
 
 from temporalio.client import Client
 
-from clinique.durable.config import DEFAULT_HOST, PRESCREEN_TASK_QUEUE
+from clinique.durable.config import DEFAULT_HOST, prescreen_task_queue
 from clinique.durable.converter import DATA_CONVERTER
 from clinique.durable.models import (
     BatchEvalInput,
@@ -47,7 +47,7 @@ async def execute_screen(
         ScreenPatientWorkflow.run,
         payload,
         id=wf_id,
-        task_queue=PRESCREEN_TASK_QUEUE,
+        task_queue=prescreen_task_queue(),
     )
 
 
@@ -62,6 +62,6 @@ async def execute_batch_eval(
         BatchEvalWorkflow.run,
         payload,
         id=wf_id,
-        task_queue=PRESCREEN_TASK_QUEUE,
+        task_queue=prescreen_task_queue(),
     )
     return report.model_dump()

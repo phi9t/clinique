@@ -1,3 +1,6 @@
 {"case_id": "age-met", "trial_id": "NCT02578680", "patient_id": "P1", "snapshot_date": "2026-03-01", "patient_source": "synthea", "gold_judgments": [{"criterion_id": "I-001", "prediction": "met"}]}
+{"case_id": "nsclc-partial-unknown", "trial_id": "NCT02578680", "patient_id": "P1", "snapshot_date": "2026-03-01", "patient_source": "synthea", "gold_judgments": [{"criterion_id": "I-002", "prediction": "unknown"}]}
+{"case_id": "squamous-exclusion-unknown", "trial_id": "NCT02578680", "patient_id": "P1", "snapshot_date": "2026-03-01", "patient_source": "synthea", "gold_judgments": [{"criterion_id": "E-001", "prediction": "unknown"}]}
+{"case_id": "prior-systemic-unknown", "trial_id": "NCT02578680", "patient_id": "P1", "snapshot_date": "2026-03-01", "patient_source": "synthea", "gold_judgments": [{"criterion_id": "I-005", "prediction": "unknown"}]}
 {"case_id": "exclusion-pd1-unknown", "trial_id": "NCT02578680", "patient_id": "P1", "snapshot_date": "2026-03-01", "patient_source": "synthea", "gold_judgments": [{"criterion_id": "E-017", "prediction": "unknown"}]}
 {"case_id": "pmc-abstain", "trial_id": "NCT02578680", "patient_id": "SYN-PMC-1", "snapshot_date": "2026-01-15", "patient_source": "pmc", "gold_judgments": [{"criterion_id": "I-002", "prediction": "unknown"}]}

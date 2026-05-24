@@ -39,6 +39,54 @@ _SECTION_RE = re.compile(
 
 _BULLET_RE = re.compile(r"^\s*(?:[\*\-•]|\d+[\.\)])\s*(.+)$", re.M)
 
+# Ordered: first match wins. Word-boundary patterns avoid substring false positives
+# (e.g. "age" inside "stage", "male" inside unrelated tokens).
+_DOMAIN_RULES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    (
+        "medication",
+        re.compile(
+            r"\b(not received|prior systemic|prior treatment|received prior|no prior)\b",
+            re.I,
+        ),
+    ),
+    (
+        "performance_status",
+        re.compile(r"\b(ecog|performance status)\b", re.I),
+    ),
+    (
+        "demographic",
+        re.compile(
+            r"\b(age|years old|gender|sex|female|male|childbearing|pregnant|breastfeeding)\b",
+            re.I,
+        ),
+    ),
+    (
+        "condition",
+        re.compile(
+            r"\b(diagnosis|histolog|cytolog|nsclc|carcinoma|cancer|malignancy|metastas|"
+            r"diverticulitis|abscess|meningitis|pneumonitis|autoimmune|hiv|hepatitis)\b",
+            re.I,
+        ),
+    ),
+    (
+        "laboratory",
+        re.compile(r"\b(anc|hemoglobin|platelet|laboratory|\blab\b|organ function|/ul)\b", re.I),
+    ),
+    (
+        "medication",
+        re.compile(
+            r"\b(medication|therapy|drug|chemotherapy|chemo|pembrolizumab|pd-1|pd-l1|"
+            r"vaccin|radiotherapy|radiation|antineoplastic|immunotherapy|nsaid|aspirin|"
+            r"steroid|systemic treatment|systemic therapy|investigational)\b",
+            re.I,
+        ),
+    ),
+    (
+        "procedure",
+        re.compile(r"\b(surgery|bronchoscopy|biopsy|resection)\b", re.I),
+    ),
+)
+
 
 class Atomizer(Protocol):
     def atomize(self, trial: Trial) -> tuple[Criterion, ...]: ...
@@ -50,19 +98,9 @@ def _next_id(prefix: str, counter: dict[str, int]) -> str:
 
 
 def _domain_for_text(text: str) -> str:
-    lowered = text.lower()
-    if any(k in lowered for k in ("age", "years old", "gender", "sex", "female", "male")):
-        return "demographic"
-    if any(k in lowered for k in ("anc", "hemoglobin", "platelet", "laboratory", "lab ", "/ul")):
-        return "laboratory"
-    if any(k in lowered for k in ("medication", "therapy", "drug", "pembrolizumab", "pd-1")):
-        return "medication"
-    if "pd-l1" in lowered:
-        return "medication"
-    if any(k in lowered for k in ("diagnosis", "histolog", "cancer", "carcinoma", "nsclc")):
-        return "condition"
-    if "ecog" in lowered or "performance status" in lowered:
-        return "performance_status"
+    for domain, pattern in _DOMAIN_RULES:
+        if pattern.search(text):
+            return domain
     return "other"
 
 

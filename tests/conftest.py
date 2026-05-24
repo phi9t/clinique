@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -12,6 +13,7 @@ from clinique.prescreen.normalizer import normalize_synthea_corpus, read_synthea
 
 TRIALS = Path("tests/fixtures/prescreen/trials.jsonl")
 SYNTHEA_CSV = Path("tests/fixtures/prescreen/synthea")
+PYTEST_TASK_QUEUE = "prescreen-pytest-e2e"
 
 
 @pytest.fixture
@@ -45,5 +47,13 @@ def temporal_dev_server_session():
 def prescreen_worker_session(temporal_dev_server_session):
     from durable_e2e_harness import prescreen_worker
 
-    with prescreen_worker() as proc:
-        yield proc
+    prior = os.environ.get("CLINIQUE_DURABLE_TASK_QUEUE")
+    os.environ["CLINIQUE_DURABLE_TASK_QUEUE"] = PYTEST_TASK_QUEUE
+    try:
+        with prescreen_worker() as proc:
+            yield proc
+    finally:
+        if prior is None:
+            os.environ.pop("CLINIQUE_DURABLE_TASK_QUEUE", None)
+        else:
+            os.environ["CLINIQUE_DURABLE_TASK_QUEUE"] = prior

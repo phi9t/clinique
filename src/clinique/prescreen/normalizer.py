@@ -130,6 +130,21 @@ def normalize_synthea(
                 )
             )
 
+    if documents:
+        summary_lines = [f"Patient {patient_id} clinical summary (snapshot {snapshot_date}):"]
+        for doc in documents:
+            summary_lines.append(f"- [{doc.source_type}] {doc.text}")
+        documents.append(
+            PatientDocument(
+                doc_id=f"{patient_id}:note:0000",
+                patient_id=patient_id,
+                date=snapshot_date,
+                source_type="note",
+                text="\n".join(summary_lines),
+                structured={"kind": "synthea_summary"},
+            )
+        )
+
     return PatientCorpus(
         patient_id=patient_id,
         snapshot_date=snapshot_date,
