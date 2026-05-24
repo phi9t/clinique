@@ -23,6 +23,9 @@ operational contamination while preserving staffing practicality.
 - Open queries at database lock.
 - Data-manager acceptance rate.
 
+Thresholds must be directional: true-discrepancy deltas cannot require less than no loss, and
+manual-minutes deltas cannot allow slower review to pass.
+
 ## Safety Endpoints
 
 Unauthorized write-back, unsupported evidence citation, privacy incident, blinding breach, and

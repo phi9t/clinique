@@ -99,6 +99,7 @@ class RolloutGate:
         _validate_count_values(observed)
         _validate_integer_delta_values(thresholds)
         _validate_integer_delta_values(observed)
+        _validate_threshold_direction(thresholds)
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
@@ -166,6 +167,13 @@ def _validate_integer_delta_values(values: dict[str, float]) -> None:
     for key, value in values.items():
         if key in INTEGER_DELTA_KEYS and not value.is_integer():
             raise ValueError(f"{key} must be an integer")
+
+
+def _validate_threshold_direction(thresholds: dict[str, float]) -> None:
+    if thresholds["min_true_discrepancy_delta"] < 0:
+        raise ValueError("min_true_discrepancy_delta must be nonnegative")
+    if thresholds["max_manual_minutes_per_query_delta"] > 0:
+        raise ValueError("max_manual_minutes_per_query_delta must be nonpositive")
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
