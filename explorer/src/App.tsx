@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Database, 
-  FileSpreadsheet, 
-  Search, 
-  Info, 
-  Layers, 
-  Users, 
-  ArrowLeft, 
-  ChevronLeft, 
-  ChevronRight, 
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import {
+  Database,
+  FileSpreadsheet,
+  Search,
+  Info,
+  Layers,
+  Users,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   ArrowUpDown,
-  FileCode
+  FileCode,
 } from 'lucide-react'
 
 // TypeScript Types matching converter output
@@ -64,25 +64,46 @@ interface DatasetContent {
   is_sampled: boolean
 }
 
+type TabId = 'data' | 'metadata' | 'codelists'
+
+const TAB_ORDER: TabId[] = ['data', 'metadata', 'codelists']
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : 'Unknown error'
+}
+
+function getAriaSort(
+  colName: string,
+  sortColumn: string,
+  sortDirection: 'asc' | 'desc',
+): 'ascending' | 'descending' | 'none' | undefined {
+  if (sortColumn !== colName) return 'none'
+  return sortDirection === 'asc' ? 'ascending' : 'descending'
+}
+
 export default function App() {
   const [summary, setSummary] = useState<DatasetSummaryItem[]>([])
   const [metadata, setMetadata] = useState<MetadataPayload | null>(null)
   const [selectedDatasetName, setSelectedDatasetName] = useState<string>('ADSL')
   const [datasetContent, setDatasetContent] = useState<DatasetContent | null>(null)
-  const [activeTab, setActiveTab] = useState<'data' | 'metadata' | 'codelists'>('data')
-  
+  const [activeTab, setActiveTab] = useState<TabId>('data')
+
   // Loading & Error states
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [loadingContent, setLoadingContent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [contentError, setContentError] = useState<string | null>(null)
-  
+  const [statusMessage, setStatusMessage] = useState('')
+
   // Interactive Data Table states
   const [searchQuery, setSearchQuery] = useState('')
   const [sortColumn, setSortColumn] = useState<string>('')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [currentPage, setCurrentPage] = useState(1)
   const rowsPerPage = 25
+
+  const shouldReduceMotion = useReducedMotion()
+  const mainContentRef = useRef<HTMLElement>(null)
 
   // 1. Fetch Global Summary and Define Metadata (bypassing browser cache)
   useEffect(() => {
@@ -91,26 +112,26 @@ export default function App() {
         setLoadingSummary(true)
         const [sumRes, metaRes] = await Promise.all([
           fetch(`/data/summary.json?t=${Date.now()}`),
-          fetch(`/data/metadata.json?t=${Date.now()}`)
+          fetch(`/data/metadata.json?t=${Date.now()}`),
         ])
-        
+
         if (!sumRes.ok || !metaRes.ok) {
           throw new Error('Failed to load dataset definitions. Run the conversion script.')
         }
-        
-        const sumData = await sumRes.json()
-        const metaData = await metaRes.json()
-        
+
+        const sumData: DatasetSummaryItem[] = await sumRes.json()
+        const metaData: MetadataPayload = await metaRes.json()
+
         setSummary(sumData)
         setMetadata(metaData)
-        
-        // Find default or first dataset
+
         if (sumData.length > 0) {
-          const first = sumData.find((d: any) => d.name === 'ADSL') || sumData[0]
+          const first = sumData.find((d) => d.name === 'ADSL') ?? sumData[0]
           setSelectedDatasetName(first.name)
         }
-      } catch (err: any) {
-        setError(err.message)
+        setStatusMessage(`Loaded ${sumData.length} datasets.`)
+      } catch (err: unknown) {
+        setError(errorMessage(err))
       } finally {
         setLoadingSummary(false)
       }
@@ -124,129 +145,137 @@ export default function App() {
     try {
       setLoadingContent(true)
       setContentError(null)
-      setDatasetContent(null) // Clear old content to prevent displaying stale data
+      setDatasetContent(null)
       setSearchQuery('')
       setSortColumn('')
       setCurrentPage(1)
-      
+      setStatusMessage(`Loading records for ${datasetName}...`)
+
       const res = await fetch(`/data/${datasetName.toLowerCase()}.json?t=${Date.now()}`)
       if (!res.ok) {
         throw new Error(`Failed to load data for dataset ${datasetName} (HTTP ${res.status})`)
       }
-      const data = await res.json()
+      const data: DatasetContent = await res.json()
       setDatasetContent(data)
-    } catch (err: any) {
+      setStatusMessage(
+        `Loaded ${datasetName} with ${data.total_rows.toLocaleString()} rows.`,
+      )
+    } catch (err: unknown) {
       console.error(err)
-      setContentError(err.message || 'Unknown error loading dataset')
+      setContentError(errorMessage(err))
+      setStatusMessage(`Failed to load ${datasetName}.`)
     } finally {
       setLoadingContent(false)
     }
   }, [])
 
   useEffect(() => {
-    loadDatasetContent(selectedDatasetName)
+    // Fetch dataset JSON when the sidebar selection changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional fetch-on-selection
+    void loadDatasetContent(selectedDatasetName)
   }, [selectedDatasetName, loadDatasetContent])
 
   const selectedSummary = useMemo(() => {
-    return summary.find(s => s.name === selectedDatasetName) || null
+    return summary.find((s) => s.name === selectedDatasetName) ?? null
   }, [summary, selectedDatasetName])
 
-  // Get active dataset details from metadata
   const activeDatasetMeta = useMemo(() => {
     if (!metadata || !selectedDatasetName) return null
-    return metadata.datasets[selectedDatasetName] || null
+    return metadata.datasets[selectedDatasetName] ?? null
   }, [metadata, selectedDatasetName])
 
-  // Calculate global summary metrics
   const globalMetrics = useMemo(() => {
-    if (summary.length === 0) return { datasetsCount: 0, subjectsCount: 0 }
-    const adsl = summary.find(d => d.name === 'ADSL')
+    if (summary.length === 0) return { datasetsCount: 0, subjectsCount: null as number | null }
+    const adsl = summary.find((d) => d.name === 'ADSL')
     return {
       datasetsCount: summary.length,
-      subjectsCount: adsl ? adsl.unique_subjects || 254 : 254
+      subjectsCount: adsl?.unique_subjects ?? null,
     }
   }, [summary])
 
-  // Sort & Search Operations on Data Rows
   const processedRows = useMemo(() => {
     if (!datasetContent) return []
     let rows = [...datasetContent.rows]
-    
-    // Apply Global Search
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
-      rows = rows.filter(row => 
-        Object.values(row).some(val => 
-          val !== null && String(val).toLowerCase().includes(q)
-        )
+      rows = rows.filter((row) =>
+        Object.values(row).some(
+          (val) => val !== null && String(val).toLowerCase().includes(q),
+        ),
       )
     }
-    
-    // Apply Sorting
+
     if (sortColumn) {
       rows.sort((a, b) => {
         const valA = a[sortColumn]
         const valB = b[sortColumn]
-        
+
         if (valA === null || valA === undefined) return sortDirection === 'asc' ? 1 : -1
         if (valB === null || valB === undefined) return sortDirection === 'asc' ? -1 : 1
-        
+
         if (typeof valA === 'number' && typeof valB === 'number') {
           return sortDirection === 'asc' ? valA - valB : valB - valA
         }
-        
-        return sortDirection === 'asc' 
+
+        return sortDirection === 'asc'
           ? String(valA).localeCompare(String(valB))
           : String(valB).localeCompare(String(valA))
       })
     }
-    
+
     return rows
   }, [datasetContent, searchQuery, sortColumn, sortDirection])
 
-  // Re-order columns so dataset-specific columns appear first (not demographic copies from ADSL)
   const orderedColumns = useMemo(() => {
     if (!datasetContent || !metadata) return []
     const cols = [...datasetContent.columns]
     if (selectedDatasetName === 'ADSL') return cols
 
-    const adslVars = new Set(
-      metadata.datasets['ADSL']?.variables.map(v => v.name) || []
-    )
+    const adslVars = new Set(metadata.datasets['ADSL']?.variables.map((v) => v.name) ?? [])
 
     cols.sort((a, b) => {
-      // USUBJID always first
       if (a.name === 'USUBJID') return -1
       if (b.name === 'USUBJID') return 1
 
       const aInAdsl = adslVars.has(a.name)
       const bInAdsl = adslVars.has(b.name)
 
-      // Variables unique to this dataset go first
       if (!aInAdsl && bInAdsl) return -1
       if (aInAdsl && !bInAdsl) return 1
 
-      // Keep original define order if both in same category
-      const aMeta = activeDatasetMeta?.variables.find(v => v.name === a.name)
-      const bMeta = activeDatasetMeta?.variables.find(v => v.name === b.name)
-      const aIdx = activeDatasetMeta?.variables.indexOf(aMeta!) ?? 0
-      const bIdx = activeDatasetMeta?.variables.indexOf(bMeta!) ?? 0
+      const aMeta = activeDatasetMeta?.variables.find((v) => v.name === a.name)
+      const bMeta = activeDatasetMeta?.variables.find((v) => v.name === b.name)
+      const aIdx = aMeta ? (activeDatasetMeta?.variables.indexOf(aMeta) ?? 0) : 0
+      const bIdx = bMeta ? (activeDatasetMeta?.variables.indexOf(bMeta) ?? 0) : 0
       return aIdx - bIdx
     })
 
     return cols
   }, [datasetContent, metadata, selectedDatasetName, activeDatasetMeta])
 
-  // Pagination bounds
   const totalPages = Math.ceil(processedRows.length / rowsPerPage)
   const paginatedRows = useMemo(() => {
     const start = (currentPage - 1) * rowsPerPage
     return processedRows.slice(start, start + rowsPerPage)
   }, [processedRows, currentPage])
 
+  const rowRangeStart = processedRows.length === 0 ? 0 : (currentPage - 1) * rowsPerPage + 1
+  const rowRangeEnd =
+    processedRows.length === 0
+      ? 0
+      : Math.min(currentPage * rowsPerPage, processedRows.length)
+
+  const searchResultsSummary =
+    processedRows.length === 0
+      ? 'No rows match the current search.'
+      : totalPages > 1
+        ? `Showing ${rowRangeStart} to ${rowRangeEnd} of ${processedRows.length.toLocaleString()} matching rows.`
+        : `${processedRows.length.toLocaleString()} rows match the current search.`
+
   const handleSort = (colName: string) => {
     if (sortColumn === colName) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
     } else {
       setSortColumn(colName)
       setSortDirection('asc')
@@ -254,25 +283,58 @@ export default function App() {
     setCurrentPage(1)
   }
 
-  // Generate codelists specifically active in this dataset
   const activeDatasetCodelists = useMemo(() => {
     if (!activeDatasetMeta) return []
-    const lists: Record<string, { name: string; items: Array<{ value: string; label: string }> }> = {}
+    const lists: Record<string, { name: string; items: Array<{ value: string; label: string }> }> =
+      {}
     for (const v of activeDatasetMeta.variables) {
       if (v.codelist) {
         lists[v.name] = {
           name: v.codelist.name,
-          items: v.codelist.items
+          items: v.codelist.items,
         }
       }
     }
     return Object.entries(lists)
   }, [activeDatasetMeta])
 
+  const handleTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, tabId: TabId) => {
+    const currentIndex = TAB_ORDER.indexOf(tabId)
+    let nextIndex: number | null = null
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      nextIndex = (currentIndex + 1) % TAB_ORDER.length
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      nextIndex = (currentIndex - 1 + TAB_ORDER.length) % TAB_ORDER.length
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      nextIndex = 0
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      nextIndex = TAB_ORDER.length - 1
+    }
+
+    if (nextIndex === null) return
+
+    const nextTab = TAB_ORDER[nextIndex]
+    setActiveTab(nextTab)
+    document.getElementById(`tab-${nextTab}`)?.focus()
+  }
+
+  const motionTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { duration: 0.15 }
+
+  const motionInitial = shouldReduceMotion ? false : { opacity: 0, y: 6 }
+  const motionAnimate = { opacity: 1, y: 0 }
+  const motionExit = shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -6 }
+
   if (loadingSummary) {
     return (
-      <div className="loading-container">
-        <div className="spinner" />
+      <div className="loading-container" role="status" aria-live="polite">
+        <div className="spinner" aria-hidden="true" />
         <p>Loading FDA submissions pilot data...</p>
       </div>
     )
@@ -280,8 +342,8 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="loading-container">
-        <Info size={48} className="text-danger" />
+      <div className="loading-container" role="alert">
+        <Info size={48} className="text-danger" aria-hidden="true" />
         <h2>Data Explorer Error</h2>
         <p>{error}</p>
         <p className="text-muted">Ensure you run the dataset converter script first.</p>
@@ -289,86 +351,123 @@ export default function App() {
     )
   }
 
+  const displayRowCount =
+    (datasetContent?.total_rows !== undefined
+      ? datasetContent?.total_rows
+      : selectedSummary?.total_rows) ?? 0
+
+  const displaySubjects =
+    datasetContent?.unique_subjects !== undefined
+      ? datasetContent?.unique_subjects
+      : selectedSummary?.unique_subjects
+
   return (
     <div className="relative min-h-screen">
-      <div className="observatory-bg" />
-      
+      <div className="observatory-bg" aria-hidden="true" />
+
+      <div
+        className="visually-hidden"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {statusMessage}
+      </div>
+
       <div className="explorer-container">
-        {/* Header Section */}
         <header className="explorer-header">
           <div className="header-title-section">
+            <a href="#main-content" className="skip-link">
+              Skip to dataset view
+            </a>
             <a href="/" className="back-home-link">
-              <ArrowLeft size={16} />
+              <ArrowLeft size={16} aria-hidden="true" />
               <span>Back to Clinique Suite</span>
             </a>
             <h1>Regulatory Submissions Dataset Explorer</h1>
             <p>FDA-pilot CDISC ADaM datasets & metadata validation dashboard</p>
           </div>
-          
+
           <div className="global-stats">
             <div className="stat-chip">
-              <Layers size={16} className="text-primary" />
+              <Layers size={16} className="text-primary" aria-hidden="true" />
               <span>Datasets:</span>
               <span className="stat-value">{globalMetrics.datasetsCount}</span>
             </div>
             <div className="stat-chip">
-              <Users size={16} className="text-secondary" />
+              <Users size={16} className="text-secondary" aria-hidden="true" />
               <span>Subjects (ADSL):</span>
-              <span className="stat-value">{globalMetrics.subjectsCount}</span>
+              <span className="stat-value">
+                {globalMetrics.subjectsCount !== null
+                  ? globalMetrics.subjectsCount
+                  : '—'}
+              </span>
             </div>
           </div>
         </header>
 
-        {/* Dashboard Panels Layout */}
         <div className="dashboard-grid">
-          {/* Sidebar List of Datasets */}
           <aside className="sidebar-panel">
-            <div className="sidebar-title">ADaM Datasets</div>
-            <div className="dataset-list">
-              {summary.map((ds) => (
-                <div
-                  key={ds.name}
-                  className={`dataset-item ${selectedDatasetName === ds.name ? 'active' : ''}`}
-                  onClick={() => setSelectedDatasetName(ds.name)}
-                >
-                  <div className="dataset-item-left">
-                    <span className="dataset-name-label">{ds.name}</span>
-                    <span className="dataset-desc-label">{ds.description}</span>
-                  </div>
-                  <div className="dataset-item-right">
-                    <span className="dataset-domain-badge">{ds.domain || 'ADaM'}</span>
-                    <span className="dataset-row-count">{ds.total_rows.toLocaleString()} rows</span>
-                  </div>
-                </div>
-              ))}
+            <div className="sidebar-title" id="dataset-nav-label">
+              ADaM Datasets
             </div>
+            <nav aria-labelledby="dataset-nav-label">
+              <ul className="dataset-list" role="list">
+                {summary.map((ds) => {
+                  const isActive = selectedDatasetName === ds.name
+                  return (
+                    <li key={ds.name}>
+                      <button
+                        type="button"
+                        className={`dataset-item ${isActive ? 'active' : ''}`}
+                        aria-current={isActive ? 'true' : undefined}
+                        onClick={() => setSelectedDatasetName(ds.name)}
+                      >
+                        <span className="dataset-item-left">
+                          <span className="dataset-name-label">{ds.name}</span>
+                          <span className="dataset-desc-label">{ds.description}</span>
+                        </span>
+                        <span className="dataset-item-right">
+                          <span className="dataset-domain-badge">{ds.domain || 'ADaM'}</span>
+                          <span className="dataset-row-count">
+                            {ds.total_rows.toLocaleString()} rows
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </nav>
           </aside>
 
-          {/* Main Visualizer Area */}
-          <main className="main-view-panel">
-            {/* Active Dataset Overview Card */}
-            <section className="card-view">
+          <main
+            id="main-content"
+            className="main-view-panel"
+            ref={mainContentRef}
+            tabIndex={-1}
+          >
+            <section className="card-view" aria-label="Dataset details">
               <div className="dataset-header-section">
                 <div className="dataset-title-meta">
                   <h2>{activeDatasetMeta?.name || selectedDatasetName}</h2>
-                  <p>{activeDatasetMeta?.description || 'No description available in define.xml.'}</p>
+                  <p>
+                    {activeDatasetMeta?.description ||
+                      'No description available in define.xml.'}
+                  </p>
                 </div>
-                
+
                 <div className="dataset-attributes">
                   <div className="attr-badge">
-                    <Database size={14} className="text-primary" />
+                    <Database size={14} className="text-primary" aria-hidden="true" />
                     <span>Total Rows:</span>
-                    <strong className="text-primary">
-                      {((datasetContent?.total_rows !== undefined ? datasetContent?.total_rows : selectedSummary?.total_rows) ?? 0).toLocaleString()}
-                    </strong>
+                    <strong className="text-primary">{displayRowCount.toLocaleString()}</strong>
                   </div>
-                  {((datasetContent?.unique_subjects !== undefined ? datasetContent?.unique_subjects : selectedSummary?.unique_subjects) ?? null) !== null && (
+                  {displaySubjects !== null && displaySubjects !== undefined && (
                     <div className="attr-badge">
-                      <Users size={14} className="text-secondary" />
+                      <Users size={14} className="text-secondary" aria-hidden="true" />
                       <span>Subjects:</span>
-                      <strong className="text-secondary">
-                        {datasetContent?.unique_subjects !== undefined ? datasetContent?.unique_subjects : selectedSummary?.unique_subjects}
-                      </strong>
+                      <strong className="text-secondary">{displaySubjects}</strong>
                     </div>
                   )}
                   {activeDatasetMeta?.repeating && (
@@ -379,112 +478,191 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Navigation Tabs */}
-              <div className="tab-row">
+              <div className="tab-row" role="tablist" aria-label="Dataset views">
                 <button
+                  type="button"
+                  role="tab"
+                  id="tab-data"
+                  aria-selected={activeTab === 'data'}
+                  aria-controls="panel-data"
+                  tabIndex={activeTab === 'data' ? 0 : -1}
                   onClick={() => setActiveTab('data')}
+                  onKeyDown={(e) => handleTabKeyDown(e, 'data')}
                   className={`tab-button ${activeTab === 'data' ? 'active' : ''}`}
                 >
-                  <FileSpreadsheet size={16} />
+                  <FileSpreadsheet size={16} aria-hidden="true" />
                   <span>Data View</span>
                 </button>
                 <button
+                  type="button"
+                  role="tab"
+                  id="tab-metadata"
+                  aria-selected={activeTab === 'metadata'}
+                  aria-controls="panel-metadata"
+                  tabIndex={activeTab === 'metadata' ? 0 : -1}
                   onClick={() => setActiveTab('metadata')}
+                  onKeyDown={(e) => handleTabKeyDown(e, 'metadata')}
                   className={`tab-button ${activeTab === 'metadata' ? 'active' : ''}`}
                 >
-                  <Info size={16} />
+                  <Info size={16} aria-hidden="true" />
                   <span>Variables (Define-XML)</span>
                 </button>
                 <button
+                  type="button"
+                  role="tab"
+                  id="tab-codelists"
+                  aria-selected={activeTab === 'codelists'}
+                  aria-controls="panel-codelists"
+                  tabIndex={activeTab === 'codelists' ? 0 : -1}
                   onClick={() => setActiveTab('codelists')}
+                  onKeyDown={(e) => handleTabKeyDown(e, 'codelists')}
                   className={`tab-button ${activeTab === 'codelists' ? 'active' : ''}`}
                 >
-                  <FileCode size={16} />
+                  <FileCode size={16} aria-hidden="true" />
                   <span>Code Lists ({activeDatasetCodelists.length})</span>
                 </button>
               </div>
 
-              {/* Tab Contents */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {/* DATA VIEW TAB */}
-                  {activeTab === 'data' && (
-                    <div key={selectedDatasetName}>
+              <div
+                role="tabpanel"
+                id="panel-data"
+                aria-labelledby="tab-data"
+                aria-hidden={activeTab !== 'data'}
+                tabIndex={activeTab === 'data' ? 0 : -1}
+                className={`tab-panel ${activeTab === 'data' ? 'tab-panel-active' : 'tab-panel-inactive'}`}
+              >
+                {activeTab === 'data' && (
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={selectedDatasetName}
+                      initial={motionInitial}
+                      animate={motionAnimate}
+                      exit={motionExit}
+                      transition={motionTransition}
+                    >
                       {loadingContent ? (
-                        <div className="loading-container" style={{ minHeight: '300px' }}>
-                          <div className="spinner" />
+                        <div
+                          className="loading-container"
+                          style={{ minHeight: '300px' }}
+                          role="status"
+                          aria-live="polite"
+                        >
+                          <div className="spinner" aria-hidden="true" />
                           <p>Loading records for {selectedDatasetName}...</p>
                         </div>
                       ) : contentError ? (
-                        <div className="loading-container text-danger" style={{ minHeight: '300px' }}>
-                          <Info size={48} className="text-danger" />
+                        <div
+                          className="loading-container text-danger"
+                          style={{ minHeight: '300px' }}
+                          role="alert"
+                        >
+                          <Info size={48} className="text-danger" aria-hidden="true" />
                           <h3>Error Loading Data</h3>
                           <p>{contentError}</p>
-                          <button 
-                            className="pg-btn" 
-                            style={{ marginTop: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                          <button
+                            type="button"
+                            className="pg-btn retry-btn"
                             onClick={() => loadDatasetContent(selectedDatasetName)}
                           >
-                            Retry
+                            Retry loading {selectedDatasetName}
                           </button>
                         </div>
                       ) : datasetContent ? (
                         <div>
-                          {/* Search / Filter Actions */}
                           <div className="table-actions-row">
                             <div className="search-box-container">
-                              <Search size={16} className="search-icon-inside" />
+                              <label htmlFor="dataset-search" className="visually-hidden">
+                                Search dataset rows
+                              </label>
+                              <Search
+                                size={16}
+                                className="search-icon-inside"
+                                aria-hidden="true"
+                              />
                               <input
-                                type="text"
-                                placeholder={`Search in all columns...`}
+                                type="search"
+                                id="dataset-search"
+                                name="dataset-search"
+                                placeholder="Search in all columns..."
                                 value={searchQuery}
                                 onChange={(e) => {
                                   setSearchQuery(e.target.value)
                                   setCurrentPage(1)
                                 }}
                                 className="search-input"
+                                aria-describedby="search-results-summary"
                               />
                             </div>
-                            
+
                             {selectedDatasetName !== 'ADSL' && (
-                              <div className="text-info attr-badge" style={{ borderColor: 'rgba(6, 182, 212, 0.3)' }}>
-                                <span>Showing dataset-specific variables first (demographics at the end)</span>
+                              <div
+                                className="text-info attr-badge column-order-hint"
+                                role="note"
+                              >
+                                <span>
+                                  Showing dataset-specific variables first (demographics at the
+                                  end)
+                                </span>
                               </div>
                             )}
 
                             {datasetContent.is_sampled && (
-                              <div className="text-warning attr-badge" style={{ borderColor: 'rgba(245, 158, 11, 0.3)' }}>
-                                <span>Note: Displaying first 1,000 observations (dataset is large)</span>
+                              <div className="text-warning attr-badge sampled-hint" role="note">
+                                <span>
+                                  Note: Displaying first 1,000 observations (dataset is large)
+                                </span>
                               </div>
                             )}
                           </div>
 
-                          {/* Data Table */}
+                          <p
+                            id="search-results-summary"
+                            className="search-results-summary"
+                            aria-live="polite"
+                            aria-atomic="true"
+                          >
+                            {searchResultsSummary}
+                          </p>
+
                           <div className="table-wrapper">
                             <table className="data-table">
+                              <caption className="visually-hidden">
+                                {selectedDatasetName} observations,{' '}
+                                {processedRows.length.toLocaleString()} rows
+                              </caption>
                               <thead>
                                 <tr>
                                   {orderedColumns.map((col) => {
-                                    // Identify if variable is key sequence in metadata
-                                    const variableMeta = activeDatasetMeta?.variables.find(v => v.name === col.name)
-                                    const isKey = variableMeta?.keySequence !== null && variableMeta?.keySequence !== undefined
-                                    
+                                    const variableMeta = activeDatasetMeta?.variables.find(
+                                      (v) => v.name === col.name,
+                                    )
+                                    const isKey =
+                                      variableMeta?.keySequence !== null &&
+                                      variableMeta?.keySequence !== undefined
+
                                     return (
-                                      <th 
-                                        key={col.name} 
-                                        onClick={() => handleSort(col.name)}
+                                      <th
+                                        key={col.name}
+                                        scope="col"
+                                        aria-sort={getAriaSort(
+                                          col.name,
+                                          sortColumn,
+                                          sortDirection,
+                                        )}
                                         className={isKey ? 'text-warning' : ''}
                                       >
-                                        <div className="flex items-center gap-1">
+                                        <button
+                                          type="button"
+                                          className="th-sort-btn"
+                                          onClick={() => handleSort(col.name)}
+                                        >
                                           <span>{col.name}</span>
-                                          <ArrowUpDown size={12} className="text-muted" />
-                                        </div>
+                                          <ArrowUpDown
+                                            size={12}
+                                            className="text-muted"
+                                            aria-hidden="true"
+                                          />
+                                        </button>
                                       </th>
                                     )
                                   })}
@@ -493,147 +671,209 @@ export default function App() {
                               <tbody>
                                 {paginatedRows.length === 0 ? (
                                   <tr>
-                                    <td colSpan={orderedColumns.length} className="text-center text-muted" style={{ padding: '40px' }}>
+                                    <td
+                                      colSpan={orderedColumns.length}
+                                      className="text-center text-muted empty-table-cell"
+                                    >
                                       No observations found matching the search criteria.
                                     </td>
                                   </tr>
                                 ) : (
-                                  paginatedRows.map((row, idx) => (
-                                    <tr key={idx}>
-                                      {orderedColumns.map((col) => {
-                                        const cellVal = row[col.name]
-                                        const variableMeta = activeDatasetMeta?.variables.find(v => v.name === col.name)
-                                        const isKey = variableMeta?.keySequence !== null && variableMeta?.keySequence !== undefined
-                                        
-                                        let cellClass = ''
-                                        if (col.name === 'USUBJID') cellClass = 'subject-cell'
-                                        else if (isKey) cellClass = 'key-cell'
-                                        
-                                        return (
-                                          <td key={col.name} className={cellClass}>
-                                            {cellVal === null || cellVal === undefined ? (
-                                              <span className="text-muted" style={{ fontSize: '11px', fontFamily: 'monospace' }}>.</span>
-                                            ) : (
-                                              String(cellVal)
-                                            )}
-                                          </td>
-                                        )
-                                      })}
-                                    </tr>
-                                  ))
+                                  paginatedRows.map((row, idx) => {
+                                    const rowStart = (currentPage - 1) * rowsPerPage
+                                    const rowKey = `${String(row.USUBJID ?? 'row')}-${rowStart + idx}`
+                                    return (
+                                      <tr key={rowKey}>
+                                        {orderedColumns.map((col) => {
+                                          const cellVal = row[col.name]
+                                          const variableMeta =
+                                            activeDatasetMeta?.variables.find(
+                                              (v) => v.name === col.name,
+                                            )
+                                          const isKey =
+                                            variableMeta?.keySequence !== null &&
+                                            variableMeta?.keySequence !== undefined
+
+                                          let cellClass = ''
+                                          if (col.name === 'USUBJID') cellClass = 'subject-cell'
+                                          else if (isKey) cellClass = 'key-cell'
+
+                                          return (
+                                            <td key={col.name} className={cellClass}>
+                                              {cellVal === null || cellVal === undefined ? (
+                                                <span className="null-cell" aria-label="missing">
+                                                  .
+                                                </span>
+                                              ) : (
+                                                String(cellVal)
+                                              )}
+                                            </td>
+                                          )
+                                        })}
+                                      </tr>
+                                    )
+                                  })
                                 )}
                               </tbody>
                             </table>
                           </div>
 
-                          {/* Pagination controls */}
                           {totalPages > 1 && (
-                            <div className="pagination-row">
+                            <nav
+                              className="pagination-row"
+                              aria-label={`${selectedDatasetName} table pagination`}
+                            >
                               <span>
-                                Showing {((currentPage - 1) * rowsPerPage) + 1} to {Math.min(currentPage * rowsPerPage, processedRows.length)} of {processedRows.length} rows
+                                Showing {rowRangeStart} to {rowRangeEnd} of{' '}
+                                {processedRows.length} rows
                               </span>
-                              
+
                               <div className="pagination-buttons">
                                 <button
-                                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                  type="button"
+                                  onClick={() =>
+                                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                                  }
                                   disabled={currentPage === 1}
                                   className="pg-btn"
+                                  aria-label="Previous page"
                                 >
-                                  <ChevronLeft size={16} />
+                                  <ChevronLeft size={16} aria-hidden="true" />
                                 </button>
-                                <span className="attr-badge">Page {currentPage} of {totalPages}</span>
+                                <span className="attr-badge">
+                                  Page {currentPage} of {totalPages}
+                                </span>
                                 <button
-                                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                  type="button"
+                                  onClick={() =>
+                                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                                  }
                                   disabled={currentPage === totalPages}
                                   className="pg-btn"
+                                  aria-label="Next page"
                                 >
-                                  <ChevronRight size={16} />
+                                  <ChevronRight size={16} aria-hidden="true" />
                                 </button>
                               </div>
-                            </div>
+                            </nav>
                           )}
                         </div>
                       ) : null}
-                    </div>
-                  )}
+                    </motion.div>
+                  </AnimatePresence>
+                )}
+              </div>
 
-                  {/* VARIABLES METADATA TAB */}
-                  {activeTab === 'metadata' && (
-                    <div className="meta-grid">
-                      {activeDatasetMeta?.variables.map((variable) => (
-                        <div key={variable.name} className="meta-card">
-                          <div className="meta-var-name">
-                            <span>{variable.name}</span>
-                            {variable.keySequence !== null && (
-                              <span className="key-badge">Key {variable.keySequence}</span>
-                            )}
-                            {variable.mandatory && (
-                              <span className="mandatory-badge">Req</span>
-                            )}
-                          </div>
-                          
-                          <div className="meta-var-desc">
-                            {variable.label}
-                          </div>
-                          
-                          <div className="meta-var-details">
-                            <span className="meta-type-tag">
-                              {variable.dataType.toLowerCase()}
-                              {variable.length ? `(${variable.length})` : ''}
+              <div
+                role="tabpanel"
+                id="panel-metadata"
+                aria-labelledby="tab-metadata"
+                aria-hidden={activeTab !== 'metadata'}
+                tabIndex={activeTab === 'metadata' ? 0 : -1}
+                className={`tab-panel ${activeTab === 'metadata' ? 'tab-panel-active' : 'tab-panel-inactive'}`}
+              >
+                {activeTab === 'metadata' && (
+                  <motion.div
+                    initial={motionInitial}
+                    animate={motionAnimate}
+                    exit={motionExit}
+                    transition={motionTransition}
+                    className="meta-grid"
+                  >
+                    {activeDatasetMeta?.variables.map((variable) => (
+                      <div key={variable.name} className="meta-card">
+                        <div className="meta-var-name">
+                          <span>{variable.name}</span>
+                          {variable.keySequence !== null && (
+                            <span className="key-badge">Key {variable.keySequence}</span>
+                          )}
+                          {variable.mandatory && (
+                            <span className="mandatory-badge">Req</span>
+                          )}
+                        </div>
+
+                        <div className="meta-var-desc">{variable.label}</div>
+
+                        <div className="meta-var-details">
+                          <span className="meta-type-tag">
+                            {variable.dataType.toLowerCase()}
+                            {variable.length ? `(${variable.length})` : ''}
+                          </span>
+                          {variable.sasFormat && (
+                            <span className="meta-format-tag">
+                              format: {variable.sasFormat}
                             </span>
-                            {variable.sasFormat && (
-                              <span className="text-muted" style={{ fontSize: '11px', fontFamily: 'monospace' }}>
-                                format: {variable.sasFormat}
-                              </span>
-                            )}
-                            {variable.codelist && (
-                              <span 
-                                className="codelist-tag"
-                                onClick={() => setActiveTab('codelists')}
-                              >
-                                Codelist: {variable.codelist.name}
-                              </span>
-                            )}
-                          </div>
+                          )}
+                          {variable.codelist && (
+                            <button
+                              type="button"
+                              className="codelist-tag"
+                              onClick={() => setActiveTab('codelists')}
+                            >
+                              Codelist: {variable.codelist.name}
+                            </button>
+                          )}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+              </div>
 
-                  {/* CODELISTS TAB */}
-                  {activeTab === 'codelists' && (
-                    <div>
-                      {activeDatasetCodelists.length === 0 ? (
-                        <div className="loading-container" style={{ minHeight: '200px' }}>
-                          <Info size={32} className="text-muted" />
-                          <p>No variables in {selectedDatasetName} are linked to CodeLists in define.xml.</p>
-                        </div>
-                      ) : (
-                        <div className="codelist-grid">
-                          {activeDatasetCodelists.map(([varName, cl]) => (
-                            <div key={varName} className="codelist-card">
-                              <div className="codelist-card-header">
-                                <h3>{varName}</h3>
-                                <span>CodeList: {cl.name}</span>
-                              </div>
-                              <table className="codelist-table">
-                                <tbody>
-                                  {cl.items.map((item, idx) => (
-                                    <tr key={idx}>
-                                      <td className="codelist-value-col">{item.value}</td>
-                                      <td className="codelist-label-col">{item.label}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
+              <div
+                role="tabpanel"
+                id="panel-codelists"
+                aria-labelledby="tab-codelists"
+                aria-hidden={activeTab !== 'codelists'}
+                tabIndex={activeTab === 'codelists' ? 0 : -1}
+                className={`tab-panel ${activeTab === 'codelists' ? 'tab-panel-active' : 'tab-panel-inactive'}`}
+              >
+                {activeTab === 'codelists' && (
+                  <motion.div
+                    initial={motionInitial}
+                    animate={motionAnimate}
+                    exit={motionExit}
+                    transition={motionTransition}
+                  >
+                    {activeDatasetCodelists.length === 0 ? (
+                      <div
+                        className="loading-container empty-codelists"
+                        role="status"
+                      >
+                        <Info size={32} className="text-muted" aria-hidden="true" />
+                        <p>
+                          No variables in {selectedDatasetName} are linked to CodeLists in
+                          define.xml.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="codelist-grid">
+                        {activeDatasetCodelists.map(([varName, cl]) => (
+                          <div key={varName} className="codelist-card">
+                            <div className="codelist-card-header">
+                              <h3>{varName}</h3>
+                              <span>CodeList: {cl.name}</span>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
+                            <table className="codelist-table">
+                              <caption className="visually-hidden">
+                                Code list values for {varName}
+                              </caption>
+                              <tbody>
+                                {cl.items.map((item) => (
+                                  <tr key={`${varName}-${item.value}`}>
+                                    <td className="codelist-value-col">{item.value}</td>
+                                    <td className="codelist-label-col">{item.label}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </div>
             </section>
           </main>
         </div>
