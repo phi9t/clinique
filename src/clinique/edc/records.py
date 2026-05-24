@@ -505,21 +505,23 @@ def validate_lock_issue_record_references(
     snapshots: tuple[EdcSnapshot, ...],
     lock_issues: tuple[DatabaseLockIssue, ...],
 ) -> None:
-    record_keys = {
+    collected_at_by_record_key = {
         (
             record.study_id,
             record.site_id,
             record.subject_id,
             record.form,
             record.field,
-        )
+        ): record.collected_at
         for snapshot in snapshots
         for record in snapshot.records
     }
     for issue in lock_issues:
         key = (issue.study_id, issue.site_id, issue.subject_id, issue.form, issue.field)
-        if key not in record_keys:
+        if key not in collected_at_by_record_key:
             raise ValueError(f"unknown lock issue record key: {key}")
+        if issue.discovered_at < collected_at_by_record_key[key]:
+            raise ValueError("lock issue discovered_at cannot be before record collected_at")
 
 
 @dataclass(frozen=True)
