@@ -127,10 +127,21 @@ def verify_workstream(
         and all(Path(path).exists() for path in internal_export_result["reports"].values())
     )
     audit = validation["audit"]
+    local_gate_failures = _local_gate_failures(
+        offline_gates=audit["gates"]["offline"],
+        retrospective_gates=audit["gates"]["retrospective"],
+        preflight_gates={"ok": preflight.ok},
+        silent_gates=silent.gates,
+        rollout_gates=rollout.gates,
+        internal_export_result=internal_export_result,
+    )
+    local_gates_passed = not local_gate_failures
     evidence = {
         "local_reports_complete": local_reports_complete,
         "local_internal_export_reports_complete": local_internal_export_reports_complete,
-        "goal_complete": bool(audit["goal_complete"]),
+        "local_gates_passed": local_gates_passed,
+        "local_gate_failures": local_gate_failures,
+        "goal_complete": bool(audit["goal_complete"]) and local_gates_passed,
         "blocked_requirements": audit["blocked_requirements"],
         "reports": reports,
         "gates": {
@@ -150,6 +161,52 @@ def verify_workstream(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n"
     )
     return evidence
+
+
+def _local_gate_failures(
+    *,
+    offline_gates: dict[str, bool],
+    retrospective_gates: dict[str, bool],
+    preflight_gates: dict[str, bool],
+    silent_gates: dict[str, bool],
+    rollout_gates: dict[str, bool],
+    internal_export_result: dict[str, object] | None,
+) -> list[str]:
+    failures = []
+    failures.extend(_false_gate_names("offline", offline_gates))
+    failures.extend(_false_gate_names("retrospective", retrospective_gates))
+    failures.extend(_false_gate_names("internal_preflight", preflight_gates))
+    failures.extend(_silent_gate_failures(silent_gates))
+    failures.extend(_false_gate_names("controlled_rollout", rollout_gates))
+    if internal_export_result is not None:
+        failures.extend(
+            _false_gate_names(
+                "internal_export_offline",
+                internal_export_result["offline"]["gates"],
+            )
+        )
+        failures.extend(
+            _false_gate_names(
+                "internal_export_retrospective",
+                internal_export_result["retrospective"]["gates"],
+            )
+        )
+    return failures
+
+
+def _false_gate_names(prefix: str, gates: dict[str, bool]) -> list[str]:
+    return [f"{prefix}.{name}" for name, passed in gates.items() if not passed]
+
+
+def _silent_gate_failures(gates: dict[str, bool]) -> list[str]:
+    failures = []
+    if not gates["no_operational_impact"]:
+        failures.append("silent_log.no_operational_impact")
+    if not gates["false_positive_burden_controlled"]:
+        failures.append("silent_log.false_positive_burden_controlled")
+    if gates["stop_criteria_triggered"]:
+        failures.append("silent_log.stop_criteria_triggered")
+    return failures
 
 
 def validate_internal_exports(

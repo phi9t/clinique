@@ -67,6 +67,10 @@
     }
   },
   "goal_complete": false,
+  "local_gate_failures": [
+    "silent_log.stop_criteria_triggered"
+  ],
+  "local_gates_passed": false,
   "local_internal_export_reports_complete": true,
   "local_reports_complete": true,
   "reports": {

@@ -65,9 +65,10 @@ Evidence:
   --internal-labels tests/fixtures/edc_query/labels.json --internal-lock-issues
   tests/fixtures/edc_query/lock_issues.json` regenerates all local reports, including
   fixture-backed approved-export L1/L2 reports, writes the internal preflight artifact, requires
-  that preflight gate to be ready before writing consolidated workstream evidence, and writes
-  `reports/edc-query/workstream-verification.json` only after local gates are valid. It exits
-  nonzero while real internal/prospective blockers remain.
+  that preflight gate to be ready before writing consolidated workstream evidence, records
+  `local_gates_passed` and `local_gate_failures`, prevents `goal_complete` when any local gate
+  fails, and writes `reports/edc-query/workstream-verification.json` only after local gates are
+  evaluated. It exits nonzero while real internal/prospective blockers remain.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
   exposure, duplicate-query timestamp gating, study/site matching, and query-log provenance,
   typed privacy/blinding and label booleans, schema enum enforcement for query categories,
@@ -84,7 +85,8 @@ Evidence:
   annotation-manual alignment, internal-data preflight object-shape, timezone-aware metadata,
   source identity, source-type, and source-specific schema-sketch enforcement, silent-log
   query-category, schema-field missing/duplicate gate rejection, source metadata diagnostics,
-  bundled verifier preflight readiness failure, preflight path traversal rejection,
+  bundled verifier preflight readiness failure and consolidated local-gate completion blocking,
+  preflight path traversal rejection,
   manifest-relative export paths, manifest-relative path traversal rejection, malformed
   approved-export payload, preflight-normalized source identity during payload path resolution,
   item-indexed payload-object rejection, source-context structural validation errors,
