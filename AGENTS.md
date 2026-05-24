@@ -24,7 +24,7 @@ The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 Docker-backed tests skip when the Docker daemon is unavailable; start Docker Desktop or
 `colima start` before validating R cross-check behavior.
 
-Temporal durable prescreen (optional; see `docs/design/temporal-prescreen.md`):
+Temporal durable prescreen (optional; see `docs/design/temporal-prescreen.md` — includes ML researcher / MLsys walkthrough):
 
 ```bash
 temporal server start-dev                              # background

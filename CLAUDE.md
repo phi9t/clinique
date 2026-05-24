@@ -37,6 +37,7 @@ uv run clinique prescreen validate --trials tests/fixtures/prescreen/trials.json
   --patients tests/fixtures/prescreen/pmc_patients.jsonl --source pmc   # exit 7 on errors
 
 # Prescreen durable execution (optional; requires `uv sync --group temporal`)
+# Walkthrough for ML researchers + MLsys: docs/design/temporal-prescreen.md
 # temporal server start-dev   # background
 # uv run clinique prescreen worker
 # uv run clinique prescreen screen --temporal --trial-id NCT... --patient-id P1 ...
