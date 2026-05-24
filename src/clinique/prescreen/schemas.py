@@ -60,6 +60,81 @@ PATIENT_SOURCES = frozenset({SYNTHEA, PMC_PATIENTS, MIMIC_IV_DEMO})
 CRITERION_TYPES = frozenset({"inclusion", "exclusion"})
 PREDICTIONS = frozenset({"met", "not_met", "unknown", "not_applicable", "conflicting_evidence"})
 RECOMMENDATIONS = frozenset({"likely_ineligible", "needs_review", "potentially_eligible"})
+CLINICAL_DOMAINS = frozenset(
+    {
+        "demographic",
+        "laboratory",
+        "medication",
+        "condition",
+        "procedure",
+        "performance_status",
+        "other",
+    }
+)
+OPERATORS = frozenset({"=", "!=", ">", ">=", "<", "<="})
+
+
+@dataclass(frozen=True)
+class Threshold:
+    value: float
+    unit: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class TemporalConstraint:
+    window_value: int
+    window_unit: str  # days | weeks | months
+    anchor: str = "enrollment"
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass(frozen=True)
+class Criterion:
+    criterion_id: str
+    trial_id: str
+    criterion_type: str
+    raw_text: str
+    clinical_domain: str = "other"
+    operator: str | None = None
+    threshold: Threshold | None = None
+    temporal_constraint: TemporalConstraint | None = None
+    requires_absence_evidence: bool = False
+    is_safety_critical: bool = False
+    ambiguity_flags: tuple[str, ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        payload: dict[str, Any] = {
+            "criterion_id": self.criterion_id,
+            "trial_id": self.trial_id,
+            "criterion_type": self.criterion_type,
+            "raw_text": self.raw_text,
+            "clinical_domain": self.clinical_domain,
+            "operator": self.operator,
+            "requires_absence_evidence": self.requires_absence_evidence,
+            "is_safety_critical": self.is_safety_critical,
+            "ambiguity_flags": list(self.ambiguity_flags),
+        }
+        if self.threshold is not None:
+            payload["threshold"] = self.threshold.to_dict()
+        if self.temporal_constraint is not None:
+            payload["temporal_constraint"] = self.temporal_constraint.to_dict()
+        return payload
+
+
+@dataclass(frozen=True)
+class Evidence:
+    criterion_id: str
+    doc_id: str
+    quote: str
+    normalized_fact: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
 
 
 @dataclass(frozen=True)
@@ -67,6 +142,45 @@ class CriterionJudgment:
     criterion_id: str
     criterion_type: str
     prediction: str
+    evidence: tuple[Evidence, ...] = ()
+    rationale: str = ""
+    confidence: float | None = None
+    human_review_required: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "criterion_id": self.criterion_id,
+            "criterion_type": self.criterion_type,
+            "prediction": self.prediction,
+            "evidence": [e.to_dict() for e in self.evidence],
+            "rationale": self.rationale,
+            "confidence": self.confidence,
+            "human_review_required": self.human_review_required,
+        }
+
+
+@dataclass(frozen=True)
+class PrescreeningPacket:
+    trial_id: str
+    patient_id: str
+    snapshot_date: str | None
+    criteria: tuple[Criterion, ...]
+    judgments: tuple[CriterionJudgment, ...]
+    recommendation: str
+    model: dict[str, Any] = field(default_factory=dict)
+    tools: tuple[dict[str, str], ...] = ()
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "trial_id": self.trial_id,
+            "patient_id": self.patient_id,
+            "snapshot_date": self.snapshot_date,
+            "criteria": [c.to_dict() for c in self.criteria],
+            "judgments": [j.to_dict() for j in self.judgments],
+            "recommendation": self.recommendation,
+            "model": dict(self.model),
+            "tools": list(self.tools),
+        }
 
 
 # ClinicalTrials.gov age strings look like "18 Years", "6 Months", "2 Weeks". Convert to years so

@@ -37,10 +37,18 @@ dev = [
     "pytest>=8",
     "ruff>=0.6",
 ]
+temporal = [
+    "temporalio>=1.9",
+    "pytest-asyncio>=0.24",
+]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "temporal: durable prescreen tests (requires uv sync --group temporal)",
+]
 
 [tool.ruff]
 line-length = 100

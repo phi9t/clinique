@@ -1,0 +1,16 @@
+#+TITLE: Prescreen Copilot Workstream
+#+STARTUP: overview indent
+
+* Prescreen Copilot [9/9]
+** DONE Bootstrap workstream directory
+** DONE Phase 0 — Record scale corpus
+Evidence :: ~/.clinique/datasets/prescreen-copilot/ (1000 trials; PMC fallback documented)
+** DONE Phase 1 — Schemas & utilities
+** DONE Phase 2 — Retrieval
+** DONE Phase 3 — Atomizer
+** DONE Phase 4 — Judge
+** DONE Phase 5 — Gate & orchestrator
+** DONE Phase 6 — Eval harness
+** DONE Phase 7 — CLI
+** DONE Phase 8 — Scale verification
+Evidence :: reports/prescreen/workstream-verification.json goal_complete=True

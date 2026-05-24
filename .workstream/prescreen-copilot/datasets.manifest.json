@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "workstream": "prescreen-copilot",
+  "datasets_root_env": "CLINIQUE_DATASETS_DIR",
+  "default_datasets_root": "~/.clinique/datasets",
+  "files": {
+    "trials": "prescreen-copilot/trials.jsonl",
+    "synthea_patients": "prescreen-copilot/synthea_patients.jsonl",
+    "pmc_patients": "prescreen-copilot/pmc_patients.jsonl",
+    "mimic_demo_patients": "prescreen-copilot/mimic_demo_patients.jsonl"
+  }
+}

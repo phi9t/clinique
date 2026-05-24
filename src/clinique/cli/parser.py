@@ -81,4 +81,59 @@ def build_parser() -> argparse.ArgumentParser:
             "output directory for prescreen explorer JSON (default: explorer/public/data/prescreen)"
         ),
     )
+    norm_mimic = prescreen_subparsers.add_parser("normalize-mimic-demo")
+    norm_mimic.add_argument("--csv-dir", required=True, help="MIMIC-IV demo hosp CSV directory")
+    norm_mimic.add_argument("--snapshot", help="as-of date (YYYY-MM-DD)")
+    norm_mimic.add_argument("--out", required=True, help="output PatientCorpus JSONL path")
+    atomize = prescreen_subparsers.add_parser("atomize")
+    atomize.add_argument("--trials", required=True, help="trials JSONL path")
+    atomize.add_argument("--trial-id", help="optional single trial filter")
+    atomize.add_argument("--out", help="optional criteria JSONL output path")
+    screen = prescreen_subparsers.add_parser("screen")
+    screen.add_argument("--trial-id", required=True)
+    screen.add_argument("--patient-id", required=True)
+    screen.add_argument("--trials", required=True)
+    screen.add_argument("--patients", required=True)
+    screen.add_argument("--source", choices=["synthea", "mimic", "pmc"], default="synthea")
+    screen.add_argument("--ledger", help="optional provenance ledger JSONL path")
+    screen.add_argument("--out", help="optional packet JSON output path")
+    screen.add_argument(
+        "--temporal",
+        action="store_true",
+        help="run via Temporal ScreenPatientWorkflow (requires worker + dev server)",
+    )
+    screen.add_argument(
+        "--temporal-host",
+        default="localhost:7233",
+        help="Temporal server address when --temporal is set",
+    )
+    worker = prescreen_subparsers.add_parser("worker")
+    worker.add_argument("--host", default="localhost:7233", help="Temporal server address")
+    eval_temporal = prescreen_subparsers.add_parser("eval-temporal")
+    eval_temporal.add_argument(
+        "--cases",
+        default=".workstream/prescreen-copilot/l0_cases.jsonl",
+    )
+    eval_temporal.add_argument("--trials", default="tests/fixtures/prescreen/trials.jsonl")
+    eval_temporal.add_argument("--synthea-patients", help="synthea patient JSONL")
+    eval_temporal.add_argument("--pmc-patients", help="pmc patient JSONL")
+    eval_temporal.add_argument("--mimic-patients", help="mimic patient JSONL")
+    eval_temporal.add_argument("--reports-dir", default="reports/prescreen")
+    eval_temporal.add_argument("--host", default="localhost:7233", help="Temporal server address")
+    eval_p = prescreen_subparsers.add_parser("eval")
+    eval_p.add_argument(
+        "--cases",
+        default=".workstream/prescreen-copilot/l0_cases.jsonl",
+    )
+    eval_p.add_argument("--trials", default="tests/fixtures/prescreen/trials.jsonl")
+    eval_p.add_argument("--patients", help="default synthea patient JSONL")
+    eval_p.add_argument("--synthea-patients", help="synthea patient JSONL")
+    eval_p.add_argument("--pmc-patients", help="pmc patient JSONL")
+    eval_p.add_argument("--mimic-patients", help="mimic patient JSONL")
+    eval_p.add_argument("--reports-dir", default="reports/prescreen")
+    verify_ws = prescreen_subparsers.add_parser("verify-workstream")
+    verify_ws.add_argument("--workstream", default=".workstream/prescreen-copilot")
+    verify_ws.add_argument("--datasets-dir", help="defaults to ~/.clinique/datasets")
+    verify_ws.add_argument("--reports-dir", default="reports/prescreen")
+    verify_ws.add_argument("--cases", help="override l0_cases.jsonl path")
     return parser

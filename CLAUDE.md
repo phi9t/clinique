@@ -35,6 +35,12 @@ uv run pytest tests/test_prescreen_ingestion.py tests/test_prescreen_normalizer.
 uv run clinique prescreen show --fixtures tests/fixtures/prescreen/trials.jsonl
 uv run clinique prescreen validate --trials tests/fixtures/prescreen/trials.jsonl \
   --patients tests/fixtures/prescreen/pmc_patients.jsonl --source pmc   # exit 7 on errors
+
+# Prescreen durable execution (optional; requires `uv sync --group temporal`)
+# temporal server start-dev   # background
+# uv run clinique prescreen worker
+# uv run clinique prescreen screen --temporal --trial-id NCT... --patient-id P1 ...
+# uv run pytest tests/test_durable_prescreen.py -q
 ```
 
 R-backed engine (rpact) runs in a pinned Docker image. Bring up the daemon (`colima start` or

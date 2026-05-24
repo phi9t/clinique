@@ -14,6 +14,7 @@ The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 ## Build, Test, and Development Commands
 
 - `uv sync`: create/update the virtual environment from `uv.lock` and install dev tools.
+- `uv sync --group temporal`: optional Temporal.io SDK for durable prescreen workflows.
 - `uv run pytest`: run the full test suite.
 - `uv run pytest tests/test_power_engines.py`: run one focused test module.
 - `uv run ruff check src tests`: lint Python source and tests.
@@ -22,6 +23,15 @@ The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 
 Docker-backed tests skip when the Docker daemon is unavailable; start Docker Desktop or
 `colima start` before validating R cross-check behavior.
+
+Temporal durable prescreen (optional; see `docs/design/temporal-prescreen.md`):
+
+```bash
+temporal server start-dev                              # background
+uv sync --group temporal
+uv run clinique prescreen worker                       # background
+uv run pytest tests/test_durable_prescreen.py -q       # embedded test server
+```
 
 ## Coding Style & Naming Conventions
 

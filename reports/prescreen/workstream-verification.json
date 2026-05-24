@@ -1,0 +1,47 @@
+{
+  "conformance": {
+    "error_count": 0,
+    "issues": [
+      {
+        "code": "age_unparsed",
+        "message": "minimum_age raw '18 Minutes' did not parse to years",
+        "record_id": "NCT06031688",
+        "severity": "warning"
+      }
+    ],
+    "ok": true,
+    "records_checked": 1007,
+    "warning_count": 1
+  },
+  "datasets": {
+    "mimic_demo_patients": "/Users/phi9t/.clinique/datasets/prescreen-copilot/mimic_demo_patients.jsonl",
+    "pmc_patients": "/Users/phi9t/.clinique/datasets/prescreen-copilot/pmc_patients.jsonl",
+    "synthea_patients": "/Users/phi9t/.clinique/datasets/prescreen-copilot/synthea_patients.jsonl",
+    "trials": "/Users/phi9t/.clinique/datasets/prescreen-copilot/trials.jsonl"
+  },
+  "eval": {
+    "cases_run": 3,
+    "criterion_accuracy": 1.0,
+    "criterion_correct": 3,
+    "criterion_total": 3,
+    "errors": [],
+    "evidence_violations": 0,
+    "exclusion_false_negatives": 0
+  },
+  "gates": {
+    "atomizer_coverage": 1.0,
+    "corpus_conformance_ok": true,
+    "criterion_accuracy": 1.0,
+    "determinism_ok": true,
+    "evidence_violations": 0,
+    "exclusion_false_negatives": 0,
+    "scale_smoke_ok": true
+  },
+  "goal_complete": true,
+  "records": {
+    "mimic_patients": 2,
+    "pmc_patients": 2,
+    "synthea_patients": 2,
+    "trials": 1001
+  }
+}

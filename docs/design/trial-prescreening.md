@@ -4,8 +4,9 @@
 [ANC example §14](../primer/clinical-trials-for-ml.md#14-one-concrete-example),
 [minimum schema §13](../primer/clinical-trials-for-ml.md#13-how-to-think-about-the-data-model-for-your-proof-point).
 
-**Status:** `L0-PUBLIC-DATA` (2026-05-24). The genuinely-public **data layer** is implemented end to
-end: heterogeneous public sources are fetched, parsed, and proven to converge on the internal model.
+**Status:** `L0-PUBLIC-DATA` + copilot tools (2026-05-24). Public data layer plus deterministic
+copilot pipeline (atomizer, retrieval, judge, evidence gate, orchestrator, eval). Workstream:
+`.workstream/prescreen-copilot/`. Scale corpus: `~/.clinique/datasets/prescreen-copilot/`.
 ClinicalTrials.gov trial ingestion now includes **search + pagination** (pull a whole disease area,
 not a hand-typed id list) alongside the single-study recorder. Three patient sources normalize onto
 the shared `PatientCorpus`/`PatientDocument` records: **Synthea** (corpus-wide, committed synthetic
@@ -255,21 +256,27 @@ src/clinique/prescreen/
   validation.py     ✅ L0 conformance gate (controlled vocab, age bounds, leakage)
   pmc_patients.py   ✅ PMC-Patients open case-report ingestion
   mimic_demo.py     ✅ MIMIC-IV demo structured normalizer
-  atomizer.py       ◻ eligibility text -> atomic criteria (LLM, strict schema)
-  retrieval.py      ◻ hybrid BM25 (rank-bm25, in-memory) + embeddings + structured + temporal filter
-  judge.py          ◻ per-criterion LLM judge (constrained prompt, evidence-grounded)
+  atomizer.py       ✅ ReferenceAtomizer + Protocol (deterministic stand-in)
+  retrieval.py      ✅ stdlib BM25 + structured boost + temporal filter
+  judge.py          ✅ RuleJudge + Protocol (deterministic stand-in)
   aggregator.py     ✅ deterministic overall recommendation (library; no CLI yet)
-  evidence_gate.py  ◻ evidence-provenance hard gate (quote fidelity + derived-fact correctness)
-  vocab.py          ◻ deterministic drug-class / synonym lookup (RxNorm/ATC subset)
-  orchestrator.py   ◻ the typed graph; builds packet, runs gate, appends to ProvenanceLedger
+  evidence_gate.py  ✅ evidence-provenance hard gate
+  vocab.py          ✅ deterministic drug-class / synonym lookup (RxNorm/ATC subset)
+  orchestrator.py   ✅ sync graph; durable wrapper in `clinique/durable/` (see temporal-prescreen.md)
+  eval.py           ✅ L0 eval + verify-workstream
+  datasets.py       ✅ ~/.clinique/datasets path resolution
 tests/
   test_prescreen_ingestion.py ✅  test_prescreen_normalizer.py ✅
   test_prescreen_validation.py ✅  test_prescreen_search.py ✅
   test_prescreen_pmc.py ✅  test_prescreen_mimic.py ✅
   test_prescreen_aggregation.py ✅  test_prescreen_cli.py ✅
-  test_prescreen_atomizer.py ◻ ... _temporal ◻ _unit_conversion ◻ _evidence_gate ◻
+  test_prescreen_atomizer.py ✅  test_prescreen_retrieval.py ✅
+  test_prescreen_judge.py ✅  test_prescreen_orchestrator.py ✅
+  test_prescreen_eval.py ✅  test_prescreen_units.py ✅  test_prescreen_temporal.py ✅
+  test_prescreen_evidence_gate.py ◻ (covered in orchestrator tests)
 tests/fixtures/prescreen/        ✅ trials.jsonl (real, recorded) + PROVENANCE.md + synthea/
-reports/prescreen/               ◻ eval metrics + error cases
+.workstream/prescreen-copilot/   ✅ design, tracker.org, l0_cases, verify-workstream gates
+reports/prescreen/               ✅ workstream-verification.json + l0-eval.json
 ```
 
 CLI commands (implemented):
@@ -282,8 +289,13 @@ CLI commands (implemented):
 | `prescreen normalize-synthea` | Synthea CSV dir → PatientCorpus JSONL | 0 success, 2 I/O or parse failure |
 | `prescreen ingest-pmc` | Record PMC-Patients sample | 0 success, 2 fetch/parse failure |
 | `prescreen validate` | L0 conformance report | 0 clean, 2 load failure, 7 conformance errors |
+| `prescreen atomize` | Trial → criteria JSONL | 0 success, 2 I/O failure |
+| `prescreen screen` | Full prescreening packet | 0 success, 2 input, 8 evidence-gate fail |
+| `prescreen eval` | L0 gold-label eval | 0 pass, 9 threshold fail |
+| `prescreen verify-workstream` | Bundled scale verification | 0 goal complete, 3 missing datasets, 9 fail |
+| `prescreen normalize-mimic-demo` | MIMIC demo CSV → JSONL | 0 success, 2 I/O failure |
 
-`screen|atomize|eval` land with the corresponding stages, mirroring `edc-query`.
+`screen|atomize|eval|verify-workstream` mirror the copilot pipeline; see `.workstream/prescreen-copilot/`.
 
 **Deferred until after the proof point** (premature for L0–L2): Postgres + pgvector, FastAPI
 service, OpenSearch, Streamlit/Next.js UI. JSONL + in-memory retrieval + a CLI packet + offline
