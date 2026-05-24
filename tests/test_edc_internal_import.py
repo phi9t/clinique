@@ -98,6 +98,43 @@ def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path
         raise AssertionError("expected unblinded snapshot rejection")
 
 
+def test_load_internal_export_bundle_rejects_duplicate_snapshot_ids(tmp_path):
+    manifest = _write_manifest(
+        tmp_path,
+        snapshot_payload=(
+            """
+            [
+              {
+                "snapshot_id": "snap",
+                "snapshot_at": "2026-03-01T00:00:00Z",
+                "contains_phi": false,
+                "contains_unblinded": false,
+                "records": []
+              },
+              {
+                "snapshot_id": "snap",
+                "snapshot_at": "2026-03-02T00:00:00Z",
+                "contains_phi": false,
+                "contains_unblinded": false,
+                "records": []
+              }
+            ]
+            """
+        ),
+    )
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        assert "duplicate snapshot id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate snapshot id rejection")
+
+
 def test_load_internal_export_bundle_builds_fixture_bundle_from_approved_exports(tmp_path):
     manifest = _write_manifest(tmp_path)
 

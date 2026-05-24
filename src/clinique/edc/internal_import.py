@@ -15,6 +15,7 @@ from clinique.edc.records import (
     validate_unique_lock_issue_ids,
     validate_unique_query_log_ids,
     validate_unique_rule_ids,
+    validate_unique_snapshot_ids,
 )
 
 
@@ -38,6 +39,7 @@ def load_internal_export_bundle(
             key=lambda snapshot: snapshot.snapshot_at,
         )
     )
+    validate_unique_snapshot_ids(snapshots)
     for snapshot in snapshots:
         if snapshot.contains_unblinded:
             raise ValueError(f"Snapshot {snapshot.snapshot_id} is marked as unblinded")
