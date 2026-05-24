@@ -70,8 +70,13 @@ def build_parser() -> argparse.ArgumentParser:
     show.add_argument("--fixtures", default="tests/fixtures/prescreen/trials.jsonl")
     export_explorer = prescreen_subparsers.add_parser("export-explorer")
     export_explorer.add_argument(
+        "--fixtures-dir",
+        default=None,
+        help="prescreen L0 fixture directory (default: repo tests/fixtures/prescreen)",
+    )
+    export_explorer.add_argument(
         "--out",
-        default="explorer/public/data/prescreen",
-        help="output directory for prescreen explorer JSON",
+        default=None,
+        help="output directory for prescreen explorer JSON (default: explorer/public/data/prescreen)",
     )
     return parser

@@ -44,9 +44,37 @@ from .schemas import (
 )
 from .validation import report_for
 
-# Default fixture locations (the committed L0 corpus).
-FIXTURES = Path("tests/fixtures/prescreen")
-DEFAULT_OUT = Path("explorer/public/data/prescreen")
+_PRESCREEN_FIXTURE_MARKER = Path("tests/fixtures/prescreen/trials.jsonl")
+
+
+def find_repo_root(*, start: Path | None = None) -> Path:
+    """Locate the clinique repo root from an installed module path or the CWD."""
+    here = (start or Path(__file__)).resolve()
+    for candidate in (here, *here.parents):
+        if (candidate / "pyproject.toml").is_file() and (
+            candidate / _PRESCREEN_FIXTURE_MARKER
+        ).is_file():
+            return candidate
+    msg = (
+        "clinique repo root not found "
+        "(expected pyproject.toml and tests/fixtures/prescreen/trials.jsonl)"
+    )
+    raise FileNotFoundError(msg)
+
+
+def default_fixtures_dir() -> Path:
+    """Committed L0 prescreen fixtures, resolved from the repo root."""
+    return find_repo_root() / "tests/fixtures/prescreen"
+
+
+def default_out_dir() -> Path:
+    """Default explorer JSON output directory, resolved from the repo root."""
+    return find_repo_root() / "explorer/public/data/prescreen"
+
+
+# Back-compat aliases for tests and callers that import the constants.
+FIXTURES = default_fixtures_dir()
+DEFAULT_OUT = default_out_dir()
 
 # ---------------------------------------------------------------------------
 # FIELD_DOCS — authored, plain-English meaning for every field of every record type. This is the
@@ -334,22 +362,23 @@ def _provenance(key: str) -> dict[str, str]:
     return table[key]
 
 
-def _load_all() -> dict[str, Any]:
+def _load_all(fixtures_dir: Path | None = None) -> dict[str, Any]:
     """Load every dataset from the committed fixtures using the canonical loaders."""
-    trials = load_recorded_studies(FIXTURES / "trials.jsonl")
+    fixtures = fixtures_dir or default_fixtures_dir()
+    trials = load_recorded_studies(fixtures / "trials.jsonl")
     synthea = normalize_synthea_corpus(
-        read_synthea_csv_dir(FIXTURES / "synthea"), snapshot_date="2026-03-01"
+        read_synthea_csv_dir(fixtures / "synthea"), snapshot_date="2026-03-01"
     )
-    pmc = load_pmc_corpora(FIXTURES / "pmc_patients.jsonl")
+    pmc = load_pmc_corpora(fixtures / "pmc_patients.jsonl")
     mimic = normalize_mimic_corpus(
-        read_mimic_csv_dir(FIXTURES / "mimic_demo"), snapshot_date="2180-12-31"
+        read_mimic_csv_dir(fixtures / "mimic_demo"), snapshot_date="2180-12-31"
     )
     return {"trials": trials, "synthea": synthea, "pmc": pmc, "mimic": mimic}
 
 
-def build_payload() -> dict[str, dict]:
+def build_payload(*, fixtures_dir: Path | None = None) -> dict[str, dict]:
     """Build every output document as an in-memory dict (no I/O). Deterministic."""
-    data = _load_all()
+    data = _load_all(fixtures_dir)
     trials, synthea, pmc, mimic = data["trials"], data["synthea"], data["pmc"], data["mimic"]
 
     index = [
@@ -417,11 +446,16 @@ def build_payload() -> dict[str, dict]:
     }
 
 
-def export_explorer(out_dir: str | Path = DEFAULT_OUT) -> list[str]:
+def export_explorer(
+    out_dir: str | Path | None = None,
+    *,
+    fixtures_dir: str | Path | None = None,
+) -> list[str]:
     """Write every output document to ``out_dir`` as sorted-key JSON. Returns the filenames written."""
-    out = Path(out_dir)
+    out = Path(out_dir) if out_dir is not None else default_out_dir()
+    fixtures = Path(fixtures_dir) if fixtures_dir is not None else None
     out.mkdir(parents=True, exist_ok=True)
-    payload = build_payload()
+    payload = build_payload(fixtures_dir=fixtures)
     written: list[str] = []
     for name, doc in payload.items():
         path = out / f"{name}.json"
