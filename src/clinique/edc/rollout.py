@@ -135,8 +135,8 @@ def _validate_rate_values(values: dict[str, float]) -> None:
 
 def _validate_count_values(values: dict[str, float]) -> None:
     for key, value in values.items():
-        if key in COUNT_KEYS and value < 0:
-            raise ValueError(f"{key} must be nonnegative")
+        if key in COUNT_KEYS and (value < 0 or not value.is_integer()):
+            raise ValueError(f"{key} must be a nonnegative integer")
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
