@@ -11,6 +11,7 @@ from clinique.edc.internal_preflight import preflight_internal_manifest
 from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
 from clinique.edc.silent import evaluate_silent_log, load_silent_log
 from clinique.edc.validation import run_validation, validate_internal_exports, verify_workstream
+from clinique.prescreen.ingestion import load_recorded_studies, record_studies
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -46,6 +47,14 @@ def _build_parser() -> argparse.ArgumentParser:
     internal.add_argument("--labels", required=True)
     internal.add_argument("--lock-issues")
     internal.add_argument("--reports-dir", default="reports/edc-query")
+
+    prescreen = subparsers.add_parser("prescreen")
+    prescreen_subparsers = prescreen.add_subparsers(dest="prescreen_command")
+    ingest = prescreen_subparsers.add_parser("ingest")
+    ingest.add_argument("--nct-ids", required=True, help="comma-separated NCT ids")
+    ingest.add_argument("--out", required=True, help="output JSONL fixture path")
+    show = prescreen_subparsers.add_parser("show")
+    show.add_argument("--fixtures", default="tests/fixtures/prescreen/trials.jsonl")
     return parser
 
 
@@ -133,6 +142,28 @@ def main(argv: list[str] | None = None) -> int:
             print(f"edc-query internal export validation failed: {exc}", file=sys.stderr)
             return 2
         print(f"EDC query internal export reports written to {args.reports_dir}")
+        return 0
+    if args.command == "prescreen" and args.prescreen_command == "ingest":
+        nct_ids = [n.strip() for n in args.nct_ids.split(",") if n.strip()]
+        try:
+            recorded = record_studies(nct_ids, args.out)
+        except Exception as exc:  # network/HTTP/parse errors surface as a clean nonzero exit
+            print(f"prescreen ingest failed: {exc}", file=sys.stderr)
+            return 2
+        print(f"recorded {len(recorded)} studies to {args.out}: {', '.join(recorded)}")
+        return 0
+    if args.command == "prescreen" and args.prescreen_command == "show":
+        try:
+            trials = load_recorded_studies(args.fixtures)
+        except (OSError, ValueError) as exc:
+            print(f"prescreen show failed: {exc}", file=sys.stderr)
+            return 2
+        for trial in trials:
+            age = trial.minimum_age.years
+            print(
+                f"{trial.trial_id}  [{trial.phase or '-'}] {trial.recruitment_status or '-'}  "
+                f"min_age={age if age is not None else '-'}  {trial.title[:70]}"
+            )
         return 0
 
     print("clinique — biostatistician agent suite.")
