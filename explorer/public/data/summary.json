@@ -1,0 +1,98 @@
+[
+  {
+    "name": "ADADAS",
+    "domain": null,
+    "description": "ADAS-Cog Analysis",
+    "total_rows": 12463,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADAE",
+    "domain": null,
+    "description": "Adverse Events Analysis Dataset",
+    "total_rows": 1191,
+    "unique_subjects": 225,
+    "is_sampled": true
+  },
+  {
+    "name": "ADCIBC",
+    "domain": null,
+    "description": "CIBIC+ Analysis",
+    "total_rows": 730,
+    "unique_subjects": 236,
+    "is_sampled": false
+  },
+  {
+    "name": "ADLBC",
+    "domain": null,
+    "description": "Analysis Dataset Lab Blood Chemistry",
+    "total_rows": 37132,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADLBCPV",
+    "domain": null,
+    "description": "Analysis Dataset Lab Blood Chemistry (Previous Visit)",
+    "total_rows": 37132,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADLBH",
+    "domain": null,
+    "description": "Analysis Dataset Lab Hematology",
+    "total_rows": 24966,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADLBHPV",
+    "domain": null,
+    "description": "Analysis Dataset Lab Hematology (Previous Visit)",
+    "total_rows": 24966,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADLBHY",
+    "domain": null,
+    "description": "Analysis Dataset Lab Hy's Law",
+    "total_rows": 9954,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADNPIX",
+    "domain": null,
+    "description": "NPI-X Item Analysis Data",
+    "total_rows": 31140,
+    "unique_subjects": 254,
+    "is_sampled": true
+  },
+  {
+    "name": "ADSL",
+    "domain": null,
+    "description": "Subject-Level Analysis Dataset",
+    "total_rows": 254,
+    "unique_subjects": 254,
+    "is_sampled": false
+  },
+  {
+    "name": "ADTTE",
+    "domain": null,
+    "description": "AE Time To 1st Derm. Event Analysis",
+    "total_rows": 254,
+    "unique_subjects": 254,
+    "is_sampled": false
+  },
+  {
+    "name": "ADVS",
+    "domain": null,
+    "description": "Vital Signs Analysis Dataset",
+    "total_rows": 32139,
+    "unique_subjects": 254,
+    "is_sampled": true
+  }
+]
