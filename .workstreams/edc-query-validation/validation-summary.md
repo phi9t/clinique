@@ -31,8 +31,8 @@ Evidence:
   burden, time-delta, and stop-criteria metrics. It writes the report and exits nonzero when
   silent gates fail, including safety-risk stop criteria, and rejects string values where
   booleans are required, unknown ground-truth labels, malformed or blank evidence citations,
-  inconsistent safety-risk ground-truth/flag labels, logs with no recommendations, or negative
-  tolerance thresholds.
+  inconsistent safety-risk ground-truth/flag labels, logs with no recommendations, or
+  non-finite/negative tolerance thresholds.
 - `uv run clinique edc-query evaluate-rollout-gate --gate
   tests/fixtures/edc_query/controlled_rollout_gate.json --output
   reports/edc-query/controlled-rollout-gate.json` validates the controlled-rollout gate mechanics
@@ -68,10 +68,10 @@ Evidence:
   detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight, silent-log query-category, evidence, and
   recommendation-ID enforcement, silent evidence-citation validation, safety-label consistency,
-  signed timing metrics, and evaluation, controlled-rollout gate rate/integer-count/integer-delta
-  validation, finite-number validation, threshold-direction validation, randomization-unit
-  validation, and evaluation, approved-export import, bundled workstream verification, and report
-  serialization.
+  finite tolerance validation, signed timing metrics, and evaluation, controlled-rollout gate
+  rate/integer-count/integer-delta validation, finite-number validation, threshold-direction
+  validation, randomization-unit validation, and evaluation, approved-export import, bundled
+  workstream verification, and report serialization.
 
 ## Not Yet Proven
 

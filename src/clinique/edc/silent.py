@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from math import ceil
+from math import ceil, isfinite
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
@@ -92,6 +92,8 @@ def evaluate_silent_log(
     *,
     false_positive_tolerance_per_reviewer_week: float,
 ) -> ValidationReport:
+    if not isfinite(false_positive_tolerance_per_reviewer_week):
+        raise ValueError("false_positive_tolerance_per_reviewer_week must be finite")
     if false_positive_tolerance_per_reviewer_week < 0:
         raise ValueError("false_positive_tolerance_per_reviewer_week must be nonnegative")
     true_positives = sum(1 for entry in entries if entry.ground_truth == "true_positive")

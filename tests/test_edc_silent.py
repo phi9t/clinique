@@ -502,3 +502,21 @@ def test_evaluate_silent_log_preserves_late_recommendation_time_deltas():
     report = evaluate_silent_log((entry,), false_positive_tolerance_per_reviewer_week=1.0)
 
     assert report.metrics["median_hours_earlier"] == -24.0
+
+
+def test_evaluate_silent_log_rejects_nonfinite_false_positive_tolerance():
+    entries = load_silent_log(SILENT_LOG)
+
+    try:
+        evaluate_silent_log(entries, false_positive_tolerance_per_reviewer_week=float("nan"))
+    except ValueError as exc:
+        assert "false_positive_tolerance_per_reviewer_week must be finite" in str(exc)
+    else:
+        raise AssertionError("expected NaN tolerance rejection")
+
+    try:
+        evaluate_silent_log(entries, false_positive_tolerance_per_reviewer_week=float("inf"))
+    except ValueError as exc:
+        assert "false_positive_tolerance_per_reviewer_week must be finite" in str(exc)
+    else:
+        raise AssertionError("expected infinite tolerance rejection")

@@ -59,8 +59,8 @@
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent
       safety-risk ground-truth/flag labels, and duplicate recommendation IDs, and exits nonzero
-      for stop criteria or uncontrolled false-positive burden; negative burden tolerances are
-      rejected as invalid input.
+      for stop criteria or uncontrolled false-positive burden; non-finite or negative burden
+      tolerances are rejected as invalid input.
 - [x] Silent-log evaluator preserves signed timing deltas so late recommendations are not
       counted as neutral or early.
 - [x] Controlled-rollout gate evaluator exists, rejects incomplete gate packages, and validates
