@@ -196,6 +196,39 @@ export default function App() {
     return rows
   }, [datasetContent, searchQuery, sortColumn, sortDirection])
 
+  // Re-order columns so dataset-specific columns appear first (not demographic copies from ADSL)
+  const orderedColumns = useMemo(() => {
+    if (!datasetContent || !metadata) return []
+    const cols = [...datasetContent.columns]
+    if (selectedDatasetName === 'ADSL') return cols
+
+    const adslVars = new Set(
+      metadata.datasets['ADSL']?.variables.map(v => v.name) || []
+    )
+
+    cols.sort((a, b) => {
+      // USUBJID always first
+      if (a.name === 'USUBJID') return -1
+      if (b.name === 'USUBJID') return 1
+
+      const aInAdsl = adslVars.has(a.name)
+      const bInAdsl = adslVars.has(b.name)
+
+      // Variables unique to this dataset go first
+      if (!aInAdsl && bInAdsl) return -1
+      if (aInAdsl && !bInAdsl) return 1
+
+      // Keep original define order if both in same category
+      const aMeta = activeDatasetMeta?.variables.find(v => v.name === a.name)
+      const bMeta = activeDatasetMeta?.variables.find(v => v.name === b.name)
+      const aIdx = activeDatasetMeta?.variables.indexOf(aMeta!) ?? 0
+      const bIdx = activeDatasetMeta?.variables.indexOf(bMeta!) ?? 0
+      return aIdx - bIdx
+    })
+
+    return cols
+  }, [datasetContent, metadata, selectedDatasetName, activeDatasetMeta])
+
   // Pagination bounds
   const totalPages = Math.ceil(processedRows.length / rowsPerPage)
   const paginatedRows = useMemo(() => {
@@ -394,6 +427,12 @@ export default function App() {
                               />
                             </div>
                             
+                            {selectedDatasetName !== 'ADSL' && (
+                              <div className="text-info attr-badge" style={{ borderColor: 'rgba(6, 182, 212, 0.3)' }}>
+                                <span>Showing dataset-specific variables first (demographics at the end)</span>
+                              </div>
+                            )}
+
                             {datasetContent.is_sampled && (
                               <div className="text-warning attr-badge" style={{ borderColor: 'rgba(245, 158, 11, 0.3)' }}>
                                 <span>Note: Displaying first 1,000 observations (dataset is large)</span>
@@ -406,7 +445,7 @@ export default function App() {
                             <table className="data-table">
                               <thead>
                                 <tr>
-                                  {datasetContent.columns.map((col) => {
+                                  {orderedColumns.map((col) => {
                                     // Identify if variable is key sequence in metadata
                                     const variableMeta = activeDatasetMeta?.variables.find(v => v.name === col.name)
                                     const isKey = variableMeta?.keySequence !== null && variableMeta?.keySequence !== undefined
@@ -429,14 +468,14 @@ export default function App() {
                               <tbody>
                                 {paginatedRows.length === 0 ? (
                                   <tr>
-                                    <td colSpan={datasetContent.columns.length} className="text-center text-muted" style={{ padding: '40px' }}>
+                                    <td colSpan={orderedColumns.length} className="text-center text-muted" style={{ padding: '40px' }}>
                                       No observations found matching the search criteria.
                                     </td>
                                   </tr>
                                 ) : (
                                   paginatedRows.map((row, idx) => (
                                     <tr key={idx}>
-                                      {datasetContent.columns.map((col) => {
+                                      {orderedColumns.map((col) => {
                                         const cellVal = row[col.name]
                                         const variableMeta = activeDatasetMeta?.variables.find(v => v.name === col.name)
                                         const isKey = variableMeta?.keySequence !== null && variableMeta?.keySequence !== undefined
