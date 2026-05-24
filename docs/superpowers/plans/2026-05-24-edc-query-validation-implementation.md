@@ -10,6 +10,28 @@
 
 ---
 
+## Completion summary
+
+| Task | Scope | Status |
+|------|-------|--------|
+| Tasks 1–6: Synthetic EDC validation stack | clinique | Done |
+| Internal EDC exports + prospective runs | operational (external) | Blocked |
+
+**Status: Closed (local synthetic phase)** — verified 2026-05-24. `goal_complete` correctly remains
+false until internal/prospective checklist items in
+`.workstreams/edc-query-validation/release-readiness-checklist.md` are satisfied with real evidence.
+
+## Verification record (2026-05-24)
+
+| Check | Command | Expected |
+|-------|---------|----------|
+| Lint | `uv run ruff check src tests` | exit 0 |
+| Tests | `uv run pytest` | all pass |
+| L0–L2 reports | `uv run clinique edc-query validate …` | `local_synthetic_validation_complete: true` |
+| Bundled verifier | `uv run clinique edc-query verify-workstream …` | exit nonzero; `goal_complete: false` with documented local gate failures |
+
+---
+
 ## File Map
 
 - Create `src/clinique/edc/__init__.py`: public exports.
@@ -38,7 +60,7 @@
 - Create: `src/clinique/edc/records.py`
 - Create: `src/clinique/edc/fixtures.py`
 
-- [ ] **Step 1: Write failing fixture loader tests**
+- [x] **Step 1: Write failing fixture loader tests**
 
 ```python
 from pathlib import Path
@@ -76,25 +98,25 @@ def test_fixture_bundle_rejects_unblinded_or_phi_markers(tmp_path):
         raise AssertionError("expected PHI fixture rejection")
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest tests/test_edc_fixtures.py -q`
 
 Expected: FAIL because `clinique.edc` does not exist.
 
-- [ ] **Step 3: Add synthetic fixture JSON and provenance**
+- [x] **Step 3: Add synthetic fixture JSON and provenance**
 
 Use two snapshots, active/stale rules, historical queries, and labels for missing, inconsistent,
 impossible, duplicate, waived/no-query, and negative cases. Use synthetic IDs such as `SUBJ-001`;
 do not include names, dates of birth, free-text clinical narratives, or treatment assignments.
 
-- [ ] **Step 4: Implement immutable records and loader**
+- [x] **Step 4: Implement immutable records and loader**
 
 Implement frozen dataclasses for `EdcRecord`, `EdcSnapshot`, `EditCheckRule`, `QueryLog`,
 `QueryLabel`, and `FixtureBundle`. Parse ISO timestamps into timezone-aware UTC datetimes.
 Reject any snapshot marked `contains_phi` or `contains_unblinded`.
 
-- [ ] **Step 5: Run GREEN**
+- [x] **Step 5: Run GREEN**
 
 Run: `uv run pytest tests/test_edc_fixtures.py -q`
 
@@ -106,7 +128,7 @@ Expected: PASS.
 - Create: `tests/test_edc_replay.py`
 - Create: `src/clinique/edc/replay.py`
 
-- [ ] **Step 1: Write failing replay tests**
+- [x] **Step 1: Write failing replay tests**
 
 ```python
 from datetime import datetime, timezone
@@ -136,19 +158,19 @@ def test_evidence_at_refuses_dates_before_first_snapshot():
         raise AssertionError("expected missing snapshot failure")
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest tests/test_edc_replay.py -q`
 
 Expected: FAIL because `evidence_at` is missing.
 
-- [ ] **Step 3: Implement timestamp-gated evidence**
+- [x] **Step 3: Implement timestamp-gated evidence**
 
 Select the latest snapshot at or before the replay timestamp and active rules with effective
 dates at or before the timestamp and no retired date before the timestamp. Return structured
 source references. Do not expose any write/update/delete method.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run: `uv run pytest tests/test_edc_replay.py -q`
 
@@ -160,7 +182,7 @@ Expected: PASS.
 - Create: `tests/test_edc_detection.py`
 - Create: `src/clinique/edc/detection.py`
 
-- [ ] **Step 1: Write failing detection tests**
+- [x] **Step 1: Write failing detection tests**
 
 ```python
 from datetime import datetime, timezone
@@ -194,19 +216,19 @@ def test_candidate_queries_are_draft_only_and_evidence_backed():
     assert all(candidate.evidence for candidate in candidates)
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest tests/test_edc_detection.py -q`
 
 Expected: FAIL because detection is missing.
 
-- [ ] **Step 3: Implement minimal deterministic rules**
+- [x] **Step 3: Implement minimal deterministic rules**
 
 Support rule kinds `required_field`, `date_order`, `future_date`, and `duplicate_existing_query`.
 Generate `CandidateQuery` records with category, text, evidence refs, duplicate flag, and
 `draft_only=True`.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run: `uv run pytest tests/test_edc_detection.py -q`
 
@@ -219,7 +241,7 @@ Expected: PASS.
 - Create: `src/clinique/edc/metrics.py`
 - Create: `src/clinique/edc/reports.py`
 
-- [ ] **Step 1: Write failing metrics/report tests**
+- [x] **Step 1: Write failing metrics/report tests**
 
 ```python
 from datetime import datetime, timezone
@@ -259,20 +281,20 @@ def test_reports_are_json_serializable_and_include_ship_gates(tmp_path):
     assert '"leakage_checks_passed": true' in replay_path.read_text()
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `uv run pytest tests/test_edc_metrics_reports.py -q`
 
 Expected: FAIL because metrics/reports are missing.
 
-- [ ] **Step 3: Implement evaluation and reports**
+- [x] **Step 3: Implement evaluation and reports**
 
 Match candidates to labels by subject/form/field/category. Compute true detections, false query
 rate, duplicate query rate, category accuracy, evidence support rate, median days earlier, and
 ship-gate booleans. Reports must serialize to deterministic JSON with inputs, metrics, gates,
 and provenance-like source summaries.
 
-- [ ] **Step 4: Run GREEN and full tests**
+- [x] **Step 4: Run GREEN and full tests**
 
 Run: `uv run pytest tests/test_edc_metrics_reports.py -q`
 
@@ -295,21 +317,21 @@ Expected: PASS.
 - Create: `.workstreams/edc-query-validation/release-readiness-checklist.md`
 - Modify: `.workstreams/edc-query-validation/tracker.org`
 
-- [ ] **Step 1: Create governed planning artifacts**
+- [x] **Step 1: Create governed planning artifacts**
 
 Write the data inventory and access boundary for synthetic/local validation, label schema and
 annotation manual, silent prospective protocol, controlled rollout gate, validation summary, and
 release-readiness checklist. Distinguish completed synthetic validation from future internal data
 and prospective phases.
 
-- [ ] **Step 2: Update tracker state with evidence**
+- [x] **Step 2: Update tracker state with evidence**
 
 Mark milestones 1-4 complete for the synthetic implementation once tests and generated reports
 prove them. Leave milestones requiring internal data or prospective deployment as blocked or
 next, with explicit blockers and evidence requirements. Do not claim internal-data validation,
 silent prospective completion, or controlled rollout completion without those artifacts.
 
-- [ ] **Step 3: Verify docs**
+- [x] **Step 3: Verify docs**
 
 Run: `rg -n "TBD|PLACEHOLDER|FIXME" .workstreams/edc-query-validation docs/superpowers/plans/2026-05-24-edc-query-validation-implementation.md`
 
@@ -323,7 +345,7 @@ Expected: no matches except intentional TODO workflow state names in org heading
 - Inspect: generated reports
 - Inspect: tests and source files
 
-- [ ] **Step 1: Run complete verification**
+- [x] **Step 1: Run complete verification**
 
 Run:
 
@@ -335,7 +357,7 @@ git diff --check
 
 Expected: Ruff exits 0, pytest exits 0, diff check exits 0.
 
-- [ ] **Step 2: Requirement-by-requirement audit**
+- [x] **Step 2: Requirement-by-requirement audit**
 
 Audit every global acceptance criterion and each milestone acceptance criterion in
 `.workstreams/edc-query-validation/tracker.org`. Record whether evidence proves completion,
@@ -343,7 +365,7 @@ shows incomplete work, or is blocked by missing internal/prospective data. Do no
 goal complete unless every workstream requirement is implemented and verified or explicitly
 outside achievable local scope with user-approved acceptance.
 
-- [ ] **Step 3: Commit aligned changes**
+- [x] **Step 3: Commit aligned changes**
 
 Commit implementation and documentation in coherent chunks. Do not include unrelated uncommitted
 files unless they are part of this workstream.

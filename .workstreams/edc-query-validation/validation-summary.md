@@ -1,5 +1,9 @@
 # EDC Query Validation Summary
 
+**Status: Local phase closed (2026-05-24).** Reports regenerated via `uv run clinique edc-query validate`
+and bundled verification via `uv run clinique edc-query verify-workstream`. See
+`reports/edc-query/audit-summary.json` and `reports/edc-query/workstream-verification.json`.
+
 ## Current Evidence
 
 Local synthetic validation is implemented and verified with deterministic tests and reports.

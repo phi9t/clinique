@@ -13,7 +13,7 @@
 * Overview
 :PROPERTIES:
 :ID: edc-query-validation-overview
-:STATUS: IN-PROGRESS
+:STATUS: LOCAL-COMPLETE
 :OWNER: unassigned
 :VALIDATION: RFC-0006 L0-L4
 :ARTIFACTS: .workstreams/edc-query-validation/design.md
@@ -27,6 +27,11 @@ prospective evidence.
 
 North-star question: does the agent improve data-cleaning outcomes without increasing
 participant, data-integrity, blinding, privacy, or compliance risk?
+
+Local synthetic phase is complete (=local_synthetic_validation_complete= in
+=reports/edc-query/audit-summary.json=). =goal_complete= remains false until internal EDC
+exports and prospective validation evidence exist; see
+=.workstreams/edc-query-validation/release-readiness-checklist.md=.
 
 ** Global acceptance criteria
 - [X] No write-back path to EDC or any system of record exists in this workstream for the local
@@ -326,6 +331,31 @@ repeat silent mode, or stop.
 ** Evidence
 See =.workstreams/edc-query-validation/validation-summary.md= and
 =.workstreams/edc-query-validation/release-readiness-checklist.md=.
+
+* DONE Workstream local closeout
+:PROPERTIES:
+:ID: edc-query-validation-local-closeout
+:STATUS: DONE
+:OWNER: unassigned
+:VALIDATION: governance
+:ARTIFACTS: validation-summary.md; reports/edc-query/workstream-verification.json
+:END:
+
+** Prompt
+Close the local synthetic validation phase. Regenerate reports, run bundled verification, and
+document that operational =goal_complete= is blocked on internal/prospective evidence.
+
+** Acceptance criteria
+- [X] =uv run ruff check src tests= and =uv run pytest= pass.
+- [X] =uv run clinique edc-query validate= regenerates reports with
+      =local_synthetic_validation_complete: true=.
+- [X] =uv run clinique edc-query verify-workstream= writes consolidated evidence; known local gate
+      failures (stop criteria fixture, synthetic internal export) are documented, not overridden.
+- [X] Next phase recommendation remains: obtain internal read-only data access before silent
+      prospective or controlled rollout.
+
+** Evidence
+See =.workstreams/edc-query-validation/validation-summary.md= (Status: Local phase closed).
 
 * Backlog
 - Model-assisted query drafting after deterministic baseline is measured.
