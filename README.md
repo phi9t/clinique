@@ -4,7 +4,8 @@ Agentic tooling for regulated clinical-trial workflows — assistive agents with
 gates, not autonomous trial execution. Design docs live in [`docs/`](docs/README.md).
 
 **New here? (ML background)** Start with the [ML onboarding primer](docs/primer/README.md) —
-clinical trials explained in ML language, then a map into this repo.
+clinical trials explained in ML language, then a map into this repo. For acronyms and jargon (EDC,
+CDISC, ADaM, NCT, L0–L4), see the [terminology glossary](docs/primer/terminology-glossary.md).
 
 Capability design docs:
 

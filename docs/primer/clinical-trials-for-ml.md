@@ -5,6 +5,9 @@
 This doc builds the domain mental model in ML language. It does not describe Clinique
 implementation — see [clinique-for-ml.md](clinique-for-ml.md) for repo mapping and commands.
 
+For acronym lookups (EDC, CDISC, ADaM, ANC, PHI, L0–L4, etc.), see the
+[terminology glossary](terminology-glossary.md).
+
 ---
 
 ## 1. The simplest mental model

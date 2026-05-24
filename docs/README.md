@@ -9,7 +9,7 @@ Design and governance docs for the Clinique agent suite.
 | [ML onboarding index](primer/README.md) | Reading order for ML researchers and MLsys engineers |
 | [Clinical trials for ML](primer/clinical-trials-for-ml.md) | Domain mental model in ML language |
 | [Clinique for ML](primer/clinique-for-ml.md) | Repo map, eval harness, commands, code pointers |
-| [Terminology glossary](primer/terminology-glossary.md) | Jargon reference for prescreen, CDISC, and Clinique architecture |
+| [Terminology glossary](primer/terminology-glossary.md) | Acronyms and jargon for ML audiences: EDC, CDISC, ADaM, prescreen labels, L0–L4, three-wedge map |
 
 ## Design
 

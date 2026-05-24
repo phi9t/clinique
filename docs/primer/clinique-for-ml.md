@@ -13,8 +13,11 @@ sign off. Deterministic gates (provenance linters, replay discipline, no-write-b
 run **before** anything is treated as shippable output.
 
 The active proof-point wedge is **trial prescreening** (criterion-level judgments with evidence).
-The repo also ships biostat substrate capabilities and an EDC query validation harness that
-demonstrates the same L0–L4 evaluation pattern.
+The repo also ships biostat substrate capabilities, an **EDC query validation** harness, and a
+**CDISC/regulatory data explorer** — all using the same L0–L4 evaluation pattern.
+
+**Jargon?** See the [terminology glossary](terminology-glossary.md) — acronyms (EDC, CDISC, ADaM,
+NCT, PHI, L0–L4), prescreen labels, EDC exit codes, and a three-wedge comparison for ML audiences.
 
 ---
 
@@ -51,6 +54,35 @@ familiar ML concepts:
 **Accuracy ≠ usefulness.** Task labels (was the criterion judgment correct?) are necessary but not
 sufficient. Workflow labels (did it save coordinator time? reduce false work?) prove the agent is
 worth shipping — see [primer §1](clinical-trials-for-ml.md#1-the-simplest-mental-model).
+
+---
+
+## Three data wedges (prescreen, EDC, CDISC)
+
+If you are comparing the three data-facing capabilities in this repo, use this map. Full acronym
+definitions and CLI details are in the [terminology glossary](terminology-glossary.md).
+
+| Wedge | One-line question | ML analogue | Status | Fixtures | Explorer |
+|---|---|---|---|---|---|
+| **Prescreen** | Can we normalize public trial + patient records? | Task instances (`Trial`) + feature sets (`PatientCorpus`) | L0 **implemented** | `tests/fixtures/prescreen/` | Prescreen L0 tab |
+| **EDC** | Can we draft data-quality queries with evidence? | Rule-based anomaly detection on frozen snapshots | L0–L2 synthetic **complete** | `tests/fixtures/edc_query/` | — (JSON reports) |
+| **CDISC** | Can we browse FDA-pilot ADaM + define.xml? | Schema + analysis dataset exploration | Static JSON + UI | `tests/fixtures/realdata/` | Regulatory CDISC tab |
+
+Shared pattern: **typed records → deterministic compute → hard gate → read-only output**. Prescreen
+and EDC both use **record-and-replay** (frozen fixtures, offline CI). Prescreen has
+`export-explorer`; CDISC JSON is committed but not yet regenerable from the repo.
+
+```bash
+# Prescreen L0
+uv run clinique prescreen validate --trials tests/fixtures/prescreen/trials.jsonl
+uv run clinique prescreen export-explorer
+
+# EDC L0–L2
+uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir reports/edc-query
+
+# Explorer (both tabs)
+cd explorer && npm install && npm run dev
+```
 
 ---
 
@@ -158,10 +190,11 @@ parsers.
 | `clinique prescreen normalize-synthea` | Synthea CSV → PatientCorpus JSONL | 2 on I/O or parse failure |
 | `clinique prescreen ingest-pmc` | Record PMC-Patients sample | 2 on failure |
 | `clinique prescreen validate` | L0 conformance report | 7 when records fail vocab/leakage rules |
+| `clinique prescreen export-explorer` | Regenerate prescreen explorer JSON | 2 on failure |
 | `clinique edc-query validate` | Regenerate L0–L2 reports | 2 on validation failure |
 | `clinique edc-query verify-workstream` | Bundled gate check | 5 when `goal_complete: false` (expected locally) |
 
-EDC exit codes are documented in [CLAUDE.md](../../CLAUDE.md).
+Full EDC exit codes (0–6): [glossary §14](terminology-glossary.md#14-edc-query-validation-wedge).
 
 ---
 
@@ -196,9 +229,9 @@ Read fixture provenance cards before trusting any corpus:
 | Wedge | Domain primer | Design doc | Best ML entry point |
 |---|---|---|---|
 | **Prescreening** | [§7–8, §14](clinical-trials-for-ml.md#7-eligibility-criteria-are-the-first-great-mlagent-wedge) | [trial-prescreening.md](../design/trial-prescreening.md) | Prescreen tests + `trials.jsonl` |
-| **EDC data quality** | [§4 `DataQuery`, §5 lifecycle](clinical-trials-for-ml.md#4-the-main-entities-in-the-data-model) | [edc-query-validation.md](../design/edc-query-validation.md) | `edc-query validate` reports |
+| **EDC data quality** | [§4 `DataQuery`, §5 lifecycle](clinical-trials-for-ml.md#4-the-main-entities-in-the-data-model) | [edc-query-validation.md](../design/edc-query-validation.md) · [glossary §14](terminology-glossary.md#14-edc-query-validation-wedge) | `edc-query validate` reports |
 | **Biostat substrate** | [§9 endpoints, §10 blinding](clinical-trials-for-ml.md#9-endpoints-are-the-labels) | [biostat-agent-suite.md](../design/biostat-agent-suite.md) | Power orchestrator + provenance gate |
-| **CDISC exploration** | [§4 analysis datasets](clinical-trials-for-ml.md#4-the-main-entities-in-the-data-model) | — | [`explorer/`](../../explorer/) FDA-pilot ADaM JSON |
+| **CDISC exploration** | [§4 analysis datasets](clinical-trials-for-ml.md#4-the-main-entities-in-the-data-model) | [glossary §15 CDISC](terminology-glossary.md#15-cdisc--regulatory-data) | [`explorer/`](../../explorer/) FDA-pilot ADaM JSON |
 
 ---
 
