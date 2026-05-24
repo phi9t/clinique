@@ -83,7 +83,8 @@
 - [x] Manifest-relative export paths cannot escape the manifest directory, preserving the
       approved-export access boundary.
 - [x] Approved-export payload loaders reject missing files, invalid JSON, non-list payloads, and
-      non-object payload entries with controlled validation failures.
+      non-object payload entries with controlled validation failures that name the payload file
+      and item index.
 - [x] Approved-export payload object parsing wraps missing required fields and malformed item
       values in controlled validation failures that name the payload file and item index.
 - [x] Approved-export import failures preserve source-specific preflight diagnostics needed to

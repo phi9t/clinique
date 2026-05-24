@@ -150,6 +150,7 @@ def _read_json(path: Path) -> list[dict]:
         raise ValueError(f"invalid JSON in internal export payload: {path}") from exc
     if not isinstance(data, list):
         raise ValueError(f"{path} must contain a JSON list")
-    if not all(isinstance(item, dict) for item in data):
-        raise ValueError(f"{path} must contain JSON objects")
+    for index, item in enumerate(data):
+        if not isinstance(item, dict):
+            raise ValueError(f"{path} must contain JSON objects: item {index}")
     return data

@@ -32,9 +32,9 @@ Evidence:
   --reports-dir reports/edc-query` validates the approved-export import path on synthetic
   fixture data, resolves relative export paths from the manifest directory, rejects relative
   export paths that escape that directory, and returns a controlled validation failure for
-  missing, invalid, non-list, non-object, or malformed object export payloads. Import-time
-  preflight failures preserve source-specific diagnostics, including missing and duplicate schema
-  fields, for remediation before payload review.
+  missing, invalid, non-list, item-indexed non-object, or malformed object export payloads.
+  Import-time preflight failures preserve source-specific diagnostics, including missing and
+  duplicate schema fields, for remediation before payload review.
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces reviewer-week normalized false-positive

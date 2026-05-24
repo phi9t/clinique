@@ -271,7 +271,10 @@ def test_load_internal_export_bundle_rejects_non_object_payload_entries(tmp_path
             lock_issues_path=FIXTURES / "lock_issues.json",
         )
     except ValueError as exc:
-        assert "must contain JSON objects" in str(exc)
+        message = str(exc)
+        assert "must contain JSON objects" in message
+        assert "snapshots.json" in message
+        assert "item 0" in message
     else:
         raise AssertionError("expected non-object payload entry rejection")
 
