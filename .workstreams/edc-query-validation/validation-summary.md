@@ -16,8 +16,12 @@ Evidence:
   `.workstreams/edc-query-validation/release-readiness-checklist.md`.
 - `uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir
   reports/edc-query` regenerates the reports and audit summary from source fixtures.
+- `uv run clinique edc-query preflight-internal-data --manifest
+  .workstreams/edc-query-validation/internal-data-manifest.template.json --output
+  reports/edc-query/internal-preflight-template.json` validates the internal-data manifest
+  contract without reading PHI-bearing exports.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
-  exposure, detection, metrics, CLI execution, and report serialization.
+  exposure, detection, metrics, CLI execution, internal-data preflight, and report serialization.
 
 ## Not Yet Proven
 

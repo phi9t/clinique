@@ -4,6 +4,7 @@
 
 - Read PHI-free synthetic fixtures from `tests/fixtures/edc_query/`.
 - Read approved internal EDC exports only after owner approval and privacy review.
+- Preflight an internal data manifest without reading PHI-bearing exports.
 - Produce local validation reports under `reports/edc-query/`.
 - Generate draft candidate queries for evaluation.
 - Record provenance for snapshot ids, rule ids, replay timestamps, and reviewer state.
@@ -23,3 +24,8 @@ Every implementation artifact must preserve draft-only behavior. Any new API wit
 effects resembling `write`, `update`, `delete`, `issue_query`, or `close_query` must be reviewed
 as a potential boundary violation.
 
+Run the internal-data preflight before connecting approved exports:
+
+```bash
+uv run clinique edc-query preflight-internal-data --manifest <approved-manifest.json>
+```

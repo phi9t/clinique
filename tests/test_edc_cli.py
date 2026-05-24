@@ -3,6 +3,45 @@ import json
 from clinique.cli import main
 
 
+def _internal_manifest() -> dict[str, object]:
+    return {
+        "manifest_version": "1",
+        "generated_at": "2026-05-24T00:00:00Z",
+        "sources": [
+            {
+                "source_type": "edc_snapshots",
+                "owner": "data-management@example.test",
+                "export_path": "/approved/exports/edc_snapshots",
+                "schema_sketch": ["study_id", "subject_id"],
+                "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
+                "sensitivity": "phi",
+                "blinding_status": "blinded",
+                "read_only": True,
+            },
+            {
+                "source_type": "query_logs",
+                "owner": "data-management@example.test",
+                "export_path": "/approved/exports/query_logs",
+                "schema_sketch": ["query_id", "opened_at"],
+                "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
+                "sensitivity": "phi",
+                "blinding_status": "blinded",
+                "read_only": True,
+            },
+            {
+                "source_type": "edit_check_history",
+                "owner": "edc-build@example.test",
+                "export_path": "/approved/exports/rules",
+                "schema_sketch": ["rule_id", "effective_at"],
+                "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
+                "sensitivity": "no_phi",
+                "blinding_status": "blinded",
+                "read_only": True,
+            },
+        ],
+    }
+
+
 def test_edc_query_validate_writes_reports_and_audit_summary(tmp_path):
     reports_dir = tmp_path / "reports"
 
@@ -76,3 +115,43 @@ def test_edc_query_validate_rejects_phi_marked_fixtures(tmp_path):
     )
 
     assert exit_code == 2
+
+
+def test_edc_query_preflight_internal_data_writes_result(tmp_path):
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps(_internal_manifest()))
+    output = tmp_path / "preflight.json"
+
+    exit_code = main(
+        [
+            "edc-query",
+            "preflight-internal-data",
+            "--manifest",
+            str(manifest),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    result = json.loads(output.read_text())
+    assert result["ok"] is True
+    assert result["missing_required_sources"] == []
+
+
+def test_edc_query_preflight_internal_data_returns_nonzero_for_unready_manifest(tmp_path):
+    manifest = _internal_manifest()
+    manifest["sources"] = manifest["sources"][:1]
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    exit_code = main(
+        [
+            "edc-query",
+            "preflight-internal-data",
+            "--manifest",
+            str(path),
+        ]
+    )
+
+    assert exit_code == 3

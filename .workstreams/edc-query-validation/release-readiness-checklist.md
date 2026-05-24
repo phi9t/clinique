@@ -11,6 +11,8 @@
 - [x] CLI validation command regenerates reports and audit summary.
 - [x] Audit summary explicitly marks the overall goal incomplete until internal/prospective
       evidence exists.
+- [x] Internal-data manifest preflight command exists and validates readiness metadata without
+      reading PHI-bearing exports.
 
 ## Internal Data Validation
 

@@ -1,0 +1,45 @@
+{
+  "manifest_version": "1",
+  "generated_at": "2026-05-24T00:00:00Z",
+  "sources": [
+    {
+      "source_type": "edc_snapshots",
+      "owner": "data-management@example.test",
+      "export_path": "/approved/read-only/edc_snapshots",
+      "schema_sketch": ["study_id", "site_id", "subject_id", "form", "field", "value", "snapshot_at"],
+      "date_coverage": {
+        "start": "2026-01-01",
+        "end": "2026-03-31"
+      },
+      "sensitivity": "phi",
+      "blinding_status": "blinded",
+      "read_only": true
+    },
+    {
+      "source_type": "query_logs",
+      "owner": "data-management@example.test",
+      "export_path": "/approved/read-only/query_logs",
+      "schema_sketch": ["query_id", "subject_id", "form", "field", "opened_at", "closed_at", "resolution"],
+      "date_coverage": {
+        "start": "2026-01-01",
+        "end": "2026-03-31"
+      },
+      "sensitivity": "phi",
+      "blinding_status": "blinded",
+      "read_only": true
+    },
+    {
+      "source_type": "edit_check_history",
+      "owner": "edc-build@example.test",
+      "export_path": "/approved/read-only/edit_check_history",
+      "schema_sketch": ["rule_id", "effective_at", "retired_at", "logic", "query_category"],
+      "date_coverage": {
+        "start": "2026-01-01",
+        "end": "2026-03-31"
+      },
+      "sensitivity": "no_phi",
+      "blinding_status": "blinded",
+      "read_only": true
+    }
+  ]
+}
