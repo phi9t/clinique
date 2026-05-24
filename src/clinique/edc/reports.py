@@ -5,7 +5,14 @@ from datetime import datetime, timezone
 
 from clinique.edc.detection import detect_candidate_queries
 from clinique.edc.metrics import evaluate_candidates
-from clinique.edc.records import EvaluationMetrics, FixtureBundle, SourceRef, ValidationReport
+from clinique.edc.records import (
+    CandidateQuery,
+    DatabaseLockIssue,
+    EvaluationMetrics,
+    FixtureBundle,
+    SourceRef,
+    ValidationReport,
+)
 from clinique.edc.replay import evidence_at
 
 
@@ -57,6 +64,7 @@ def build_retrospective_report(bundle: FixtureBundle) -> ValidationReport:
     leakage_checks_passed = True
     total_true = 0
     total_false = 0
+    lock_issue_early_detection_count = 0
 
     for snapshot in bundle.snapshots:
         evidence = evidence_at(bundle, snapshot.snapshot_at)
@@ -64,6 +72,9 @@ def build_retrospective_report(bundle: FixtureBundle) -> ValidationReport:
         metrics = evaluate_candidates(candidates, bundle.labels, replayed_at=evidence.replayed_at)
         total_true += metrics.true_discrepancies_detected
         total_false += metrics.false_queries
+        lock_issue_early_detection_count += _count_lock_issues_found_early(
+            candidates, bundle.lock_issues, evidence.replayed_at
+        )
         run_leakage_ok = all(
             _source_ok(source, evidence.replayed_at)
             for candidate in candidates
@@ -89,10 +100,28 @@ def build_retrospective_report(bundle: FixtureBundle) -> ValidationReport:
         metrics={
             "true_discrepancies_detected": total_true,
             "false_queries": total_false,
+            "false_alerts_per_true_discrepancy": total_false / total_true if total_true else 0.0,
+            "database_lock_issue_early_detection_count": lock_issue_early_detection_count,
         },
         gates={
             "no_write_back": True,
             "leakage_checks_passed": leakage_checks_passed,
             "timestamped_replay": True,
         },
+    )
+
+
+def _count_lock_issues_found_early(
+    candidates: tuple[CandidateQuery, ...],
+    lock_issues: tuple[DatabaseLockIssue, ...],
+    replayed_at: datetime,
+) -> int:
+    candidate_keys = {
+        (candidate.subject_id, candidate.form, candidate.field) for candidate in candidates
+    }
+    return sum(
+        1
+        for issue in lock_issues
+        if (issue.subject_id, issue.form, issue.field) in candidate_keys
+        and replayed_at < issue.discovered_at
     )

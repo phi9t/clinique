@@ -36,3 +36,5 @@ def test_reports_are_json_serializable_and_include_ship_gates(tmp_path):
 
     assert '"no_write_back": true' in offline_path.read_text()
     assert '"leakage_checks_passed": true' in replay_path.read_text()
+    assert '"database_lock_issue_early_detection_count": 1' in replay_path.read_text()
+    assert '"false_alerts_per_true_discrepancy": 0.0' in replay_path.read_text()

@@ -3,6 +3,7 @@
 from clinique.edc.fixtures import load_fixture_bundle
 from clinique.edc.records import (
     CandidateQuery,
+    DatabaseLockIssue,
     EditCheckRule,
     EdcRecord,
     EdcSnapshot,
@@ -17,6 +18,7 @@ from clinique.edc.replay import evidence_at
 
 __all__ = [
     "CandidateQuery",
+    "DatabaseLockIssue",
     "EditCheckRule",
     "EdcRecord",
     "EdcSnapshot",

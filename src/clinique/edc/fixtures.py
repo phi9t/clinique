@@ -3,7 +3,14 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from clinique.edc.records import EditCheckRule, EdcSnapshot, FixtureBundle, QueryLabel, QueryLog
+from clinique.edc.records import (
+    DatabaseLockIssue,
+    EditCheckRule,
+    EdcSnapshot,
+    FixtureBundle,
+    QueryLabel,
+    QueryLog,
+)
 
 
 def _read_json(path: Path) -> list[dict]:
@@ -35,4 +42,10 @@ def load_fixture_bundle(path: str | Path) -> FixtureBundle:
             QueryLog.from_json(raw) for raw in _read_json(fixture_dir / "query_logs.json")
         ),
         labels=tuple(QueryLabel.from_json(raw) for raw in _read_json(fixture_dir / "labels.json")),
+        lock_issues=tuple(
+            DatabaseLockIssue.from_json(raw)
+            for raw in _read_json(fixture_dir / "lock_issues.json")
+        )
+        if (fixture_dir / "lock_issues.json").exists()
+        else (),
     )

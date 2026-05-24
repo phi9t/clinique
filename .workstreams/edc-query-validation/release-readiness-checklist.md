@@ -1,0 +1,32 @@
+# EDC Query Release Readiness Checklist
+
+## Synthetic Validation
+
+- [x] PHI-free fixtures exist.
+- [x] Fixture provenance exists.
+- [x] Timestamp gating is tested.
+- [x] Draft-only/no-write boundary is tested.
+- [x] Offline report exists.
+- [x] Retrospective replay report exists.
+
+## Internal Data Validation
+
+- [ ] Internal EDC snapshots approved and connected.
+- [ ] Internal query logs approved and connected.
+- [ ] Internal edit-check history approved and connected.
+- [ ] Internal L1 offline report generated.
+- [ ] Internal L2 retrospective replay report generated.
+
+## Prospective Validation
+
+- [ ] Silent prospective protocol approved.
+- [ ] Silent prospective run completed.
+- [ ] Controlled rollout gate approved.
+- [ ] Human approval path validated.
+
+## Ship Gate
+
+Do not ship until internal and prospective validation show earlier or lower-effort true
+discrepancy detection, controlled false and duplicate query burden, evidence-backed query text,
+complete auditability, and no write-back without named human approval.
+

@@ -169,11 +169,42 @@ class QueryLabel:
 
 
 @dataclass(frozen=True)
+class DatabaseLockIssue:
+    issue_id: str
+    study_id: str
+    site_id: str
+    subject_id: str
+    form: str
+    field: str
+    severity: str
+    discovered_at: datetime
+    description: str
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any]) -> "DatabaseLockIssue":
+        discovered_at = parse_timestamp(raw["discovered_at"])
+        if discovered_at is None:
+            raise ValueError("lock issue discovered_at is required")
+        return cls(
+            issue_id=raw["issue_id"],
+            study_id=raw["study_id"],
+            site_id=raw["site_id"],
+            subject_id=raw["subject_id"],
+            form=raw["form"],
+            field=raw["field"],
+            severity=raw["severity"],
+            discovered_at=discovered_at,
+            description=raw["description"],
+        )
+
+
+@dataclass(frozen=True)
 class FixtureBundle:
     snapshots: tuple[EdcSnapshot, ...]
     rules: tuple[EditCheckRule, ...]
     query_logs: tuple[QueryLog, ...]
     labels: tuple[QueryLabel, ...]
+    lock_issues: tuple[DatabaseLockIssue, ...] = ()
 
 
 @dataclass(frozen=True)

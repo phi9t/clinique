@@ -1,0 +1,13 @@
+[
+  {
+    "issue_id": "LOCK-001",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-01",
+    "subject_id": "SUBJ-002",
+    "form": "Vitals",
+    "field": "visit_date",
+    "severity": "major",
+    "discovered_at": "2026-03-12T10:00:00Z",
+    "description": "Future visit date remained open at lock readiness review."
+  }
+]

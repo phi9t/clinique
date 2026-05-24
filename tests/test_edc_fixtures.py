@@ -20,6 +20,7 @@ def test_load_fixture_bundle_has_timestamped_snapshots_and_labels():
         "duplicate",
     }
     assert all(not snapshot.contains_phi for snapshot in bundle.snapshots)
+    assert [issue.issue_id for issue in bundle.lock_issues] == ["LOCK-001"]
 
 
 def test_fixture_bundle_rejects_unblinded_or_phi_markers(tmp_path):

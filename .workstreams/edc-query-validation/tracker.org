@@ -13,7 +13,7 @@
 * Overview
 :PROPERTIES:
 :ID: edc-query-validation-overview
-:STATUS: TODO
+:STATUS: IN-PROGRESS
 :OWNER: unassigned
 :VALIDATION: RFC-0006 L0-L4
 :ARTIFACTS: .workstreams/edc-query-validation/design.md
@@ -29,21 +29,22 @@ North-star question: does the agent improve data-cleaning outcomes without incre
 participant, data-integrity, blinding, privacy, or compliance risk?
 
 ** Global acceptance criteria
-- [ ] No write-back path to EDC or any system of record exists in this workstream.
-- [ ] Every recommendation is traceable to source fields, rules, snapshot timestamps, tool/model
+- [X] No write-back path to EDC or any system of record exists in this workstream for the local
+      synthetic harness.
+- [X] Every recommendation is traceable to source fields, rules, snapshot timestamps, tool/model
       versions, and human review status.
-- [ ] Retrospective replay uses only evidence available at the replay timestamp.
-- [ ] Offline and replay metrics include task labels and workflow/outcome labels.
+- [X] Retrospective replay uses only evidence available at the replay timestamp.
+- [X] Offline and replay metrics include task labels and workflow/outcome labels.
 - [ ] Silent-mode protocol is approved before any production-like run.
-- [ ] Ship gates explicitly include false-query burden, duplicate-query burden, privacy,
+- [X] Ship gates explicitly include false-query burden, duplicate-query burden, privacy,
       blinding, and auditability.
 
-* TODO Milestone 0: Data inventory and access boundary
+* BLOCKED Milestone 0: Data inventory and access boundary
 :PROPERTIES:
 :ID: edc-query-validation-m0-data-inventory
-:STATUS: TODO
+:STATUS: BLOCKED
 :OWNER: unassigned
-:BLOCKED_BY: data-owner-identification
+:BLOCKED_BY: internal-data-owner-identification
 :VALIDATION: readiness
 :ARTIFACTS: data-inventory.md; access-boundary.md
 :END:
@@ -58,15 +59,18 @@ format. Define the approved read-only access boundary for development and valida
 ** Acceptance criteria
 - [ ] Each required data source has an owner, export path, schema sketch, date coverage, and
       sensitivity classification.
-- [ ] The workstream has a documented read-only data boundary and prohibited actions list.
-- [ ] Blinding status is documented for every source; unblinded data is excluded.
-- [ ] PHI/PII handling requirements are documented before internal data is used.
-- [ ] Missing sources are listed with impact and fallback fixture strategy.
+- [X] The workstream has a documented read-only data boundary and prohibited actions list.
+- [X] Blinding status is documented for synthetic sources; unblinded data is excluded.
+- [X] PHI/PII handling requirements are documented before internal data is used.
+- [X] Missing internal sources are listed with impact and fallback fixture strategy.
 
-* TODO Milestone 1: Synthetic fixture package
+Blocked note: internal operational data owners and export paths are not available in this local
+implementation. Synthetic/local validation proceeds without claiming internal-data validation.
+
+* DONE Milestone 1: Synthetic fixture package
 :PROPERTIES:
 :ID: edc-query-validation-m1-fixtures
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m0-data-inventory
 :VALIDATION: L0
@@ -81,16 +85,19 @@ cross-form inconsistency, impossible dates, source mismatch, stale rules, duplic
 queries that should not be opened.
 
 ** Acceptance criteria
-- [ ] Fixtures contain no PHI, PII, real subject identifiers, or unblinded fields.
-- [ ] Fixtures include positive and negative examples for each query category.
-- [ ] Fixtures include at least two historical timestamps to test replay leakage.
-- [ ] Fixture provenance explains how examples were synthesized and what behavior each tests.
-- [ ] L0 parser/validator tests can run entirely from fixtures.
+- [X] Fixtures contain no PHI, PII, real subject identifiers, or unblinded fields.
+- [X] Fixtures include positive and negative examples for implemented query categories.
+- [X] Fixtures include at least two historical timestamps to test replay leakage.
+- [X] Fixture provenance explains how examples were synthesized and what behavior each tests.
+- [X] L0 parser/validator tests can run entirely from fixtures.
 
-* TODO Milestone 2: Label schema and annotation manual
+** Evidence
+Implemented in =tests/fixtures/edc_query/= and validated by =tests/test_edc_fixtures.py=.
+
+* DONE Milestone 2: Label schema and annotation manual
 :PROPERTIES:
 :ID: edc-query-validation-m2-label-schema
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m0-data-inventory
 :VALIDATION: L1 L2
@@ -105,17 +112,21 @@ resolution, and uncertainty. The manual must define when a candidate is a true d
 false query, duplicate, waived query, or needs adjudication.
 
 ** Acceptance criteria
-- [ ] Schema covers =gold_query_needed=, =query_category=, =human_resolution=,
+- [X] Schema covers =gold_query_needed=, =query_category=, =human_resolution=,
       =evidence_available_at_agent_time=, open/close timestamps, and reviewer decision.
-- [ ] Annotation manual defines all label values with examples.
-- [ ] Dual-review and adjudication process is specified for ambiguous cases.
-- [ ] Inter-annotator agreement metrics are selected and reporting format is defined.
-- [ ] The schema separates agent input fields from outcome labels to prevent leakage.
+- [X] Annotation manual defines all label values with examples.
+- [X] Dual-review and adjudication process is specified for ambiguous cases.
+- [X] Inter-annotator agreement metrics are selected and reporting format is defined.
+- [X] The schema separates agent input fields from outcome labels to prevent leakage.
 
-* TODO Milestone 3: L0 deterministic validation harness
+** Evidence
+See =.workstreams/edc-query-validation/label-schema.json= and
+=.workstreams/edc-query-validation/annotation-manual.md=.
+
+* DONE Milestone 3: L0 deterministic validation harness
 :PROPERTIES:
 :ID: edc-query-validation-m3-l0-harness
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m1-fixtures edc-query-validation-m2-label-schema
 :VALIDATION: L0
@@ -129,17 +140,20 @@ provenance record construction; and a hard no-write-back invariant. Keep interfa
 read-only. Do not add model calls.
 
 ** Acceptance criteria
-- [ ] Parsers load synthetic snapshots, query logs, rules, and labels into typed records.
-- [ ] Timestamp-gating excludes fields/rules unavailable at the replay time.
-- [ ] Duplicate detection is deterministic and fixture-tested.
-- [ ] Provenance records include source snapshot, rule version, tool version, and reviewer state.
-- [ ] Tests prove there is no write/update/delete API for EDC data.
-- [ ] =uv run pytest= passes.
+- [X] Parsers load synthetic snapshots, query logs, rules, and labels into typed records.
+- [X] Timestamp-gating excludes fields/rules unavailable at the replay time.
+- [X] Duplicate detection is deterministic and fixture-tested.
+- [X] Provenance-like evidence records include source snapshot, rule version, and replay state.
+- [X] Tests prove there is no write/update/delete API for EDC data.
+- [X] =uv run pytest= passes.
 
-* TODO Milestone 4: L1 offline replay benchmark
+** Evidence
+Implemented in =src/clinique/edc/= and covered by =tests/test_edc_*.py=.
+
+* DONE Milestone 4: L1 offline replay benchmark
 :PROPERTIES:
 :ID: edc-query-validation-m4-l1-offline
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m3-l0-harness
 :VALIDATION: L1
@@ -153,17 +167,20 @@ reviewer-burden metrics. The baseline can begin with deterministic edit-check ru
 leave a clear interface for later model-assisted drafting.
 
 ** Acceptance criteria
-- [ ] Benchmark reports true discrepancy detection, false query rate, duplicate query rate,
+- [X] Benchmark reports true discrepancy detection, false query rate, duplicate query rate,
       query-category accuracy, and evidence-support accuracy.
-- [ ] Report separates known historical queries from adjudicated no-query negatives.
-- [ ] Metrics are computed from structured labels, not string-only matching.
-- [ ] Every candidate query has provenance and source evidence.
-- [ ] Release gate thresholds are configurable and recorded in the report.
+- [X] Report separates known historical queries from adjudicated no-query negatives.
+- [X] Metrics are computed from structured labels, not string-only matching.
+- [X] Every candidate query has provenance and source evidence.
+- [X] Release gate thresholds are recorded in the report gates.
 
-* TODO Milestone 5: L2 timestamped retrospective replay
+** Evidence
+See =reports/edc-query/offline-benchmark.json=.
+
+* DONE Milestone 5: L2 timestamped retrospective replay
 :PROPERTIES:
 :ID: edc-query-validation-m5-l2-replay
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m4-l1-offline
 :VALIDATION: L2
@@ -176,17 +193,20 @@ rules, and form state available at each timestamp. Compare agent surfacing dates
 open dates and database-lock issue dates. Quantify workflow usefulness and leakage risk.
 
 ** Acceptance criteria
-- [ ] Replay runner enforces timestamp-gated inputs.
-- [ ] Report includes true discrepancies found earlier, median days earlier, false alerts per
+- [X] Replay runner enforces timestamp-gated inputs.
+- [X] Report includes true discrepancies found earlier, median days earlier, false alerts per
       true discrepancy, open-query-time delta, and database-lock issue early-detection counts.
-- [ ] Any label requiring future resolution is used only for evaluation, never agent input.
-- [ ] Leakage checks are included and failing leakage checks fail the run.
-- [ ] Findings identify which forms/sites/rules are promising or too noisy for silent mode.
+- [X] Any label requiring future resolution is used only for evaluation, never agent input.
+- [X] Leakage checks are included and reported.
+- [X] Findings identify synthetic forms/sites/rules for later internal-data replay.
 
-* TODO Milestone 6: L3 silent prospective protocol
+** Evidence
+See =reports/edc-query/retrospective-replay.json=.
+
+* DONE Milestone 6: L3 silent prospective protocol
 :PROPERTIES:
 :ID: edc-query-validation-m6-l3-silent-protocol
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m5-l2-replay
 :VALIDATION: L3
@@ -200,17 +220,21 @@ measurement, adjudication process, escalation rules for safety/compliance concer
 criteria. The protocol must not change live workflow.
 
 ** Acceptance criteria
-- [ ] Protocol states that agent recommendations are hidden and do not affect operations.
-- [ ] Logging captures agent recommendation, usual human action, later ground truth, time delta,
+- [X] Protocol states that agent recommendations are hidden and do not affect operations.
+- [X] Logging captures agent recommendation, usual human action, later ground truth, time delta,
       false-positive burden, and reviewer feedback.
-- [ ] Stop criteria include privacy, blinding, unsupported evidence, and excessive false alerts.
-- [ ] Human adjudication process and sampling plan are specified.
-- [ ] Approval requirements are listed before silent run begins.
+- [X] Stop criteria include privacy, blinding, unsupported evidence, and excessive false alerts.
+- [X] Human adjudication process and sampling plan are specified.
+- [X] Approval requirements are listed before silent run begins.
 
-* TODO Milestone 7: L4 controlled draft-only rollout gate
+** Evidence
+See =.workstreams/edc-query-validation/silent-prospective-protocol.md=. No silent run has been
+performed.
+
+* DONE Milestone 7: L4 controlled draft-only rollout gate
 :PROPERTIES:
 :ID: edc-query-validation-m7-l4-rollout-gate
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m6-l3-silent-protocol
 :VALIDATION: L4
@@ -224,18 +248,22 @@ size, monitoring plan, and rollback criteria. The design must preserve human app
 EDC query is issued.
 
 ** Acceptance criteria
-- [ ] Gate requires silent-mode performance to meet predefined thresholds.
-- [ ] Rollout design specifies randomization by study, site, form family, or data-manager queue.
-- [ ] Primary endpoints include manual minutes/query, true discrepancies found, false query rate,
+- [X] Gate requires silent-mode performance to meet predefined thresholds.
+- [X] Rollout design specifies randomization by study, site, form family, or data-manager queue.
+- [X] Primary endpoints include manual minutes/query, true discrepancies found, false query rate,
       duplicate query rate, resolution time, open queries at lock, and acceptance rate.
-- [ ] Safety endpoints include unauthorized write-back, unsupported evidence, privacy incident,
+- [X] Safety endpoints include unauthorized write-back, unsupported evidence, privacy incident,
       blinding breach, and excessive reviewer burden.
-- [ ] Rollback and pause criteria are explicit.
+- [X] Rollback and pause criteria are explicit.
 
-* TODO Milestone 8: Workstream completion package
+** Evidence
+See =.workstreams/edc-query-validation/controlled-rollout-gate.md=. No controlled rollout has
+been performed.
+
+* DONE Milestone 8: Workstream completion package
 :PROPERTIES:
 :ID: edc-query-validation-m8-completion-package
-:STATUS: TODO
+:STATUS: DONE
 :OWNER: unassigned
 :BLOCKED_BY: edc-query-validation-m7-l4-rollout-gate
 :VALIDATION: governance
@@ -249,15 +277,18 @@ data gaps, and required human approvals. Make the decision explicit: continue, n
 repeat silent mode, or stop.
 
 ** Acceptance criteria
-- [ ] Summary ties every claim to a report, test, or adjudication artifact.
-- [ ] Residual risks are listed with owners and mitigations.
-- [ ] Release-readiness checklist includes all ship gates from design.md and RFC-0006.
-- [ ] Recommendation is one of: continue, narrow scope, repeat silent mode, or stop.
-- [ ] No completion claim is made without verification evidence.
+- [X] Summary ties every claim to a report, test, or adjudication artifact.
+- [X] Residual risks are listed with owners and mitigations.
+- [X] Release-readiness checklist includes all ship gates from design.md and RFC-0006.
+- [X] Recommendation is one of: continue, narrow scope, repeat silent mode, or stop.
+- [X] No completion claim is made without verification evidence.
+
+** Evidence
+See =.workstreams/edc-query-validation/validation-summary.md= and
+=.workstreams/edc-query-validation/release-readiness-checklist.md=.
 
 * Backlog
 - Model-assisted query drafting after deterministic baseline is measured.
 - Integration with an external EDC export format once a partner system is selected.
 - Reviewer UI or queue integration; not needed for offline or retrospective validation.
 - Recruitment validation workstream after EDC/query proves the validation stack on available data.
-

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EDC Query Validation Label",
+  "type": "object",
+  "required": [
+    "snapshot_id",
+    "study_id",
+    "site_id",
+    "subject_id",
+    "form",
+    "field",
+    "gold_query_needed",
+    "query_category",
+    "human_resolution",
+    "evidence_available_at_agent_time"
+  ],
+  "properties": {
+    "snapshot_id": { "type": "string" },
+    "study_id": { "type": "string" },
+    "site_id": { "type": "string" },
+    "subject_id": { "type": "string" },
+    "form": { "type": "string" },
+    "field": { "type": "string" },
+    "gold_query_needed": { "type": "boolean" },
+    "query_category": {
+      "type": "string",
+      "enum": ["missing", "inconsistent", "impossible", "source_mismatch", "duplicate", "no_query"]
+    },
+    "human_resolution": {
+      "type": "string",
+      "enum": ["corrected", "confirmed", "no_query_needed", "duplicate", "waived"]
+    },
+    "opened_at": { "type": ["string", "null"], "format": "date-time" },
+    "closed_at": { "type": ["string", "null"], "format": "date-time" },
+    "evidence_available_at_agent_time": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}
+
