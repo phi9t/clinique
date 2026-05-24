@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
-import { REPO_HOME } from './lib/assets'
+import { REPO_HOME, logoMarkUrl } from './lib/assets'
 import CdiscExplorer from './cdisc/CdiscExplorer'
 import PrescreenExplorer from './prescreen/PrescreenExplorer'
 
@@ -28,7 +28,16 @@ export default function App() {
               <ArrowLeft size={16} aria-hidden="true" />
               <span>Back to Clinique Suite</span>
             </a>
-            <h1>Clinique Dataset Explorer</h1>
+            <div className="header-title-row">
+              <img
+                src={logoMarkUrl()}
+                alt="Clinique"
+                className="header-logo"
+                width={32}
+                height={32}
+              />
+              <h1>Clinique Dataset Explorer</h1>
+            </div>
             <p>
               {family === 'cdisc'
                 ? 'FDA-pilot CDISC ADaM datasets & metadata validation dashboard'

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" role="img" aria-label="Clinique">
+  <defs>
+    <linearGradient id="shield" x1="4" y1="4" x2="52" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366f1"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- Mark (scaled from 48x48) -->
+  <g transform="translate(4 8) scale(1)">
+    <path
+      fill="none"
+      stroke="url(#shield)"
+      stroke-width="2.5"
+      stroke-linejoin="round"
+      d="M24 4 L40 12 V26 C40 34.5 33 40.5 24 44 C15 40.5 8 34.5 8 26 V12 Z"
+    />
+    <polyline
+      fill="none"
+      stroke="#6366f1"
+      stroke-width="2.25"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      points="14,30 20,26 26,28 34,18"
+    />
+    <circle cx="34" cy="18" r="2.75" fill="#06b6d4"/>
+  </g>
+  <!-- Wordmark -->
+  <text
+    x="72"
+    y="42"
+    font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif"
+    font-size="32"
+    font-weight="700"
+    fill="#111827"
+    letter-spacing="-0.5"
+  >Clinique</text>
+</svg>

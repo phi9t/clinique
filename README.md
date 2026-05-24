@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="Clinique" width="320">
+</p>
+
 # Clinique
 
 Agentic tooling for regulated clinical-trial workflows — assistive agents with deterministic
@@ -123,6 +127,8 @@ npm run build:pages
 ```
 
 **One-time setup:** In the GitHub repo, go to **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**. Pushes to `main` that touch `explorer/` trigger an automatic deploy via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
+
+**Repo social card (optional):** Upload [`docs/assets/social-preview.png`](docs/assets/social-preview.png) under **Settings → General → Social preview** so the repository card on GitHub.com shows the Clinique brand.
 
 Regenerate prescreen explorer JSON from committed fixtures:
 

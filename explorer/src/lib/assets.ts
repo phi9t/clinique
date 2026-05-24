@@ -4,3 +4,7 @@ export function dataUrl(path: string): string {
   const clean = path.replace(/^\//, '')
   return `${import.meta.env.BASE_URL}${clean}`
 }
+
+export function logoMarkUrl(): string {
+  return dataUrl('logo-mark.svg')
+}
