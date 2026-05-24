@@ -50,10 +50,10 @@ Evidence:
   internal/prospective blockers remain.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
   exposure, duplicate-query timestamp gating, study/site matching, and query-log provenance,
-  typed privacy/blinding and label booleans, schema enum enforcement for query categories and
-  human resolutions, required replay timestamps, query/label open-close chronology,
-  study/site-scoped task and workflow metric attribution, detection, metrics, CLI execution,
-  internal-data preflight, silent-log evaluation, controlled-rollout gate evaluation,
+  typed privacy/blinding and label booleans, schema enum enforcement for query categories,
+  query-log status, and human resolutions, required replay timestamps, query/label open-close
+  chronology, study/site-scoped task and workflow metric attribution, detection, metrics, CLI
+  execution, internal-data preflight, silent-log evaluation, controlled-rollout gate evaluation,
   approved-export import, bundled workstream verification, and report serialization.
 
 ## Not Yet Proven

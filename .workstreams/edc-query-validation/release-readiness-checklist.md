@@ -8,8 +8,8 @@
 - [x] Draft-only/no-write boundary is tested.
 - [x] Duplicate-query detection excludes future query logs, matches by study/site identity, and
       cites historical query-log evidence.
-- [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans and
-      schema-defined query category/resolution enums.
+- [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans plus
+      schema-defined query category, status, and resolution enums.
 - [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.
 - [x] Query-log and label loaders reject impossible open/close timestamp chronology.
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,

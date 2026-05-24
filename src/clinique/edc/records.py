@@ -21,6 +21,7 @@ ALLOWED_HUMAN_RESOLUTIONS = {
     "duplicate",
     "waived",
 }
+ALLOWED_QUERY_LOG_STATUSES = {"open", "closed"}
 
 
 def parse_timestamp(value: str | None) -> datetime | None:
@@ -192,8 +193,16 @@ class QueryLog:
             ),
             opened_at=opened_at,
             closed_at=closed_at,
-            status=raw["status"],
-            resolution=raw["resolution"],
+            status=require_one_of(
+                "query log status",
+                raw["status"],
+                ALLOWED_QUERY_LOG_STATUSES,
+            ),
+            resolution=require_one_of(
+                "query log resolution",
+                raw["resolution"],
+                ALLOWED_HUMAN_RESOLUTIONS,
+            ),
         )
 
 
