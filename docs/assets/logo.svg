@@ -4,6 +4,10 @@
       <stop stop-color="#6366f1"/>
       <stop offset="1" stop-color="#8b5cf6"/>
     </linearGradient>
+    <linearGradient id="wordmark" x1="72" y1="16" x2="280" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a5b4fc"/>
+      <stop offset="1" stop-color="#c084fc"/>
+    </linearGradient>
   </defs>
   <!-- Mark (scaled from 48x48) -->
   <g transform="translate(4 8) scale(1)">
@@ -31,7 +35,7 @@
     font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif"
     font-size="32"
     font-weight="700"
-    fill="#111827"
+    fill="url(#wordmark)"
     letter-spacing="-0.5"
   >Clinique</text>
 </svg>
