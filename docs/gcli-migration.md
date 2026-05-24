@@ -3,7 +3,7 @@
 If you are an existing Gemini CLI user looking to migrate your workflow to Antigravity CLI, you have come to the right place. The guide below will help you get familiar with and up and running quickly in Antigravity CLI.
 
 > [!NOTE]
-> **TL;DR:** Antigravity CLI supports the majority of features from Gemini CLI. While there is not 100% feature parity, workflow defining features like Gemini CLI extensions (Antigravity plugins), Agent Skills, MCP servers, hooks, and subagents are all supported in Antigravity CLI.
+> **TL;DR:** Antigravity CLI supports the majority of features from Gemini CLI. While there is not 100% feature parity, workflow-defining features like Gemini CLI extensions (Antigravity plugins), Agent Skills, MCP servers, hooks, and subagents are all supported in Antigravity CLI.
 
 On the first launch of Antigravity CLI, you should see Migration Options where you can choose to migrate your existing Gemini CLI extensions to the equivalent Antigravity Plugins.
 
@@ -57,7 +57,7 @@ Workspace-specific skills for Antigravity CLI are stored in `.agents/skills`, wh
 
 ## MCP Servers
 
-Antigravity CLI supports both local and remote MCP servers and provides the same `/mcp` command to manage them. The main difference from Gemini CLI is the file location where mcpServers are defined.
+Antigravity CLI supports both local and remote MCP servers and provides the same `/mcp` command to manage them. The main difference from Gemini CLI is the file location where `mcpServers` are defined.
 
 Antigravity and Antigravity CLI store MCP server configurations in a distinct `mcp_config.json` file, whereas Gemini CLI stores them inline in your `settings.json`.
 
@@ -68,3 +68,16 @@ Antigravity and Antigravity CLI store MCP server configurations in a distinct `m
 | :--- | :--- | :--- |
 | **Location** | Global: `~/.gemini/settings.json`<br>Workspace: `.gemini/settings.json` | Global: `~/.gemini/antigravity-cli/mcp_config.json`<br>Workspace: `.agents/mcp_config.json` |
 | **Management** | `/mcp` | `/mcp` |
+
+---
+
+## Automated migration
+
+An Antigravity CLI skill automates MCP config conversion and skills relocation:
+
+```bash
+python3 ~/.gemini/antigravity-cli/skills/gemini-cli-migration/scripts/migrate.py
+agy plugin import gemini
+```
+
+See the `gemini-cli-migration` skill at `~/.gemini/antigravity-cli/skills/gemini-cli-migration/` for the full workflow.

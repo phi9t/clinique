@@ -1,7 +1,9 @@
 # Design Spec: Gemini CLI to Antigravity CLI Migration
 
 **Date**: 2026-05-24
-**Status**: Proposed
+**Status**: Implemented
+
+The clinique deliverable is `docs/gcli-migration.md`. The `gemini-cli-migration` skill lives outside this repo at `~/.gemini/antigravity-cli/skills/gemini-cli-migration/`.
 
 ## 1. Goal
 Add the official Gemini CLI (`gcli`) migration documentation to `docs/gcli-migration.md` and create a reusable Antigravity CLI skill to automate and guide the installation/configuration of tools, skills, and MCPs designed for Gemini CLI into the Antigravity CLI (`agy`).

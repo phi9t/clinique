@@ -10,12 +10,23 @@
 
 ---
 
+## Completion summary
+
+| Task | Owner repo | Status |
+|------|------------|--------|
+| Task 1: Migration documentation | clinique | Done (`6b3c3a2`, polished in follow-up) |
+| Task 2–5: Skill init, script, SKILL.md, validation | `~/.gemini/antigravity-cli` | Done (external) |
+
+clinique scope is complete after Task 1 polish and this plan update.
+
+---
+
 ### Task 1: Update Migration Documentation
 
 **Files:**
 - Modify: `docs/gcli-migration.md`
 
-- [ ] **Step 1: Write migration documentation**
+- [x] **Step 1: Write migration documentation**
 
 Write the official documentation scraped from `https://antigravity.google/docs/gcli-migration` with site chrome removed.
 
@@ -92,7 +103,7 @@ Antigravity and Antigravity CLI store MCP server configurations in a distinct `m
 | **Management** | `/mcp` | `/mcp` |
 ```
 
-- [ ] **Step 2: Commit documentation changes**
+- [x] **Step 2: Commit documentation changes**
 
 ```bash
 git add docs/gcli-migration.md
@@ -103,10 +114,12 @@ git commit -m "docs: add gemini-cli migration guide"
 
 ### Task 2: Initialize new Skill
 
+> **Note:** Executed in `~/.gemini/antigravity-cli`, not in clinique.
+
 **Files:**
 - Create: `/Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/`
 
-- [ ] **Step 1: Run init_skill.py**
+- [x] **Step 1: Run init_skill.py**
 
 Run:
 ```bash
@@ -115,7 +128,7 @@ python3 /Users/phi9t/.gemini/antigravity-cli/skills/skill-creator/scripts/init_s
 
 Expected: Command runs successfully, creating the skill folder, YAML frontmatter, and `agents/openai.yaml`.
 
-- [ ] **Step 2: Commit initialized skill**
+- [x] **Step 2: Commit initialized skill**
 
 ```bash
 git add /Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/
@@ -126,10 +139,12 @@ git commit -m "feat(skill): initialize gemini-cli-migration skill folder"
 
 ### Task 3: Implement Migration Script
 
+> **Note:** Executed in `~/.gemini/antigravity-cli`, not in clinique.
+
 **Files:**
 - Create: `/Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/scripts/migrate.py`
 
-- [ ] **Step 1: Write python migration script**
+- [x] **Step 1: Write python migration script**
 
 Write the logic for converting MCP configs and migrating skills directories.
 
@@ -259,11 +274,11 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Make migration script executable**
+- [x] **Step 2: Make migration script executable**
 
 Run: `chmod +x /Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/scripts/migrate.py`
 
-- [ ] **Step 3: Commit migration script**
+- [x] **Step 3: Commit migration script**
 
 ```bash
 git add /Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/scripts/migrate.py
@@ -274,10 +289,12 @@ git commit -m "feat(skill): implement migrate.py script for gemini migration"
 
 ### Task 4: Complete SKILL.md Instructions
 
+> **Note:** Executed in `~/.gemini/antigravity-cli`, not in clinique.
+
 **Files:**
 - Modify: `/Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/SKILL.md`
 
-- [ ] **Step 1: Write SKILL.md**
+- [x] **Step 1: Write SKILL.md**
 
 Write the complete instruction file.
 
@@ -318,7 +335,7 @@ Confirm that configuration files are valid and contain converted fields:
 - Check `.agents/mcp_config.json` for workspace configurations if applicable.
 ```
 
-- [ ] **Step 2: Commit SKILL.md changes**
+- [x] **Step 2: Commit SKILL.md changes**
 
 ```bash
 git add /Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration/SKILL.md
@@ -329,16 +346,18 @@ git commit -m "feat(skill): complete SKILL.md instructions"
 
 ### Task 5: Validation & Testing
 
+> **Note:** Skill validation ran against `~/.gemini/antigravity-cli`; scratch tests used `clinique/scratch/` and were cleaned up.
+
 **Files:**
 - Create: `/Users/phi9t/CodeBase/clinique/scratch/test_migrate_input.json`
 - Create: `/Users/phi9t/CodeBase/clinique/scratch/test_migrate.py`
 
-- [ ] **Step 1: Run skill validation tool**
+- [x] **Step 1: Run skill validation tool**
 
 Run: `python3 /Users/phi9t/.gemini/antigravity-cli/skills/skill-creator/scripts/quick_validate.py /Users/phi9t/.gemini/antigravity-cli/skills/gemini-cli-migration`
 Expected: Validates successfully without errors.
 
-- [ ] **Step 2: Create mock input and test runner**
+- [x] **Step 2: Create mock input and test runner**
 
 Create `/Users/phi9t/CodeBase/clinique/scratch/test_migrate_input.json`:
 ```json
@@ -400,12 +419,12 @@ if __name__ == "__main__":
     run_test()
 ```
 
-- [ ] **Step 3: Run the test runner**
+- [x] **Step 3: Run the test runner**
 
 Run: `python3 /Users/phi9t/CodeBase/clinique/scratch/test_migrate.py`
 Expected: "All tests passed successfully!" printed.
 
-- [ ] **Step 4: Cleanup scratch test files**
+- [x] **Step 4: Cleanup scratch test files**
 
 Run: `rm /Users/phi9t/CodeBase/clinique/scratch/test_migrate_input.json /Users/phi9t/CodeBase/clinique/scratch/test_migrate_output.json /Users/phi9t/CodeBase/clinique/scratch/test_migrate.py`
 Expected: Files deleted, workspace clean.
