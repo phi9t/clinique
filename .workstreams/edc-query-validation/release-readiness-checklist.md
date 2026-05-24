@@ -86,7 +86,8 @@
       non-object payload entries with controlled validation failures.
 - [x] Approved-export import failures preserve source-specific preflight diagnostics needed to
       remediate missing, duplicate, unknown, unblinded, non-read-only, incomplete, metadata, and
-      access-boundary issues before payload review.
+      access-boundary issues before payload review, including missing and duplicate schema
+      fields by source type.
 
 ## Internal Data Validation
 

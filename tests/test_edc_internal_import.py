@@ -133,6 +133,30 @@ def test_load_internal_export_bundle_names_preflight_source_failures(tmp_path):
         raise AssertionError("expected source-specific preflight diagnostics")
 
 
+def test_load_internal_export_bundle_names_schema_preflight_failures(tmp_path):
+    manifest = _write_manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    payload["sources"][0]["schema_sketch"] = ["snapshot_id", "snapshot_at", "study_id"]
+    payload["sources"][1]["schema_sketch"] = [
+        *payload["sources"][1]["schema_sketch"],
+        "query_id",
+    ]
+    manifest.write_text(json.dumps(payload))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        message = str(exc)
+        assert "missing_schema_fields.edc_snapshots=collected_at" in message
+        assert "duplicate_schema_fields.query_logs=query_id" in message
+    else:
+        raise AssertionError("expected schema-specific preflight diagnostics")
+
+
 def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path):
     manifest = _write_manifest(
         tmp_path,

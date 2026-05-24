@@ -96,6 +96,11 @@ def _preflight_error_message(preflight: object) -> str:
                 )
                 continue
             details.append(f"{field}={','.join(values)}")
+    for field in ("missing_schema_fields", "duplicate_schema_fields"):
+        values_by_source = getattr(preflight, field, {})
+        for source_type, values in values_by_source.items():
+            if values:
+                details.append(f"{field}.{source_type}={','.join(values)}")
     prefix = "internal export manifest failed preflight"
     return f"{prefix}: {'; '.join(details)}" if details else prefix
 
