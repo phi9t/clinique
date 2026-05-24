@@ -79,6 +79,8 @@
 - [x] Approved-export import path is executable against synthetic fixture exports and generates
       internal-style L1/L2 reports without claiming real operational validation; relative
       export paths are resolved from the manifest directory for portable approved-export bundles.
+- [x] Manifest-relative export paths cannot escape the manifest directory, preserving the
+      approved-export access boundary.
 - [x] Approved-export payload loaders reject missing files, invalid JSON, non-list payloads, and
       non-object payload entries with controlled validation failures.
 

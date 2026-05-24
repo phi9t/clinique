@@ -272,6 +272,27 @@ def test_load_internal_export_bundle_resolves_relative_paths_from_manifest_direc
     assert [query.query_id for query in bundle.query_logs] == ["Q-001"]
 
 
+def test_load_internal_export_bundle_rejects_relative_paths_outside_manifest_directory(
+    tmp_path,
+):
+    export_root = tmp_path / "approved-export"
+    manifest = _write_manifest(export_root, relative_export_paths=True)
+    payload = json.loads(manifest.read_text())
+    payload["sources"][0]["export_path"] = "../outside-export"
+    manifest.write_text(json.dumps(payload))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        assert "relative export_path escapes manifest directory" in str(exc)
+    else:
+        raise AssertionError("expected relative export path escape rejection")
+
+
 def test_load_internal_export_bundle_rejects_duplicate_lock_issue_ids(tmp_path):
     manifest = _write_manifest(tmp_path)
     issue = {
