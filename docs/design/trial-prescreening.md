@@ -4,11 +4,20 @@
 [ANC example §14](../primer/clinical-trials-for-ml.md#14-one-concrete-example),
 [minimum schema §13](../primer/clinical-trials-for-ml.md#13-how-to-think-about-the-data-model-for-your-proof-point).
 
-**Status:** `L0-PUBLIC-SCAFFOLD` (2026-05-24). The genuinely-public L0 path is implemented:
-ClinicalTrials.gov trial ingestion + JSONL fixture recorder and a Synthea patient normalizer, both
-deterministic and offline-tested. Atomizer, retriever, criterion judge, evidence-provenance gate,
-and orchestrator remain proposed. Reuses the platform substrate ([provenance ledger + provenance
-gate](biostat-agent-suite.md)); nothing ships until L0–L2 evidence meets the gates below.
+**Status:** `L0-PUBLIC-DATA` (2026-05-24). The genuinely-public **data layer** is implemented end to
+end: heterogeneous public sources are fetched, parsed, and proven to converge on the internal model.
+ClinicalTrials.gov trial ingestion now includes **search + pagination** (pull a whole disease area,
+not a hand-typed id list) alongside the single-study recorder. Three patient sources normalize onto
+the shared `PatientCorpus`/`PatientDocument` records: **Synthea** (corpus-wide, committed synthetic
+fixture), **PMC-Patients** (open real free-text case reports → `note` documents), and the
+**MIMIC-IV demo** (real de-identified structured data; only synthetic-shaped fixtures committed). A
+dedicated **conformance gate** (`validation.py`, CLI `prescreen validate`, exit code 7) enforces the
+controlled vocabularies, age-bound sanity, duplicate-id, and the snapshot **no-leakage** invariant.
+All paths are deterministic and offline-tested.
+
+Atomizer, retriever, criterion judge, evidence-provenance gate, and orchestrator remain proposed.
+Reuses the platform substrate ([provenance ledger + provenance gate](biostat-agent-suite.md));
+nothing ships until L0–L2 evidence meets the gates below.
 
 Evidence-grounded **trial prescreening copilot**. A coordinator, clinician, or trial-ops user
 provides a trial eligibility section and a patient record; the agent returns atomic criteria,

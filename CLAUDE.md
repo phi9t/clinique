@@ -29,8 +29,12 @@ uv run ruff check .     # lint (line-length 100)
 uv run ruff format .    # format
 
 # Prescreen L0 (offline tests + fixture summary)
-uv run pytest tests/test_prescreen_ingestion.py tests/test_prescreen_normalizer.py -q
+uv run pytest tests/test_prescreen_ingestion.py tests/test_prescreen_normalizer.py \
+  tests/test_prescreen_search.py tests/test_prescreen_pmc.py \
+  tests/test_prescreen_mimic.py tests/test_prescreen_validation.py -q
 uv run clinique prescreen show --fixtures tests/fixtures/prescreen/trials.jsonl
+uv run clinique prescreen validate --trials tests/fixtures/prescreen/trials.jsonl \
+  --patients tests/fixtures/prescreen/pmc_patients.jsonl --source pmc   # exit 7 on errors
 ```
 
 R-backed engine (rpact) runs in a pinned Docker image. Bring up the daemon (`colima start` or
@@ -92,11 +96,20 @@ fail; 5 workstream `goal_complete` false; 6 silent-log gate fail) — preserve t
 is intentionally `false` until real internal EDC data and prospective runs exist; do not flip
 gates to make it pass.
 
-**`prescreen/`** (trial prescreening, L0 public scaffold) ingests ClinicalTrials.gov eligibility
-into typed `Trial` records (record-and-replay JSONL fixtures) and normalizes Synthea CSV exports
-into a `PatientCorpus`. CLI: `prescreen ingest` (network, records fixture) and `prescreen show`
-(offline summary). Atomizer, retriever, judge, and evidence gate are design-only for now — see
-`docs/design/trial-prescreening.md`.
+**`prescreen/`** (trial prescreening, L0 public data layer) fetches, parses, and validates the
+public data, converging heterogeneous sources onto two typed records: `Trial` (ClinicalTrials.gov)
+and `PatientCorpus`/`PatientDocument` (all patient sources). Trial ingestion supports both an
+enumerated-id recorder and **search + pagination** (`ingestion.py`). Three patient sources
+normalize to the shared corpus: Synthea (`normalizer.py`, corpus-wide), PMC-Patients
+(`pmc_patients.py`, real free text → `note` docs), and the MIMIC-IV demo (`mimic_demo.py`, real
+de-identified structured data — only synthetic-shaped fixtures are committed). Every source keeps
+the **fetch/parse split**: network fetchers record raw snapshots; pure parsers are offline-tested
+against committed fixtures. `validation.py` is the **conformance gate** — controlled vocabularies
+(in `schemas.py`), age-bound sanity, duplicate-id, and the snapshot **no-leakage** invariant
+(`document.date` ≤ `snapshot_date`). CLI: `prescreen ingest` / `search` / `normalize-synthea` /
+`ingest-pmc` (record fixtures), `prescreen validate` (exit `7` on error-severity issues), and
+`prescreen show` (offline summary). Atomizer, retriever, judge, and evidence gate are design-only
+for now — see `docs/design/trial-prescreening.md`.
 
 Other capabilities (`estimand/`, `programming/`, `dryrun/`, `conformance/`, `io/xpt.py`) follow the
 same shape: deterministic logic over typed records, validated against synthetic fixtures and, where

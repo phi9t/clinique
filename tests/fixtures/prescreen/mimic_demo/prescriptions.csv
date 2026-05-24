@@ -1,0 +1,2 @@
+subject_id,hadm_id,starttime,stoptime,drug,gsn
+10001,20001,2180-07-24 12:00:00,2180-07-29 12:00:00,Cisplatin,012345

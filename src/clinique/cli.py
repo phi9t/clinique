@@ -11,7 +11,14 @@ from clinique.edc.internal_preflight import preflight_internal_manifest
 from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
 from clinique.edc.silent import evaluate_silent_log, load_silent_log
 from clinique.edc.validation import run_validation, validate_internal_exports, verify_workstream
-from clinique.prescreen.ingestion import load_recorded_studies, record_studies
+from clinique.prescreen.ingestion import (
+    load_recorded_studies,
+    record_search,
+    record_studies,
+)
+from clinique.prescreen.normalizer import normalize_synthea_corpus, read_synthea_csv_dir
+from clinique.prescreen.pmc_patients import load_pmc_corpora, record_pmc
+from clinique.prescreen.validation import corpus_from_dict, report_for
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -53,6 +60,28 @@ def _build_parser() -> argparse.ArgumentParser:
     ingest = prescreen_subparsers.add_parser("ingest")
     ingest.add_argument("--nct-ids", required=True, help="comma-separated NCT ids")
     ingest.add_argument("--out", required=True, help="output JSONL fixture path")
+    search = prescreen_subparsers.add_parser("search")
+    search.add_argument("--cond", help="query.cond condition term")
+    search.add_argument("--term", help="query.term free-text term")
+    search.add_argument("--status", help="comma-separated overallStatus filter")
+    search.add_argument("--max", type=int, default=None, help="max studies to record")
+    search.add_argument("--out", required=True, help="output JSONL fixture path")
+    norm_synthea = prescreen_subparsers.add_parser("normalize-synthea")
+    norm_synthea.add_argument("--csv-dir", required=True, help="Synthea CSV export directory")
+    norm_synthea.add_argument("--snapshot", help="as-of date (YYYY-MM-DD)")
+    norm_synthea.add_argument("--out", required=True, help="output PatientCorpus JSONL path")
+    ingest_pmc = prescreen_subparsers.add_parser("ingest-pmc")
+    ingest_pmc.add_argument("--limit", type=int, default=100, help="number of records to fetch")
+    ingest_pmc.add_argument("--out", required=True, help="output JSONL fixture path")
+    validate_p = prescreen_subparsers.add_parser("validate")
+    validate_p.add_argument("--trials", help="trials JSONL to validate")
+    validate_p.add_argument("--patients", help="patient JSONL to validate")
+    validate_p.add_argument(
+        "--source",
+        choices=["synthea", "mimic", "pmc"],
+        help="how to load --patients (pmc=raw records; else normalized corpus JSONL)",
+    )
+    validate_p.add_argument("--out", help="optional path to write the JSON report")
     show = prescreen_subparsers.add_parser("show")
     show.add_argument("--fixtures", default="tests/fixtures/prescreen/trials.jsonl")
     return parser
@@ -152,6 +181,69 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print(f"recorded {len(recorded)} studies to {args.out}: {', '.join(recorded)}")
         return 0
+    if args.command == "prescreen" and args.prescreen_command == "search":
+        status = [s.strip() for s in args.status.split(",") if s.strip()] if args.status else None
+        try:
+            recorded = record_search(
+                args.out, cond=args.cond, term=args.term, status=status, max_studies=args.max
+            )
+        except Exception as exc:  # network/HTTP/parse errors surface as a clean nonzero exit
+            print(f"prescreen search failed: {exc}", file=sys.stderr)
+            return 2
+        print(f"recorded {len(recorded)} studies to {args.out}")
+        return 0
+    if args.command == "prescreen" and args.prescreen_command == "normalize-synthea":
+        try:
+            tables = read_synthea_csv_dir(args.csv_dir)
+            corpora = normalize_synthea_corpus(tables, snapshot_date=args.snapshot)
+        except (OSError, ValueError) as exc:
+            print(f"prescreen normalize-synthea failed: {exc}", file=sys.stderr)
+            return 2
+        out = Path(args.out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        with out.open("w", encoding="utf-8") as handle:
+            for corpus in corpora:
+                handle.write(json.dumps(corpus.to_dict(), sort_keys=True) + "\n")
+        print(f"normalized {len(corpora)} patients to {args.out}")
+        return 0
+    if args.command == "prescreen" and args.prescreen_command == "ingest-pmc":
+        try:
+            count = record_pmc(args.out, limit=args.limit)
+        except Exception as exc:  # network/HTTP/parse errors surface as a clean nonzero exit
+            print(f"prescreen ingest-pmc failed: {exc}", file=sys.stderr)
+            return 2
+        print(f"recorded {count} PMC-Patients records to {args.out}")
+        return 0
+    if args.command == "prescreen" and args.prescreen_command == "validate":
+        if not args.trials and not args.patients:
+            print("prescreen validate: pass --trials and/or --patients", file=sys.stderr)
+            return 2
+        try:
+            trials = load_recorded_studies(args.trials) if args.trials else []
+            corpora = []
+            if args.patients:
+                if args.source == "pmc":
+                    corpora = load_pmc_corpora(args.patients)
+                else:
+                    with Path(args.patients).open(encoding="utf-8") as handle:
+                        corpora = [
+                            corpus_from_dict(json.loads(line)) for line in handle if line.strip()
+                        ]
+        except (OSError, ValueError) as exc:
+            print(f"prescreen validate failed: {exc}", file=sys.stderr)
+            return 2
+        report = report_for(trials=trials, corpora=corpora)
+        text = json.dumps(report.to_dict(), indent=2, sort_keys=True) + "\n"
+        if args.out:
+            Path(args.out).write_text(text)
+        else:
+            print(text, end="")
+        print(
+            f"checked {report.records_checked} records: "
+            f"{report.error_count} errors, {report.warning_count} warnings",
+            file=sys.stderr,
+        )
+        return 0 if report.ok else 7
     if args.command == "prescreen" and args.prescreen_command == "show":
         try:
             trials = load_recorded_studies(args.fixtures)
