@@ -217,6 +217,24 @@ def test_load_internal_export_bundle_rejects_duplicate_snapshot_ids(tmp_path):
         raise AssertionError("expected duplicate snapshot id rejection")
 
 
+def test_load_internal_export_bundle_rejects_non_object_payload_entries(tmp_path):
+    manifest = _write_manifest(
+        tmp_path,
+        snapshot_payload='["not-an-object"]',
+    )
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        assert "must contain JSON objects" in str(exc)
+    else:
+        raise AssertionError("expected non-object payload entry rejection")
+
+
 def test_load_internal_export_bundle_builds_fixture_bundle_from_approved_exports(tmp_path):
     manifest = _write_manifest(tmp_path)
 
