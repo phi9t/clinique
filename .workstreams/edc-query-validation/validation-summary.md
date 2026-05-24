@@ -22,10 +22,10 @@ Evidence:
   contract without reading PHI-bearing exports, requires the manifest to be a top-level JSON
   object, checks top-level manifest version and timezone-aware `generated_at` metadata, rejects
   source types outside the approved EDC snapshots, query logs, and edit-check history inventory,
-  requires owner/export path metadata to be nonblank strings, and requires schema sketches to
-  list nonblank source-specific fields needed by the approved-export importer, with missing
-  and duplicate fields reported per source type. It also rejects manifest-relative export paths
-  that escape the manifest directory before reading any export payload.
+  requires `source_type` and owner/export path metadata to be nonblank strings, and requires
+  schema sketches to list nonblank source-specific fields needed by the approved-export importer,
+  with missing and duplicate fields reported per source type. It also rejects manifest-relative
+  export paths that escape the manifest directory before reading any export payload.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json

@@ -116,9 +116,10 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     for source in sources:
         if not isinstance(source, dict):
             raise ValueError("each manifest source must be an object")
-        source_type = str(source.get("source_type", ""))
-        if not source_type:
-            raise ValueError("each manifest source requires source_type")
+        source_type_value = source.get("source_type")
+        if not isinstance(source_type_value, str) or not source_type_value.strip():
+            raise ValueError("each manifest source requires source_type to be a nonblank string")
+        source_type = source_type_value.strip()
         present.append(source_type)
         if source_type in seen and source_type not in duplicate:
             duplicate.append(source_type)

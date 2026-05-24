@@ -187,6 +187,23 @@ def test_preflight_internal_manifest_rejects_unknown_source_types(tmp_path):
     assert result.unknown_sources == ("safety_database",)
 
 
+def test_preflight_internal_manifest_rejects_malformed_source_type_metadata(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "source_type": 123,
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    try:
+        preflight_internal_manifest(path)
+    except ValueError as exc:
+        assert "each manifest source requires source_type to be a nonblank string" in str(exc)
+    else:
+        raise AssertionError("expected malformed source_type rejection")
+
+
 def test_preflight_internal_manifest_rejects_invalid_date_coverage(tmp_path):
     manifest = _valid_manifest()
     manifest["sources"][0] = {
