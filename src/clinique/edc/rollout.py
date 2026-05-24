@@ -66,8 +66,8 @@ class RolloutGate:
             evaluated_at=evaluated_at,
             randomization_unit=raw["randomization_unit"],
             human_approval_path_validated=human_approval_path_validated,
-            thresholds={key: float(value) for key, value in raw["thresholds"].items()},
-            observed={key: float(value) for key, value in raw["observed"].items()},
+            thresholds=_require_numeric_values(raw["thresholds"]),
+            observed=_require_numeric_values(raw["observed"]),
             safety=safety,
         )
 
@@ -84,6 +84,15 @@ def _require_bool(label: str, value: Any) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{label} must be a boolean")
     return value
+
+
+def _require_numeric_values(values: dict[str, Any]) -> dict[str, float]:
+    parsed: dict[str, float] = {}
+    for key, value in values.items():
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            raise ValueError(f"{key} must be numeric")
+        parsed[key] = float(value)
+    return parsed
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:

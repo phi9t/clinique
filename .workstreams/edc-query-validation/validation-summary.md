@@ -34,7 +34,7 @@ Evidence:
   tests/fixtures/edc_query/controlled_rollout_gate.json --output
   reports/edc-query/controlled-rollout-gate.json` validates the controlled-rollout gate mechanics
   against structured synthetic evidence and rejects incomplete threshold, observed-metric, or
-  safety endpoint packages, including string values where booleans are required.
+  safety endpoint packages, including string values where numeric or boolean fields are required.
 - `uv run clinique edc-query verify-workstream --fixtures tests/fixtures/edc_query --manifest
   .workstreams/edc-query-validation/internal-data-manifest.template.json --silent-log
   tests/fixtures/edc_query/silent_log.json --rollout-gate
