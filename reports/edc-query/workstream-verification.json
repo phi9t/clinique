@@ -40,7 +40,8 @@
         "edit_check_history",
         "query_logs"
       ],
-      "unblinded_sources": []
+      "unblinded_sources": [],
+      "unknown_sources": []
     },
     "offline": {
       "duplicate_query_burden_measured": true,

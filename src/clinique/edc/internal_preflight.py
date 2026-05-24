@@ -8,6 +8,7 @@ from typing import Any
 
 
 REQUIRED_SOURCES = ("edc_snapshots", "query_logs", "edit_check_history")
+ALLOWED_SOURCES = set(REQUIRED_SOURCES)
 ALLOWED_SENSITIVITY = {"phi", "pii", "no_phi"}
 ALLOWED_BLINDING_STATUS = {"blinded"}
 
@@ -18,6 +19,7 @@ class InternalPreflightResult:
     present_sources: tuple[str, ...]
     missing_required_sources: tuple[str, ...]
     duplicate_sources: tuple[str, ...]
+    unknown_sources: tuple[str, ...]
     unblinded_sources: tuple[str, ...]
     non_read_only_sources: tuple[str, ...]
     incomplete_sources: tuple[str, ...]
@@ -28,6 +30,7 @@ class InternalPreflightResult:
             "present_sources": list(self.present_sources),
             "missing_required_sources": list(self.missing_required_sources),
             "duplicate_sources": list(self.duplicate_sources),
+            "unknown_sources": list(self.unknown_sources),
             "unblinded_sources": list(self.unblinded_sources),
             "non_read_only_sources": list(self.non_read_only_sources),
             "incomplete_sources": list(self.incomplete_sources),
@@ -44,6 +47,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     present: list[str] = []
     seen: set[str] = set()
     duplicate: list[str] = []
+    unknown: list[str] = []
     unblinded: list[str] = []
     non_read_only: list[str] = []
     incomplete: list[str] = []
@@ -57,6 +61,8 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         if source_type in seen and source_type not in duplicate:
             duplicate.append(source_type)
         seen.add(source_type)
+        if source_type not in ALLOWED_SOURCES and source_type not in unknown:
+            unknown.append(source_type)
         if source.get("blinding_status") == "unblinded":
             unblinded.append(source_type)
         if source.get("read_only") is not True:
@@ -65,12 +71,20 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
             incomplete.append(source_type)
 
     missing = tuple(source for source in REQUIRED_SOURCES if source not in set(present))
-    ok = not missing and not duplicate and not unblinded and not non_read_only and not incomplete
+    ok = (
+        not missing
+        and not duplicate
+        and not unknown
+        and not unblinded
+        and not non_read_only
+        and not incomplete
+    )
     return InternalPreflightResult(
         ok=ok,
         present_sources=tuple(sorted(set(present))),
         missing_required_sources=missing,
         duplicate_sources=tuple(duplicate),
+        unknown_sources=tuple(unknown),
         unblinded_sources=tuple(unblinded),
         non_read_only_sources=tuple(non_read_only),
         incomplete_sources=tuple(incomplete),

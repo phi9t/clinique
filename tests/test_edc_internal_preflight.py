@@ -87,6 +87,30 @@ def test_preflight_internal_manifest_rejects_duplicate_source_types(tmp_path):
     assert result.duplicate_sources == ("edc_snapshots",)
 
 
+def test_preflight_internal_manifest_rejects_unknown_source_types(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"] = [
+        *manifest["sources"],
+        {
+            "source_type": "safety_database",
+            "owner": "safety@example.test",
+            "export_path": "/approved/exports/safety",
+            "schema_sketch": ["case_id", "event_term", "seriousness"],
+            "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
+            "sensitivity": "phi",
+            "blinding_status": "blinded",
+            "read_only": True,
+        },
+    ]
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.unknown_sources == ("safety_database",)
+
+
 def test_preflight_internal_manifest_rejects_invalid_date_coverage(tmp_path):
     manifest = _valid_manifest()
     manifest["sources"][0] = {
