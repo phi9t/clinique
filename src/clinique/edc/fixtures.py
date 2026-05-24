@@ -10,6 +10,7 @@ from clinique.edc.records import (
     FixtureBundle,
     QueryLabel,
     QueryLog,
+    validate_unique_label_keys,
 )
 
 
@@ -35,13 +36,16 @@ def load_fixture_bundle(path: str | Path) -> FixtureBundle:
         if snapshot.contains_unblinded:
             raise ValueError(f"Snapshot {snapshot.snapshot_id} is marked as unblinded")
 
+    labels = tuple(QueryLabel.from_json(raw) for raw in _read_json(fixture_dir / "labels.json"))
+    validate_unique_label_keys(labels)
+
     return FixtureBundle(
         snapshots=snapshots,
         rules=tuple(EditCheckRule.from_json(raw) for raw in _read_json(fixture_dir / "rules.json")),
         query_logs=tuple(
             QueryLog.from_json(raw) for raw in _read_json(fixture_dir / "query_logs.json")
         ),
-        labels=tuple(QueryLabel.from_json(raw) for raw in _read_json(fixture_dir / "labels.json")),
+        labels=labels,
         lock_issues=tuple(
             DatabaseLockIssue.from_json(raw)
             for raw in _read_json(fixture_dir / "lock_issues.json")

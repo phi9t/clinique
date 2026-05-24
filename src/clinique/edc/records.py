@@ -296,6 +296,22 @@ class FixtureBundle:
     lock_issues: tuple[DatabaseLockIssue, ...] = ()
 
 
+def validate_unique_label_keys(labels: tuple[QueryLabel, ...]) -> None:
+    seen: set[tuple[str, str, str, str, str, str]] = set()
+    for label in labels:
+        key = (
+            label.snapshot_id,
+            label.study_id,
+            label.site_id,
+            label.subject_id,
+            label.form,
+            label.field,
+        )
+        if key in seen:
+            raise ValueError(f"duplicate label key: {key}")
+        seen.add(key)
+
+
 @dataclass(frozen=True)
 class SourceRef:
     source_type: str

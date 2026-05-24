@@ -413,3 +413,29 @@ def test_fixture_bundle_rejects_unknown_query_log_status_and_resolution(tmp_path
             assert expected_error in str(exc)
         else:
             raise AssertionError("expected query-log enum rejection")
+
+
+def test_fixture_bundle_rejects_duplicate_label_keys(tmp_path):
+    fixture_dir = tmp_path / "duplicate_label_keys"
+    label = {
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "gold_query_needed": True,
+        "query_category": "missing",
+        "human_resolution": "corrected",
+        "opened_at": "2026-03-03T09:00:00Z",
+        "closed_at": None,
+        "evidence_available_at_agent_time": True,
+    }
+    _write_minimal_fixture_dir(fixture_dir, labels=[label, dict(label)])
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "duplicate label key" in str(exc)
+    else:
+        raise AssertionError("expected duplicate label rejection")
