@@ -109,10 +109,14 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
         return 0
     if args.prescreen_command == "export-explorer":
         try:
-            written = write_explorer_json(args.out)
+            written = write_explorer_json(
+                args.out,
+                fixtures_dir=args.fixtures_dir,
+            )
         except (OSError, ValueError) as exc:
             print(f"prescreen export-explorer failed: {exc}", file=sys.stderr)
             return 2
-        print(f"exported {len(written)} files to {args.out}: {', '.join(written)}")
+        out_display = args.out or "explorer/public/data/prescreen"
+        print(f"exported {len(written)} files to {out_display}: {', '.join(written)}")
         return 0
     return None

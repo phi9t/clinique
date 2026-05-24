@@ -8,6 +8,7 @@ from clinique.prescreen.explorer_export import (
     _load_all,
     build_payload,
     dataclass_field_names,
+    default_out_dir,
     documented_field_names,
     export_explorer,
 )
@@ -89,3 +90,20 @@ def test_export_is_deterministic(tmp_path):
     export_explorer(out_b)
     for name in sorted(EXPECTED_FILES):
         assert (out_a / name).read_bytes() == (out_b / name).read_bytes()
+
+
+def test_committed_snapshot_matches_live_export(tmp_path):
+    """CI gate: committed explorer JSON must match a fresh export from fixtures."""
+    export_explorer(tmp_path)
+    committed = default_out_dir()
+    for name in sorted(EXPECTED_FILES):
+        assert (tmp_path / name).read_bytes() == (committed / name).read_bytes(), name
+
+
+def test_export_works_outside_repo_root(tmp_path, monkeypatch):
+    """Fixture paths resolve from the installed module, not the process CWD."""
+    monkeypatch.chdir(tmp_path)
+    out = tmp_path / "prescreen-out"
+    export_explorer(out)
+    assert (out / "index.json").is_file()
+    assert (out / "trials.json").is_file()
