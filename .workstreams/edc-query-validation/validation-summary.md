@@ -36,9 +36,13 @@ Evidence:
 - `uv run clinique edc-query verify-workstream --fixtures tests/fixtures/edc_query --manifest
   .workstreams/edc-query-validation/internal-data-manifest.template.json --silent-log
   tests/fixtures/edc_query/silent_log.json --rollout-gate
-  tests/fixtures/edc_query/controlled_rollout_gate.json --reports-dir reports/edc-query`
-  regenerates all local reports and writes `reports/edc-query/workstream-verification.json`.
-  It exits nonzero while real internal/prospective blockers remain.
+  tests/fixtures/edc_query/controlled_rollout_gate.json --reports-dir reports/edc-query
+  --internal-export-manifest tests/fixtures/edc_query/internal_export_manifest.json
+  --internal-labels tests/fixtures/edc_query/labels.json --internal-lock-issues
+  tests/fixtures/edc_query/lock_issues.json` regenerates all local reports, including
+  fixture-backed approved-export L1/L2 reports, and writes
+  `reports/edc-query/workstream-verification.json`. It exits nonzero while real
+  internal/prospective blockers remain.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
   exposure, detection, metrics, CLI execution, internal-data preflight, silent-log evaluation,
   controlled-rollout gate evaluation, approved-export import, bundled workstream verification,

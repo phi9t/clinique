@@ -17,6 +17,18 @@
       "rollout_gate_passed": true,
       "safety_endpoints_clear": true
     },
+    "internal_export_offline": {
+      "duplicate_query_burden_measured": true,
+      "evidence_supported": true,
+      "false_query_rate_controlled": true,
+      "leakage_checks_passed": true,
+      "no_write_back": true
+    },
+    "internal_export_retrospective": {
+      "leakage_checks_passed": true,
+      "no_write_back": true,
+      "timestamped_replay": true
+    },
     "internal_preflight": {
       "incomplete_sources": [],
       "missing_required_sources": [],
@@ -48,11 +60,14 @@
     }
   },
   "goal_complete": false,
+  "local_internal_export_reports_complete": true,
   "local_reports_complete": true,
   "reports": {
     "audit_summary": "reports/edc-query/audit-summary.json",
     "controlled_rollout_gate": "reports/edc-query/controlled-rollout-gate.json",
+    "internal_offline_benchmark": "reports/edc-query/internal-offline-benchmark.json",
     "internal_preflight": "reports/edc-query/internal-preflight-template.json",
+    "internal_retrospective_replay": "reports/edc-query/internal-retrospective-replay.json",
     "offline_benchmark": "reports/edc-query/offline-benchmark.json",
     "retrospective_replay": "reports/edc-query/retrospective-replay.json",
     "silent_log_evaluation": "reports/edc-query/silent-log-evaluation.json"

@@ -52,3 +52,7 @@ uv run clinique edc-query validate-internal-exports \
 
 The synthetic fixture manifest `tests/fixtures/edc_query/internal_export_manifest.json` exercises
 the import path without using real operational data.
+
+To include that path in the bundled local evidence package, pass the same manifest and labels to
+`verify-workstream` with `--internal-export-manifest`, `--internal-labels`, and optional
+`--internal-lock-issues`.

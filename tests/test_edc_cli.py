@@ -352,6 +352,48 @@ def test_edc_query_verify_workstream_writes_consolidated_evidence(tmp_path):
     )
 
 
+def test_edc_query_verify_workstream_can_include_internal_export_reports(tmp_path):
+    reports_dir = tmp_path / "reports"
+
+    exit_code = main(
+        [
+            "edc-query",
+            "verify-workstream",
+            "--fixtures",
+            "tests/fixtures/edc_query",
+            "--manifest",
+            ".workstreams/edc-query-validation/internal-data-manifest.template.json",
+            "--silent-log",
+            "tests/fixtures/edc_query/silent_log.json",
+            "--rollout-gate",
+            "tests/fixtures/edc_query/controlled_rollout_gate.json",
+            "--reports-dir",
+            str(reports_dir),
+            "--internal-export-manifest",
+            "tests/fixtures/edc_query/internal_export_manifest.json",
+            "--internal-labels",
+            "tests/fixtures/edc_query/labels.json",
+            "--internal-lock-issues",
+            "tests/fixtures/edc_query/lock_issues.json",
+        ]
+    )
+
+    assert exit_code == 5
+    evidence = json.loads((reports_dir / "workstream-verification.json").read_text())
+    assert evidence["local_internal_export_reports_complete"] is True
+    assert evidence["reports"]["internal_offline_benchmark"] == str(
+        reports_dir / "internal-offline-benchmark.json"
+    )
+    assert evidence["reports"]["internal_retrospective_replay"] == str(
+        reports_dir / "internal-retrospective-replay.json"
+    )
+    assert evidence["gates"]["internal_export_offline"]["no_write_back"] is True
+    assert evidence["gates"]["internal_export_retrospective"]["timestamped_replay"] is True
+    assert "internal_data_validation__internal_l1_offline_report_generated" in (
+        evidence["blocked_requirements"]
+    )
+
+
 def test_edc_query_validate_internal_exports_writes_l1_l2_reports(tmp_path):
     manifest = _write_internal_export_manifest(tmp_path / "exports")
     reports_dir = tmp_path / "reports"

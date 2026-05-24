@@ -73,9 +73,14 @@ def verify_workstream(
     rollout_gate: str | Path,
     reports_dir: str | Path,
     checklist_path: str | Path = ".workstreams/edc-query-validation/release-readiness-checklist.md",
+    internal_export_manifest: str | Path | None = None,
+    internal_labels: str | Path | None = None,
+    internal_lock_issues: str | Path | None = None,
 ) -> dict[str, object]:
     output_dir = Path(reports_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if bool(internal_export_manifest) != bool(internal_labels):
+        raise ValueError("internal export verification requires both manifest and labels")
 
     validation = run_validation(
         fixtures=fixtures,
@@ -105,10 +110,24 @@ def verify_workstream(
         "retrospective_replay": str(output_dir / "retrospective-replay.json"),
         "silent_log_evaluation": str(silent_path),
     }
+    internal_export_result = None
+    if internal_export_manifest and internal_labels:
+        internal_export_result = validate_internal_exports(
+            manifest=internal_export_manifest,
+            labels=internal_labels,
+            lock_issues=internal_lock_issues,
+            reports_dir=output_dir,
+        )
+        reports.update(internal_export_result["reports"])
     local_reports_complete = all(Path(path).exists() for path in reports.values())
+    local_internal_export_reports_complete = (
+        internal_export_result is not None
+        and all(Path(path).exists() for path in internal_export_result["reports"].values())
+    )
     audit = validation["audit"]
     evidence = {
         "local_reports_complete": local_reports_complete,
+        "local_internal_export_reports_complete": local_internal_export_reports_complete,
         "goal_complete": bool(audit["goal_complete"]),
         "blocked_requirements": audit["blocked_requirements"],
         "reports": reports,
@@ -120,6 +139,11 @@ def verify_workstream(
             "controlled_rollout": rollout.gates,
         },
     }
+    if internal_export_result is not None:
+        evidence["gates"]["internal_export_offline"] = internal_export_result["offline"]["gates"]
+        evidence["gates"]["internal_export_retrospective"] = internal_export_result[
+            "retrospective"
+        ]["gates"]
     (output_dir / "workstream-verification.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n"
     )

@@ -38,6 +38,9 @@ def _build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--silent-log", required=True)
     verify.add_argument("--rollout-gate", required=True)
     verify.add_argument("--reports-dir", default="reports/edc-query")
+    verify.add_argument("--internal-export-manifest")
+    verify.add_argument("--internal-labels")
+    verify.add_argument("--internal-lock-issues")
     internal = edc_subparsers.add_parser("validate-internal-exports")
     internal.add_argument("--manifest", required=True)
     internal.add_argument("--labels", required=True)
@@ -93,13 +96,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"EDC query rollout-gate report written to {args.output}")
         return 0 if report.gates["rollout_gate_passed"] else 4
     if args.command == "edc-query" and args.edc_command == "verify-workstream":
-        evidence = verify_workstream(
-            fixtures=args.fixtures,
-            manifest=args.manifest,
-            silent_log=args.silent_log,
-            rollout_gate=args.rollout_gate,
-            reports_dir=args.reports_dir,
-        )
+        try:
+            evidence = verify_workstream(
+                fixtures=args.fixtures,
+                manifest=args.manifest,
+                silent_log=args.silent_log,
+                rollout_gate=args.rollout_gate,
+                reports_dir=args.reports_dir,
+                internal_export_manifest=args.internal_export_manifest,
+                internal_labels=args.internal_labels,
+                internal_lock_issues=args.internal_lock_issues,
+            )
+        except ValueError as exc:
+            print(f"edc-query workstream verification failed: {exc}", file=sys.stderr)
+            return 2
         print(f"EDC query workstream evidence written to {args.reports_dir}")
         return 0 if evidence["goal_complete"] else 5
     if args.command == "edc-query" and args.edc_command == "validate-internal-exports":

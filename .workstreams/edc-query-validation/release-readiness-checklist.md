@@ -16,8 +16,9 @@
 - [x] Silent-log evaluator exists and validates silent-mode logs without affecting operations.
 - [x] Controlled-rollout gate evaluator exists and validates thresholds, safety endpoints, and
       human approval path from structured evidence.
-- [x] Bundled workstream verifier regenerates all local reports and consolidates remaining
-      blockers in `reports/edc-query/workstream-verification.json`.
+- [x] Bundled workstream verifier regenerates local synthetic reports, optional approved-export
+      fixture reports, and consolidates remaining blockers in
+      `reports/edc-query/workstream-verification.json`.
 - [x] Approved-export import path is executable against synthetic fixture exports and generates
       internal-style L1/L2 reports without claiming real operational validation.
 
