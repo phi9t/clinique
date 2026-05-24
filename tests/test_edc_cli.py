@@ -393,7 +393,10 @@ def test_edc_query_verify_workstream_writes_consolidated_evidence(tmp_path):
     evidence = json.loads((reports_dir / "workstream-verification.json").read_text())
     assert evidence["local_reports_complete"] is True
     assert evidence["local_gates_passed"] is False
-    assert evidence["local_gate_failures"] == ["silent_log.stop_criteria_triggered"]
+    assert evidence["local_gate_failures"] == [
+        "silent_log.stop_criteria_triggered",
+        "internal_export.reports_missing",
+    ]
     assert evidence["goal_complete"] is False
     assert set(evidence["reports"]) == {
         "audit_summary",

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from clinique.edc.audit import audit_release_checklist
@@ -71,3 +72,61 @@ def test_verify_workstream_blocks_completion_on_local_gate_failures(tmp_path):
     assert evidence["goal_complete"] is False
     assert evidence["local_gates_passed"] is False
     assert "silent_log.stop_criteria_triggered" in evidence["local_gate_failures"]
+
+
+def test_verify_workstream_blocks_completion_without_internal_export_evidence(tmp_path):
+    checklist = tmp_path / "complete-checklist.md"
+    checklist.write_text(
+        "# Checklist\n\n"
+        "## Synthetic Validation\n\n"
+        "- [x] PHI-free fixtures exist.\n\n"
+        "## Internal Data Validation\n\n"
+        "- [x] Internal EDC snapshots approved and connected.\n"
+        "- [x] Internal query logs approved and connected.\n"
+        "- [x] Internal edit-check history approved and connected.\n"
+        "- [x] Internal L1 offline report generated.\n"
+        "- [x] Internal L2 retrospective replay report generated.\n\n"
+        "## Prospective Validation\n\n"
+        "- [x] Silent prospective protocol approved.\n"
+        "- [x] Silent prospective run completed.\n"
+        "- [x] Controlled rollout gate approved.\n"
+        "- [x] Human approval path validated.\n"
+    )
+    silent_log = tmp_path / "passing-silent-log.json"
+    silent_log.write_text(
+        json.dumps(
+            [
+                {
+                    "recommendation_id": "SIL-PASS-001",
+                    "logged_at": "2026-04-01T00:00:00Z",
+                    "study_id": "STUDY-EDC-001",
+                    "site_id": "SITE-01",
+                    "subject_id": "SUBJ-001",
+                    "form": "AE",
+                    "field": "term",
+                    "query_category": "missing",
+                    "agent_recommendation": "Draft query for missing AE term.",
+                    "agent_evidence": ["rec-ae-001", "RULE-MISSING-AE"],
+                    "human_action": "opened_query",
+                    "human_action_at": "2026-04-02T00:00:00Z",
+                    "ground_truth": "true_positive",
+                    "reviewer_id": "DM-001",
+                    "affected_operations": False,
+                    "safety_risk": False,
+                }
+            ]
+        )
+    )
+
+    evidence = verify_workstream(
+        fixtures="tests/fixtures/edc_query",
+        manifest=".workstreams/edc-query-validation/internal-data-manifest.template.json",
+        silent_log=silent_log,
+        rollout_gate="tests/fixtures/edc_query/controlled_rollout_gate.json",
+        reports_dir=tmp_path / "reports",
+        checklist_path=checklist,
+    )
+
+    assert evidence["goal_complete"] is False
+    assert evidence["local_internal_export_reports_complete"] is False
+    assert evidence["local_gate_failures"] == ["internal_export.reports_missing"]

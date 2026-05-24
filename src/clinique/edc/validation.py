@@ -178,19 +178,21 @@ def _local_gate_failures(
     failures.extend(_false_gate_names("internal_preflight", preflight_gates))
     failures.extend(_silent_gate_failures(silent_gates))
     failures.extend(_false_gate_names("controlled_rollout", rollout_gates))
-    if internal_export_result is not None:
-        failures.extend(
-            _false_gate_names(
-                "internal_export_offline",
-                internal_export_result["offline"]["gates"],
-            )
+    if internal_export_result is None:
+        failures.append("internal_export.reports_missing")
+        return failures
+    failures.extend(
+        _false_gate_names(
+            "internal_export_offline",
+            internal_export_result["offline"]["gates"],
         )
-        failures.extend(
-            _false_gate_names(
-                "internal_export_retrospective",
-                internal_export_result["retrospective"]["gates"],
-            )
+    )
+    failures.extend(
+        _false_gate_names(
+            "internal_export_retrospective",
+            internal_export_result["retrospective"]["gates"],
         )
+    )
     return failures
 
 
