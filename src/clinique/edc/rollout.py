@@ -50,6 +50,10 @@ COUNT_KEYS = {
     "max_open_queries_at_lock",
     "open_queries_at_lock",
 }
+INTEGER_DELTA_KEYS = {
+    "min_true_discrepancy_delta",
+    "true_discrepancy_delta",
+}
 
 
 @dataclass(frozen=True)
@@ -87,6 +91,8 @@ class RolloutGate:
         _validate_rate_values(observed)
         _validate_count_values(thresholds)
         _validate_count_values(observed)
+        _validate_integer_delta_values(thresholds)
+        _validate_integer_delta_values(observed)
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
@@ -137,6 +143,12 @@ def _validate_count_values(values: dict[str, float]) -> None:
     for key, value in values.items():
         if key in COUNT_KEYS and (value < 0 or not value.is_integer()):
             raise ValueError(f"{key} must be a nonnegative integer")
+
+
+def _validate_integer_delta_values(values: dict[str, float]) -> None:
+    for key, value in values.items():
+        if key in INTEGER_DELTA_KEYS and not value.is_integer():
+            raise ValueError(f"{key} must be an integer")
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:

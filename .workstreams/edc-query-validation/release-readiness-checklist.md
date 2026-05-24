@@ -65,7 +65,8 @@
       counted as neutral or early.
 - [x] Controlled-rollout gate evaluator exists, rejects incomplete gate packages, and validates
       typed numeric thresholds, bounded rate values, nonnegative integer count endpoints,
-      nonnegative safety-count endpoints, and human approval path from structured evidence.
+      integer true-discrepancy deltas, nonnegative safety-count endpoints, and human approval
+      path from structured evidence.
 - [x] Bundled workstream verifier regenerates local synthetic reports, optional approved-export
       fixture reports, and consolidates remaining blockers in
       `reports/edc-query/workstream-verification.json`.
