@@ -196,6 +196,12 @@ class QueryLog:
             closed_at=closed_at,
             label="query log",
         )
+        status = require_one_of(
+            "query log status",
+            raw["status"],
+            ALLOWED_QUERY_LOG_STATUSES,
+        )
+        validate_query_log_status_timestamp(status=status, closed_at=closed_at)
         return cls(
             query_id=raw["query_id"],
             snapshot_id=raw["snapshot_id"],
@@ -212,11 +218,7 @@ class QueryLog:
             ),
             opened_at=opened_at,
             closed_at=closed_at,
-            status=require_one_of(
-                "query log status",
-                raw["status"],
-                ALLOWED_QUERY_LOG_STATUSES,
-            ),
+            status=status,
             resolution=require_one_of(
                 "query log resolution",
                 raw["resolution"],
@@ -328,6 +330,13 @@ def validate_unique_snapshot_record_keys(snapshot_id: str, records: tuple[EdcRec
         if key in seen:
             raise ValueError(f"duplicate snapshot record key in {snapshot_id}: {key}")
         seen.add(key)
+
+
+def validate_query_log_status_timestamp(*, status: str, closed_at: datetime | None) -> None:
+    if status == "closed" and closed_at is None:
+        raise ValueError("closed query logs require closed_at")
+    if status == "open" and closed_at is not None:
+        raise ValueError("open query logs cannot have closed_at")
 
 
 def validate_unique_query_log_ids(query_logs: tuple[QueryLog, ...]) -> None:

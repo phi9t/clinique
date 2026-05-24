@@ -425,6 +425,48 @@ def test_fixture_bundle_rejects_query_logs_closed_before_opened(tmp_path):
         raise AssertionError("expected query-log chronology rejection")
 
 
+def test_fixture_bundle_rejects_query_log_status_timestamp_mismatches(tmp_path):
+    base_query = {
+        "query_id": "Q-BAD",
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "query_text": "Please confirm AE term.",
+        "query_category": "missing",
+        "opened_at": "2026-03-03T09:00:00Z",
+        "closed_at": None,
+        "status": "open",
+        "resolution": "confirmed",
+    }
+    cases = [
+        (
+            "closed_without_closed_at",
+            {"status": "closed", "closed_at": None},
+            "closed query logs require closed_at",
+        ),
+        (
+            "open_with_closed_at",
+            {"status": "open", "closed_at": "2026-03-04T09:00:00Z"},
+            "open query logs cannot have closed_at",
+        ),
+    ]
+    for dirname, patch, expected_error in cases:
+        fixture_dir = tmp_path / dirname
+        query = dict(base_query)
+        query.update(patch)
+        _write_minimal_fixture_dir(fixture_dir, query_logs=[query])
+
+        try:
+            load_fixture_bundle(fixture_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected query-log status timestamp rejection")
+
+
 def test_fixture_bundle_rejects_label_closed_without_opened(tmp_path):
     fixture_dir = tmp_path / "bad_label_close_without_open"
     _write_minimal_fixture_dir(

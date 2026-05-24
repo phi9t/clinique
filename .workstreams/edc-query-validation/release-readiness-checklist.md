@@ -12,6 +12,7 @@
       schema-defined query category, status, and resolution enums.
 - [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.
 - [x] Query-log and label loaders reject impossible open/close timestamp chronology.
+- [x] Query-log loaders reject status/timestamp mismatches for open and closed queries.
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,
       form, and field.
 - [x] True-detection metrics require label evidence to be available at the replay timestamp.
