@@ -681,3 +681,90 @@ def test_load_rollout_gate_rejects_permissive_improvement_thresholds(tmp_path):
         assert "max_manual_minutes_per_query_delta must be nonpositive" in str(exc)
     else:
         raise AssertionError("expected permissive manual-minutes threshold rejection")
+
+
+def test_load_rollout_gate_rejects_nonfinite_numeric_values(tmp_path):
+    path = tmp_path / "nonfinite_rollout_gate.json"
+    path.write_text(
+        """
+        {
+          "gate_id": "ROLLOUT-NAN-THRESHOLD",
+          "evaluated_at": "2026-05-01T00:00:00Z",
+          "randomization_unit": "form_family",
+          "human_approval_path_validated": true,
+          "thresholds": {
+            "max_false_query_rate": NaN,
+            "max_duplicate_query_rate": 0.10,
+            "min_acceptance_rate": 0.75,
+            "max_open_queries_at_lock": 10,
+            "min_true_discrepancy_delta": 1,
+            "max_manual_minutes_per_query_delta": 0
+          },
+          "observed": {
+            "manual_minutes_per_query_delta": -5,
+            "true_discrepancy_delta": 4,
+            "false_query_rate": 0.02,
+            "duplicate_query_rate": 0.02,
+            "query_resolution_time_delta_hours": -12,
+            "open_queries_at_lock": 4,
+            "acceptance_rate": 0.8
+          },
+          "safety": {
+            "unauthorized_write_back": 0,
+            "unsupported_evidence": 0,
+            "privacy_incident": 0,
+            "blinding_breach": 0,
+            "excessive_reviewer_burden": false
+          }
+        }
+        """
+    )
+
+    try:
+        load_rollout_gate(path)
+    except ValueError as exc:
+        assert "max_false_query_rate must be finite" in str(exc)
+    else:
+        raise AssertionError("expected NaN threshold rejection")
+
+    path.write_text(
+        """
+        {
+          "gate_id": "ROLLOUT-INFINITE-OBSERVED",
+          "evaluated_at": "2026-05-01T00:00:00Z",
+          "randomization_unit": "form_family",
+          "human_approval_path_validated": true,
+          "thresholds": {
+            "max_false_query_rate": 0.05,
+            "max_duplicate_query_rate": 0.10,
+            "min_acceptance_rate": 0.75,
+            "max_open_queries_at_lock": 10,
+            "min_true_discrepancy_delta": 1,
+            "max_manual_minutes_per_query_delta": 0
+          },
+          "observed": {
+            "manual_minutes_per_query_delta": -5,
+            "true_discrepancy_delta": 4,
+            "false_query_rate": 0.02,
+            "duplicate_query_rate": 0.02,
+            "query_resolution_time_delta_hours": Infinity,
+            "open_queries_at_lock": 4,
+            "acceptance_rate": 0.8
+          },
+          "safety": {
+            "unauthorized_write_back": 0,
+            "unsupported_evidence": 0,
+            "privacy_incident": 0,
+            "blinding_breach": 0,
+            "excessive_reviewer_burden": false
+          }
+        }
+        """
+    )
+
+    try:
+        load_rollout_gate(path)
+    except ValueError as exc:
+        assert "query_resolution_time_delta_hours must be finite" in str(exc)
+    else:
+        raise AssertionError("expected infinite observed metric rejection")

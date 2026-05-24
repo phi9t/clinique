@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from math import isfinite
 from pathlib import Path
 from typing import Any
 
@@ -141,7 +142,10 @@ def _require_numeric_values(values: dict[str, Any]) -> dict[str, float]:
     for key, value in values.items():
         if isinstance(value, bool) or not isinstance(value, int | float):
             raise ValueError(f"{key} must be numeric")
-        parsed[key] = float(value)
+        numeric = float(value)
+        if not isfinite(numeric):
+            raise ValueError(f"{key} must be finite")
+        parsed[key] = numeric
     return parsed
 
 
