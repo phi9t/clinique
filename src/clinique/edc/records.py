@@ -53,6 +53,20 @@ def require_one_of(label: str, value: Any, allowed: set[str]) -> str:
     return value
 
 
+def validate_open_close_chronology(
+    *,
+    opened_at: datetime | None,
+    closed_at: datetime | None,
+    label: str,
+) -> None:
+    if closed_at is None:
+        return
+    if opened_at is None:
+        raise ValueError(f"{label} closed_at requires opened_at")
+    if closed_at < opened_at:
+        raise ValueError(f"{label} closed_at cannot be before opened_at")
+
+
 @dataclass(frozen=True)
 class EdcRecord:
     record_id: str
@@ -156,6 +170,12 @@ class QueryLog:
         opened_at = parse_timestamp(raw["opened_at"])
         if opened_at is None:
             raise ValueError("query log opened_at is required")
+        closed_at = parse_timestamp(raw.get("closed_at"))
+        validate_open_close_chronology(
+            opened_at=opened_at,
+            closed_at=closed_at,
+            label="query log",
+        )
         return cls(
             query_id=raw["query_id"],
             snapshot_id=raw["snapshot_id"],
@@ -171,7 +191,7 @@ class QueryLog:
                 ALLOWED_QUERY_CATEGORIES,
             ),
             opened_at=opened_at,
-            closed_at=parse_timestamp(raw.get("closed_at")),
+            closed_at=closed_at,
             status=raw["status"],
             resolution=raw["resolution"],
         )
@@ -194,6 +214,13 @@ class QueryLabel:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> "QueryLabel":
+        opened_at = parse_timestamp(raw.get("opened_at"))
+        closed_at = parse_timestamp(raw.get("closed_at"))
+        validate_open_close_chronology(
+            opened_at=opened_at,
+            closed_at=closed_at,
+            label="label",
+        )
         return cls(
             snapshot_id=raw["snapshot_id"],
             study_id=raw["study_id"],
@@ -212,8 +239,8 @@ class QueryLabel:
                 raw["human_resolution"],
                 ALLOWED_HUMAN_RESOLUTIONS,
             ),
-            opened_at=parse_timestamp(raw.get("opened_at")),
-            closed_at=parse_timestamp(raw.get("closed_at")),
+            opened_at=opened_at,
+            closed_at=closed_at,
             evidence_available_at_agent_time=require_bool(
                 "evidence_available_at_agent_time",
                 raw["evidence_available_at_agent_time"],

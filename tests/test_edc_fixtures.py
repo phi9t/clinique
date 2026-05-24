@@ -289,3 +289,94 @@ def test_fixture_bundle_rejects_missing_rule_effective_timestamps(tmp_path):
         assert "effective_at is required" in str(exc)
     else:
         raise AssertionError("expected missing rule effective timestamp rejection")
+
+
+def test_fixture_bundle_rejects_query_logs_closed_before_opened(tmp_path):
+    fixture_dir = tmp_path / "bad_query_log_chronology"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        query_logs=[
+            {
+                "query_id": "Q-BAD",
+                "snapshot_id": "snap",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "query_text": "Please confirm AE term.",
+                "query_category": "missing",
+                "opened_at": "2026-03-03T09:00:00Z",
+                "closed_at": "2026-03-02T09:00:00Z",
+                "status": "closed",
+                "resolution": "confirmed",
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "query log closed_at cannot be before opened_at" in str(exc)
+    else:
+        raise AssertionError("expected query-log chronology rejection")
+
+
+def test_fixture_bundle_rejects_label_closed_without_opened(tmp_path):
+    fixture_dir = tmp_path / "bad_label_close_without_open"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        labels=[
+            {
+                "snapshot_id": "snap",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "gold_query_needed": True,
+                "query_category": "missing",
+                "human_resolution": "corrected",
+                "opened_at": None,
+                "closed_at": "2026-03-05T12:00:00Z",
+                "evidence_available_at_agent_time": True,
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "label closed_at requires opened_at" in str(exc)
+    else:
+        raise AssertionError("expected label close-without-open rejection")
+
+
+def test_fixture_bundle_rejects_labels_closed_before_opened(tmp_path):
+    fixture_dir = tmp_path / "bad_label_chronology"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        labels=[
+            {
+                "snapshot_id": "snap",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "gold_query_needed": True,
+                "query_category": "missing",
+                "human_resolution": "corrected",
+                "opened_at": "2026-03-05T12:00:00Z",
+                "closed_at": "2026-03-04T12:00:00Z",
+                "evidence_available_at_agent_time": True,
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "label closed_at cannot be before opened_at" in str(exc)
+    else:
+        raise AssertionError("expected label chronology rejection")

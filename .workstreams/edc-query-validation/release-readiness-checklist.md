@@ -11,6 +11,7 @@
 - [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans and
       schema-defined query category/resolution enums.
 - [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.
+- [x] Query-log and label loaders reject impossible open/close timestamp chronology.
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,
       form, and field.
 - [x] Offline report exists.
