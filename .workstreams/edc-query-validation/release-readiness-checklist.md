@@ -6,8 +6,8 @@
 - [x] Fixture provenance exists.
 - [x] Timestamp gating is tested.
 - [x] Draft-only/no-write boundary is tested.
-- [x] Duplicate-query detection excludes future query logs and cites historical query-log
-      evidence.
+- [x] Duplicate-query detection excludes future query logs, matches by study/site identity, and
+      cites historical query-log evidence.
 - [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans and
       schema-defined query category/resolution enums.
 - [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.

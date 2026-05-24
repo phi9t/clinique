@@ -3,6 +3,7 @@ from pathlib import Path
 
 from clinique.edc.detection import detect_candidate_queries
 from clinique.edc.fixtures import load_fixture_bundle
+from clinique.edc.records import QueryLog
 from clinique.edc.replay import evidence_at
 
 
@@ -41,6 +42,30 @@ def test_duplicate_candidate_queries_include_query_log_evidence():
     assert ("query_log", "Q-001") in {
         (source.source_type, source.source_id) for source in duplicate.evidence
     }
+
+
+def test_detect_candidate_queries_does_not_match_query_logs_across_sites():
+    bundle = load_fixture_bundle(FIXTURES)
+    evidence = evidence_at(bundle, datetime(2026, 3, 8, tzinfo=timezone.utc))
+    wrong_site_query = QueryLog(
+        query_id="Q-WRONG-SITE",
+        snapshot_id="snap-2026-03-01",
+        study_id="STUDY-EDC-001",
+        site_id="SITE-99",
+        subject_id="SUBJ-003",
+        form="Labs",
+        field="hemoglobin",
+        query_text="Please confirm hemoglobin value.",
+        query_category="duplicate",
+        opened_at=datetime(2026, 3, 2, tzinfo=timezone.utc),
+        closed_at=None,
+        status="open",
+        resolution="confirmed",
+    )
+
+    candidates = detect_candidate_queries(evidence, existing_queries=(wrong_site_query,))
+
+    assert not any(candidate.is_duplicate for candidate in candidates)
 
 
 def test_candidate_queries_are_draft_only_and_evidence_backed():

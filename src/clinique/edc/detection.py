@@ -53,7 +53,8 @@ def detect_candidate_queries(
 ) -> tuple[CandidateQuery, ...]:
     candidates: list[CandidateQuery] = []
     records_by_key = {
-        (record.subject_id, record.form, record.field): record for record in evidence.snapshot.records
+        (record.study_id, record.site_id, record.subject_id, record.form, record.field): record
+        for record in evidence.snapshot.records
     }
 
     for record in evidence.snapshot.records:
@@ -105,7 +106,7 @@ def detect_candidate_queries(
     for query in existing_queries:
         if query.opened_at > evidence.replayed_at:
             continue
-        key = (query.subject_id, query.form, query.field)
+        key = (query.study_id, query.site_id, query.subject_id, query.form, query.field)
         record = records_by_key.get(key)
         if record is None:
             continue
