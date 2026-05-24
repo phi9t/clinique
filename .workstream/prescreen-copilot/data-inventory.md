@@ -51,6 +51,14 @@ temporal server start-dev &
 uv sync --group temporal
 uv run clinique prescreen worker &
 
+uv run clinique prescreen verify-workstream \
+  --workstream .workstream/prescreen-copilot \
+  --temporal
+```
+
+Or eval only:
+
+```bash
 uv run clinique prescreen eval-temporal \
   --cases .workstream/prescreen-copilot/l0_cases.jsonl \
   --trials "$DATASETS/trials.jsonl" \

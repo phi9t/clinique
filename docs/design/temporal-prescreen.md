@@ -270,11 +270,15 @@ accuracy &lt; 0.90 or errors present — same threshold posture as sync `prescre
 
 ```bash
 uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot
+
+# With Temporal worker running — adds eval-temporal + sync parity check:
+uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot --temporal
 ```
 
 This gate checks scale datasets, conformance, atomizer coverage, gold accuracy, evidence
-violations, and determinism. It uses the **sync** orchestrator today; durable batch eval is the
-path for re-running the gold set under Temporal when validating worker deployments.
+violations, and determinism. By default it uses the **sync** orchestrator. Pass `--temporal` (with
+a worker on `--temporal-host`, default `localhost:7233`) to run `eval-temporal` on the workstream
+gold set and require **parity** with sync metrics before `verification_complete` is true.
 
 ### Data tiers the copilot uses
 
@@ -313,6 +317,8 @@ uv sync --group temporal
 uv run pytest tests/test_durable_models.py tests/test_durable_prescreen.py -q
 uv run pytest tests/test_durable_prescreen_e2e.py -v
 uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot
+# Optional (worker + dev server running):
+uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot --temporal
 ```
 
 ---

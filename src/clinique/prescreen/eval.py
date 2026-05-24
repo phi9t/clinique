@@ -167,6 +167,102 @@ class WorkstreamGates:
         )
 
 
+def eval_metrics_passes_gates(metrics: EvalMetrics | dict[str, Any]) -> bool:
+    if isinstance(metrics, EvalMetrics):
+        accuracy = metrics.criterion_accuracy
+        violations = metrics.evidence_violations
+        false_negs = metrics.exclusion_false_negatives
+        errors = metrics.errors
+        cases_run = metrics.cases_run
+        criterion_total = metrics.criterion_total
+    else:
+        accuracy = float(metrics.get("criterion_accuracy", 0))
+        violations = int(metrics.get("evidence_violations", 0))
+        false_negs = int(metrics.get("exclusion_false_negatives", 0))
+        errors = list(metrics.get("errors") or [])
+        cases_run = int(metrics.get("cases_run", 0))
+        criterion_total = int(metrics.get("criterion_total", 0))
+    return (
+        cases_run > 0
+        and criterion_total > 0
+        and accuracy >= 0.90
+        and violations == 0
+        and false_negs == 0
+        and not errors
+    )
+
+
+def eval_metrics_parity(
+    sync: EvalMetrics,
+    temporal: dict[str, Any],
+) -> tuple[bool, list[str]]:
+    issues: list[str] = []
+    pairs = (
+        ("cases_run", sync.cases_run, temporal.get("cases_run")),
+        ("criterion_total", sync.criterion_total, temporal.get("criterion_total")),
+        ("criterion_correct", sync.criterion_correct, temporal.get("criterion_correct")),
+        ("evidence_violations", sync.evidence_violations, temporal.get("evidence_violations")),
+        (
+            "exclusion_false_negatives",
+            sync.exclusion_false_negatives,
+            temporal.get("exclusion_false_negatives"),
+        ),
+    )
+    for name, left, right in pairs:
+        if left != right:
+            issues.append(f"{name}: sync={left} temporal={right}")
+    if sync.criterion_accuracy != temporal.get("criterion_accuracy"):
+        issues.append(
+            "criterion_accuracy: "
+            f"sync={sync.criterion_accuracy} temporal={temporal.get('criterion_accuracy')}"
+        )
+    return not issues, issues
+
+
+async def _run_temporal_batch_eval_async(
+    *,
+    cases_path: Path,
+    dataset_paths: dict[str, Path],
+    reports_dir: Path,
+    temporal_host: str,
+) -> dict[str, Any]:
+    from clinique.durable.cli_runtime import connect_client
+    from clinique.durable.client import execute_batch_eval
+    from clinique.durable.models import BatchEvalInput
+
+    client = await connect_client(temporal_host)
+    return await execute_batch_eval(
+        client,
+        BatchEvalInput(
+            cases_path=str(cases_path),
+            trials_path=str(dataset_paths["trials"]),
+            synthea_patients_path=str(dataset_paths["synthea_patients"]),
+            pmc_patients_path=str(dataset_paths["pmc_patients"]),
+            mimic_patients_path=str(dataset_paths["mimic_demo_patients"]),
+            reports_dir=str(reports_dir),
+        ),
+    )
+
+
+def run_temporal_batch_eval(
+    *,
+    cases_path: Path,
+    dataset_paths: dict[str, Path],
+    reports_dir: Path,
+    temporal_host: str = "localhost:7233",
+) -> dict[str, Any]:
+    import asyncio
+
+    return asyncio.run(
+        _run_temporal_batch_eval_async(
+            cases_path=cases_path,
+            dataset_paths=dataset_paths,
+            reports_dir=reports_dir,
+            temporal_host=temporal_host,
+        )
+    )
+
+
 def verify_workstream(
     *,
     workstream_dir: str | Path = ".workstream/prescreen-copilot",
@@ -175,6 +271,9 @@ def verify_workstream(
     cases_path: str | Path | None = None,
     smoke_pairs: int = 50,
     seed: int = 42,
+    temporal: bool = False,
+    temporal_host: str = "localhost:7233",
+    temporal_eval_runner=run_temporal_batch_eval,
 ) -> dict[str, Any]:
     ws = Path(workstream_dir)
     manifest_path = ws / "datasets.manifest.json"
@@ -245,6 +344,26 @@ def verify_workstream(
 
     output_dir = Path(reports_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    temporal_block: dict[str, Any] = {"ran": False}
+    if temporal:
+        temporal_eval = temporal_eval_runner(
+            cases_path=cases_file,
+            dataset_paths=paths,
+            reports_dir=output_dir,
+            temporal_host=temporal_host,
+        )
+        parity_ok, parity_issues = eval_metrics_parity(eval_metrics, temporal_eval)
+        temporal_block = {
+            "ran": True,
+            "host": temporal_host,
+            "eval": temporal_eval,
+            "eval_passes": eval_metrics_passes_gates(temporal_eval),
+            "parity_ok": parity_ok,
+            "parity_issues": parity_issues,
+            "temporal_goal_complete": eval_metrics_passes_gates(temporal_eval) and parity_ok,
+        }
+
     report = {
         "goal_complete": gates.goal_complete
         and eval_metrics.cases_run > 0
@@ -252,6 +371,13 @@ def verify_workstream(
         "gates": gates.as_dict(),
         "conformance": conformance.to_dict(),
         "eval": eval_metrics.to_dict(),
+        "temporal": temporal_block,
+        "verification_complete": (
+            gates.goal_complete
+            and eval_metrics.cases_run > 0
+            and eval_metrics.criterion_total > 0
+            and (not temporal or temporal_block.get("temporal_goal_complete", False))
+        ),
         "datasets": {k: str(v) for k, v in paths.items()},
         "records": {
             "trials": len(trials),
@@ -264,25 +390,54 @@ def verify_workstream(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    summary_path = ws / "validation-summary.md"
-    summary_path.write_text(
-        "\n".join(
+    summary_lines = [
+        "# Prescreen Copilot Validation Summary",
+        "",
+        "## Sync verification (`goal_complete`)",
+        "",
+        f"- goal_complete: **{report['goal_complete']}**",
+        f"- corpus_conformance_ok: {gates.corpus_conformance_ok}",
+        f"- atomizer_coverage: {gates.atomizer_coverage:.3f}",
+        f"- criterion_accuracy: {gates.criterion_accuracy:.3f}",
+        f"- evidence_violations: {gates.evidence_violations}",
+        f"- exclusion_false_negatives: {gates.exclusion_false_negatives}",
+        f"- scale_smoke_ok: {gates.scale_smoke_ok}",
+        f"- determinism_ok: {gates.determinism_ok}",
+        "",
+        f"Full report: `{output_dir / 'workstream-verification.json'}`",
+        "",
+    ]
+    if temporal:
+        summary_lines.extend(
             [
-                "# Prescreen Copilot Validation Summary",
+                "## Temporal verification (`--temporal`)",
                 "",
-                f"- goal_complete: **{gates.goal_complete}**",
-                f"- corpus_conformance_ok: {gates.corpus_conformance_ok}",
-                f"- atomizer_coverage: {gates.atomizer_coverage:.3f}",
-                f"- criterion_accuracy: {gates.criterion_accuracy:.3f}",
-                f"- evidence_violations: {gates.evidence_violations}",
-                f"- exclusion_false_negatives: {gates.exclusion_false_negatives}",
-                f"- scale_smoke_ok: {gates.scale_smoke_ok}",
-                f"- determinism_ok: {gates.determinism_ok}",
+                f"- temporal_goal_complete: **{temporal_block['temporal_goal_complete']}**",
+                f"- eval_passes: {temporal_block['eval_passes']}",
+                f"- parity_with_sync: {temporal_block['parity_ok']}",
+            ]
+        )
+        if temporal_block["parity_issues"]:
+            summary_lines.append(f"- parity_issues: {temporal_block['parity_issues']}")
+        summary_lines.extend(
+            [
                 "",
-                f"Full report: `{output_dir / 'workstream-verification.json'}`",
+                f"Temporal eval report: `{temporal_block['eval'].get('report_path', 'n/a')}`",
                 "",
             ]
-        ),
-        encoding="utf-8",
+        )
+    summary_lines.extend(
+        [
+            "## Durable pytest evidence",
+            "",
+            "```bash",
+            "uv sync --group temporal",
+            "uv run pytest tests/test_durable_models.py tests/test_durable_prescreen.py "
+            "tests/test_durable_prescreen_e2e.py -q",
+            "```",
+            "",
+        ]
     )
+    summary_path = ws / "validation-summary.md"
+    summary_path.write_text("\n".join(summary_lines), encoding="utf-8")
     return report

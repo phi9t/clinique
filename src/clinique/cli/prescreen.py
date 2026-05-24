@@ -286,19 +286,30 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
                 datasets_dir=args.datasets_dir,
                 reports_dir=args.reports_dir,
                 cases_path=args.cases,
+                temporal=args.temporal,
+                temporal_host=args.temporal_host,
             )
         except FileNotFoundError as exc:
             print(f"prescreen verify-workstream failed: {exc}", file=sys.stderr)
             return 3
+        except ImportError as exc:
+            print(f"prescreen verify-workstream failed: {exc}", file=sys.stderr)
+            return 2
         except (OSError, ValueError) as exc:
             print(f"prescreen verify-workstream failed: {exc}", file=sys.stderr)
             return 2
-        print(
+        msg = (
             f"goal_complete={report['goal_complete']} "
-            f"criterion_accuracy={report['eval']['criterion_accuracy']:.3f}",
-            file=sys.stderr,
+            f"criterion_accuracy={report['eval']['criterion_accuracy']:.3f}"
         )
-        return 0 if report["goal_complete"] else 9
+        if args.temporal:
+            temporal = report.get("temporal", {})
+            msg += (
+                f" temporal_goal_complete={temporal.get('temporal_goal_complete')} "
+                f"parity_ok={temporal.get('parity_ok')}"
+            )
+        print(msg, file=sys.stderr)
+        return 0 if report["verification_complete"] else 9
     if args.prescreen_command == "validate":
         if not args.trials and not args.patients:
             print("prescreen validate: pass --trials and/or --patients", file=sys.stderr)

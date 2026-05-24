@@ -292,7 +292,8 @@ CLI commands (implemented):
 | `prescreen atomize` | Trial → criteria JSONL | 0 success, 2 I/O failure |
 | `prescreen screen` | Full prescreening packet | 0 success, 2 input, 8 evidence-gate fail |
 | `prescreen eval` | L0 gold-label eval | 0 pass, 9 threshold fail |
-| `prescreen verify-workstream` | Bundled scale verification | 0 goal complete, 3 missing datasets, 9 fail |
+| `prescreen verify-workstream` | Bundled scale verification | 0 verification complete, 3 missing datasets, 9 fail |
+| `prescreen verify-workstream --temporal` | Sync gates + Temporal eval parity | 2 SDK/connect, 9 fail |
 | `prescreen normalize-mimic-demo` | MIMIC demo CSV → JSONL | 0 success, 2 I/O failure |
 
 `screen|atomize|eval|verify-workstream` mirror the copilot pipeline; see `.workstream/prescreen-copilot/`.

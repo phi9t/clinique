@@ -26,8 +26,8 @@ prospective `eval-temporal` on scale corpus.
 - [x] `clinique/durable/` wraps copilot graph (Pydantic payloads, parallel criteria, batch eval)
 - [x] `uv run pytest tests/test_durable_models.py tests/test_durable_prescreen.py tests/test_durable_prescreen_e2e.py -q` passes
 - [x] Walkthrough for ML researchers / MLsys in `docs/design/temporal-prescreen.md`
-- [ ] Optional: `prescreen eval-temporal` on scale corpus → `l0-eval-temporal.json` (prospective; needs running worker)
-- [ ] Optional: wire `eval-temporal` into `verify-workstream --temporal` (not implemented — sync oracle stays canonical for `goal_complete`)
+- [x] `prescreen verify-workstream --temporal` runs eval-temporal and checks sync parity
+- [ ] Optional: prospective `prescreen verify-workstream --temporal` on scale corpus with live worker (manual)
 
 Quick durable smoke:
 

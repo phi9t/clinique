@@ -136,4 +136,14 @@ def build_parser() -> argparse.ArgumentParser:
     verify_ws.add_argument("--datasets-dir", help="defaults to ~/.clinique/datasets")
     verify_ws.add_argument("--reports-dir", default="reports/prescreen")
     verify_ws.add_argument("--cases", help="override l0_cases.jsonl path")
+    verify_ws.add_argument(
+        "--temporal",
+        action="store_true",
+        help="also run eval-temporal and require parity with sync eval",
+    )
+    verify_ws.add_argument(
+        "--temporal-host",
+        default="localhost:7233",
+        help="Temporal server when --temporal is set (worker must be running)",
+    )
     return parser

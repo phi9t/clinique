@@ -60,7 +60,8 @@ Override dataset root with `CLINIQUE_DATASETS_DIR` or `--datasets-dir`.
 | `prescreen eval` | 0 / 9 |
 | `prescreen eval-temporal` | 0 / 2 / 3 / 9 |
 | `prescreen worker` | 0 running / 2 connect or missing SDK |
-| `prescreen verify-workstream` | 0 goal complete / 3 missing datasets / 9 thresholds fail |
+| `prescreen verify-workstream` | 0 verification complete / 3 missing datasets / 9 fail |
+| `prescreen verify-workstream --temporal` | also requires Temporal eval + sync parity; 2 connect/SDK |
 | `prescreen normalize-mimic-demo` | 0 / 2 |
 
 Sync commands implement the copilot graph in-process. Temporal commands wrap the **same**
@@ -89,7 +90,7 @@ separately:
 | Wire model round-trip | `uv run pytest tests/test_durable_models.py -q` | Pydantic ↔ domain |
 | Sync parity + determinism | `uv run pytest tests/test_durable_prescreen.py -q` | `packet_fingerprint` vs orchestrator |
 | Real server + failure injection | `uv run pytest tests/test_durable_prescreen_e2e.py -v` | dev server, worker, retry/gate cases |
-| Gold set under Temporal | `prescreen eval-temporal` (see data-inventory) | `reports/prescreen/l0-eval-temporal.json` |
+| Gold set under Temporal | `prescreen verify-workstream --temporal` or `prescreen eval-temporal` | `l0-eval-temporal.json` + parity in verification report |
 
 Design and extension guide: [`docs/design/temporal-prescreen.md`](../../docs/design/temporal-prescreen.md).
 

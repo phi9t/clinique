@@ -53,7 +53,7 @@ uv run clinique prescreen eval-temporal \
 | Gap | Severity | Notes |
 |---|---|---|
 | `l0_cases.jsonl` has 3 gold cases | low | Enough for CI gate; expand for richer criterion coverage |
-| `verify-workstream` is sync-only | intentional | Adding `--temporal` would couple release to running cluster |
+| `verify-workstream --temporal` | implemented | sync `goal_complete` + `temporal_goal_complete` parity |
 | No committed `l0-eval-temporal.json` | low | Generated on demand; sync `l0-eval.json` in reports is canonical |
 | Human-review workflow signal | deferred | Ledger writes `pending`; no Temporal wait on reviewer |
 | Durable ingest/normalize workflows | deferred | CT.gov fetch still sync CLI |
