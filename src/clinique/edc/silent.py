@@ -63,6 +63,8 @@ def load_silent_log(path: str | Path) -> tuple[SilentLogEntry, ...]:
         raw_entries = json.load(handle)
     if not isinstance(raw_entries, list):
         raise ValueError("silent log must contain a JSON list")
+    if not raw_entries:
+        raise ValueError("silent log must contain at least one recommendation")
     entries = tuple(SilentLogEntry.from_json(raw) for raw in raw_entries)
     impacted = [entry.recommendation_id for entry in entries if entry.affected_operations]
     if impacted:

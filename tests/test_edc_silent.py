@@ -76,6 +76,18 @@ def test_load_silent_log_rejects_string_boolean_values(tmp_path):
         raise AssertionError("expected strict boolean rejection")
 
 
+def test_load_silent_log_rejects_empty_logs(tmp_path):
+    path = tmp_path / "empty_silent_log.json"
+    path.write_text("[]")
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "at least one recommendation" in str(exc)
+    else:
+        raise AssertionError("expected empty silent log rejection")
+
+
 def test_evaluate_silent_log_reports_burden_deltas_and_stop_criteria():
     entries = load_silent_log(SILENT_LOG)
 
