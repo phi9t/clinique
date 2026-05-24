@@ -23,7 +23,8 @@ Evidence:
   object, checks top-level manifest version/timestamp metadata, rejects source types outside the
   approved EDC snapshots, query logs, and edit-check history inventory, requires owner/export
   path metadata to be nonblank strings, and requires schema sketches to list nonblank
-  source-specific fields needed by the approved-export importer.
+  source-specific fields needed by the approved-export importer, with missing fields reported
+  per source type.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json

@@ -64,6 +64,7 @@ class InternalPreflightResult:
     unblinded_sources: tuple[str, ...]
     non_read_only_sources: tuple[str, ...]
     incomplete_sources: tuple[str, ...]
+    missing_schema_fields: dict[str, tuple[str, ...]]
     invalid_metadata: tuple[str, ...]
 
     def as_dict(self) -> dict[str, object]:
@@ -76,6 +77,10 @@ class InternalPreflightResult:
             "unblinded_sources": list(self.unblinded_sources),
             "non_read_only_sources": list(self.non_read_only_sources),
             "incomplete_sources": list(self.incomplete_sources),
+            "missing_schema_fields": {
+                source_type: list(fields)
+                for source_type, fields in self.missing_schema_fields.items()
+            },
             "invalid_metadata": list(self.invalid_metadata),
         }
 
@@ -97,6 +102,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     unblinded: list[str] = []
     non_read_only: list[str] = []
     incomplete: list[str] = []
+    missing_schema_fields: dict[str, tuple[str, ...]] = {}
     for source in sources:
         if not isinstance(source, dict):
             raise ValueError("each manifest source must be an object")
@@ -115,6 +121,9 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
             non_read_only.append(source_type)
         if not _source_complete(source):
             incomplete.append(source_type)
+        missing_fields = _missing_schema_fields(source.get("schema_sketch"), source_type)
+        if missing_fields:
+            missing_schema_fields[source_type] = missing_fields
 
     missing = tuple(source for source in REQUIRED_SOURCES if source not in set(present))
     ok = (
@@ -135,6 +144,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         unblinded_sources=tuple(unblinded),
         non_read_only_sources=tuple(non_read_only),
         incomplete_sources=tuple(incomplete),
+        missing_schema_fields=missing_schema_fields,
         invalid_metadata=invalid_metadata,
     )
 
@@ -174,10 +184,15 @@ def _schema_sketch_complete(value: Any, source_type: Any) -> bool:
         and all(isinstance(field, str) and field.strip() for field in value)
     ):
         return False
+    return not _missing_schema_fields(value, source_type)
+
+
+def _missing_schema_fields(value: Any, source_type: Any) -> tuple[str, ...]:
     required = REQUIRED_SCHEMA_FIELDS.get(source_type)
-    if required is None:
-        return True
-    return required.issubset({field.strip() for field in value})
+    if required is None or not isinstance(value, list):
+        return ()
+    present = {field.strip() for field in value if isinstance(field, str)}
+    return tuple(sorted(required - present))
 
 
 def _date_coverage_complete(value: Any) -> bool:

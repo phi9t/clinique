@@ -85,6 +85,7 @@ def test_preflight_internal_manifest_accepts_minimum_complete_manifest(tmp_path)
 
     assert result.ok is True
     assert result.missing_required_sources == ()
+    assert result.missing_schema_fields == {}
     assert result.unblinded_sources == ()
     assert result.non_read_only_sources == ()
     assert result.invalid_metadata == ()
@@ -227,6 +228,38 @@ def test_preflight_internal_manifest_rejects_source_specific_schema_gaps(tmp_pat
 
     assert result.ok is False
     assert result.incomplete_sources == ("edc_snapshots", "query_logs", "edit_check_history")
+    assert result.missing_schema_fields == {
+        "edc_snapshots": (
+            "collected_at",
+            "contains_phi",
+            "contains_unblinded",
+            "field",
+            "form",
+            "record_id",
+            "site_id",
+            "subject_id",
+            "value",
+        ),
+        "query_logs": (
+            "closed_at",
+            "field",
+            "form",
+            "query_category",
+            "query_text",
+            "resolution",
+            "site_id",
+            "snapshot_id",
+            "study_id",
+            "subject_id",
+        ),
+        "edit_check_history": (
+            "field",
+            "form",
+            "kind",
+            "message",
+            "query_category",
+        ),
+    }
 
 
 def test_preflight_internal_manifest_rejects_malformed_source_identity_metadata(tmp_path):
