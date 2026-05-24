@@ -152,6 +152,68 @@ def test_fixture_bundle_rejects_unknown_label_enums(tmp_path):
             raise AssertionError("expected unknown label enum rejection")
 
 
+def test_fixture_bundle_rejects_inconsistent_label_semantics(tmp_path):
+    base_label = {
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "gold_query_needed": True,
+        "query_category": "missing",
+        "human_resolution": "corrected",
+        "opened_at": "2026-03-02T09:00:00Z",
+        "closed_at": None,
+        "evidence_available_at_agent_time": True,
+    }
+    cases = [
+        (
+            "true_no_query_category",
+            {"gold_query_needed": True, "query_category": "no_query"},
+            "true discrepancy labels cannot use no_query category",
+        ),
+        (
+            "true_no_query_resolution",
+            {"gold_query_needed": True, "human_resolution": "no_query_needed"},
+            "true discrepancy labels cannot use no_query_needed resolution",
+        ),
+        (
+            "false_discrepancy_category",
+            {"gold_query_needed": False, "query_category": "missing"},
+            "no-query labels must use no_query category",
+        ),
+        (
+            "false_corrected_resolution",
+            {"gold_query_needed": False, "human_resolution": "corrected"},
+            "no-query labels must use no_query_needed resolution",
+        ),
+        (
+            "false_opened",
+            {"gold_query_needed": False, "opened_at": "2026-03-02T09:00:00Z"},
+            "no-query labels cannot have opened_at",
+        ),
+    ]
+    for dirname, patch, expected_error in cases:
+        fixture_dir = tmp_path / dirname
+        label = dict(base_label)
+        label.update(patch)
+        if not label["gold_query_needed"] and "human_resolution" not in patch:
+            label["human_resolution"] = "no_query_needed"
+        if not label["gold_query_needed"] and "query_category" not in patch:
+            label["query_category"] = "no_query"
+        if not label["gold_query_needed"] and "opened_at" not in patch:
+            label["opened_at"] = None
+        _write_minimal_fixture_dir(fixture_dir, labels=[label])
+
+        try:
+            load_fixture_bundle(fixture_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected inconsistent label semantics rejection")
+
+
 def test_fixture_bundle_rejects_unknown_source_query_categories(tmp_path):
     fixture_dir = tmp_path / "bad_rule_category"
     _write_minimal_fixture_dir(

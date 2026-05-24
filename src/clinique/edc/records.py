@@ -251,6 +251,23 @@ class QueryLabel:
             closed_at=closed_at,
             label="label",
         )
+        gold_query_needed = require_bool("gold_query_needed", raw["gold_query_needed"])
+        query_category = require_one_of(
+            "query_category",
+            raw["query_category"],
+            ALLOWED_QUERY_CATEGORIES,
+        )
+        human_resolution = require_one_of(
+            "human_resolution",
+            raw["human_resolution"],
+            ALLOWED_HUMAN_RESOLUTIONS,
+        )
+        validate_query_label_semantics(
+            gold_query_needed=gold_query_needed,
+            query_category=query_category,
+            human_resolution=human_resolution,
+            opened_at=opened_at,
+        )
         return cls(
             snapshot_id=raw["snapshot_id"],
             study_id=raw["study_id"],
@@ -258,17 +275,9 @@ class QueryLabel:
             subject_id=raw["subject_id"],
             form=raw["form"],
             field=raw["field"],
-            gold_query_needed=require_bool("gold_query_needed", raw["gold_query_needed"]),
-            query_category=require_one_of(
-                "query_category",
-                raw["query_category"],
-                ALLOWED_QUERY_CATEGORIES,
-            ),
-            human_resolution=require_one_of(
-                "human_resolution",
-                raw["human_resolution"],
-                ALLOWED_HUMAN_RESOLUTIONS,
-            ),
+            gold_query_needed=gold_query_needed,
+            query_category=query_category,
+            human_resolution=human_resolution,
             opened_at=opened_at,
             closed_at=closed_at,
             evidence_available_at_agent_time=require_bool(
@@ -337,6 +346,28 @@ def validate_query_log_status_timestamp(*, status: str, closed_at: datetime | No
         raise ValueError("closed query logs require closed_at")
     if status == "open" and closed_at is not None:
         raise ValueError("open query logs cannot have closed_at")
+
+
+def validate_query_label_semantics(
+    *,
+    gold_query_needed: bool,
+    query_category: str,
+    human_resolution: str,
+    opened_at: datetime | None,
+) -> None:
+    if gold_query_needed:
+        if query_category == "no_query":
+            raise ValueError("true discrepancy labels cannot use no_query category")
+        if human_resolution == "no_query_needed":
+            raise ValueError("true discrepancy labels cannot use no_query_needed resolution")
+        return
+
+    if query_category != "no_query":
+        raise ValueError("no-query labels must use no_query category")
+    if human_resolution != "no_query_needed":
+        raise ValueError("no-query labels must use no_query_needed resolution")
+    if opened_at is not None:
+        raise ValueError("no-query labels cannot have opened_at")
 
 
 def validate_unique_query_log_ids(query_logs: tuple[QueryLog, ...]) -> None:
