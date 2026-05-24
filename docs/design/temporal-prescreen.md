@@ -117,6 +117,198 @@ uv run pytest tests/test_durable_prescreen_e2e.py -v
 - **Deterministic aggregation** stays in pure Python; the workflow only orchestrates.
 - **Sync orchestrator** (`PrescreenOrchestrator.screen`) remains the offline oracle for unit tests.
 
+## Walkthrough: copilot pipeline on Temporal
+
+This section ties the **prescreen copilot** workstream (`.workstream/prescreen-copilot/`) to the
+**Temporal durable layer** (`src/clinique/durable/`). The copilot implements a deterministic typed
+graph; Temporal wraps that graph so long-running screens survive worker restarts, retry transient
+failures per criterion, and batch-eval the workstream gold set with isolated per-case history.
+
+### Copilot pipeline (sync reference)
+
+The copilot pipeline is the same whether you run sync or durable — only the **orchestration shell**
+changes:
+
+```
+Trial + PatientCorpus
+  → ReferenceAtomizer        → list[Criterion]
+  → per criterion:
+      retrieve (BM25)        → list[Evidence]
+      RuleJudge              → CriterionJudgment
+  → aggregate                → recommendation string
+  → build PrescreeningPacket
+  → evidence-provenance gate  (hard fail if quotes don't match source docs)
+  → optional ProvenanceLedger append
+```
+
+Sync entry point: `PrescreenOrchestrator().screen(trial, corpus)` in `prescreen/orchestrator.py`.
+This is the **offline oracle** — durable tests assert identical packet fingerprints against it.
+
+Workstream design and gates: `.workstream/prescreen-copilot/design.md` and
+`docs/design/trial-prescreening.md`.
+
+### How Temporal maps the pipeline
+
+```mermaid
+flowchart TD
+  subgraph copilot_data [Copilot data]
+    TRIALS[trials.jsonl]
+    PATIENTS[patient JSONL]
+    CASES[l0_cases.jsonl gold labels]
+  end
+
+  subgraph sync_path [Sync path — no server]
+    CLI1["clinique prescreen screen"]
+    ORCH[PrescreenOrchestrator]
+    CLI1 --> ORCH
+  end
+
+  subgraph durable_path [Durable path — Temporal]
+    CLI2["clinique prescreen screen --temporal"]
+    CLI3["clinique prescreen eval-temporal"]
+    CLIENT[Temporal Client + Pydantic payloads]
+    SW[ScreenPatientWorkflow]
+    BE[BatchEvalWorkflow]
+    WORKER[clinique.durable.worker]
+    CLI2 --> CLIENT
+    CLI3 --> CLIENT
+    CLIENT --> SW
+    CLIENT --> BE
+    WORKER --> SW
+    WORKER --> BE
+  end
+
+  subgraph activities [Activities call copilot modules]
+    A1[atomize_trial → ReferenceAtomizer]
+    A2[evaluate_criterion → retrieve + RuleJudge]
+    A3[aggregate_judgments → aggregate]
+    A4[build_packet]
+    A5[assert_evidence_provenance_activity]
+    A6[append_ledger → ProvenanceLedger]
+  end
+
+  TRIALS --> CLI1
+  TRIALS --> CLI2
+  PATIENTS --> CLI1
+  PATIENTS --> CLI2
+  CASES --> CLI3
+
+  SW --> A1 --> A2 --> A3 --> A4 --> A5 --> A6
+  BE --> SW
+```
+
+| Copilot stage | Sync | Temporal activity / workflow |
+|---|---|---|
+| Atomize trial | in-process | `atomize_trial` |
+| Retrieve + judge per criterion | in-process loop | `evaluate_criterion` (one activity per criterion, **parallel** via `asyncio.gather`) |
+| Aggregate | in-process | `aggregate_judgments` |
+| Build packet | in-process | `build_packet` |
+| Evidence gate | in-process, exit 8 on CLI | `assert_evidence_provenance_activity` (non-retryable failure) |
+| Ledger | optional | `append_ledger` |
+| Full screen | `PrescreenOrchestrator.screen` | `ScreenPatientWorkflow` child or standalone |
+| L0 batch eval | `prescreen eval` | `BatchEvalWorkflow` → child `ScreenPatientWorkflow` per case |
+
+Wire types are **Pydantic models** in `durable/models.py` (`TrialModel`, `PatientCorpusModel`,
+`PrescreeningPacketModel`, …). Activities convert to stdlib dataclasses at the boundary, call
+existing copilot code, and convert back.
+
+### Prescreen copilot commands: sync vs durable
+
+**1. Single patient screen (development / coordinator preview)**
+
+```bash
+# Sync — no Temporal server; fastest for unit work
+uv run clinique prescreen screen \
+  --trial-id NCT02578680 --patient-id P1 \
+  --trials tests/fixtures/prescreen/trials.jsonl \
+  --patients /tmp/synthea_patients.jsonl
+
+# Durable — same copilot logic, persisted workflow history + per-criterion retry
+temporal server start-dev &
+uv sync --group temporal
+uv run clinique prescreen worker &
+uv run clinique prescreen screen --temporal \
+  --trial-id NCT02578680 --patient-id P1 \
+  --trials tests/fixtures/prescreen/trials.jsonl \
+  --patients /tmp/synthea_patients.jsonl \
+  --ledger /tmp/prescreen-ledger.jsonl   # optional provenance append
+```
+
+**2. L0 eval against copilot gold labels**
+
+The workstream ships criterion-level gold in `.workstream/prescreen-copilot/l0_cases.jsonl`.
+Each line is one `(trial_id, patient_id, snapshot_date, gold_judgments)` case.
+
+```bash
+# Sync eval → reports/prescreen/l0-eval.json
+uv run clinique prescreen eval \
+  --cases .workstream/prescreen-copilot/l0_cases.jsonl \
+  --trials tests/fixtures/prescreen/trials.jsonl \
+  --synthea-patients /tmp/synthea_patients.jsonl
+
+# Durable batch eval → reports/prescreen/l0-eval-temporal.json
+uv run clinique prescreen eval-temporal \
+  --cases .workstream/prescreen-copilot/l0_cases.jsonl \
+  --trials tests/fixtures/prescreen/trials.jsonl \
+  --synthea-patients /tmp/synthea_patients.jsonl
+```
+
+`BatchEvalWorkflow` loads cases via `load_eval_inputs`, resolves trial + corpus per case, runs up to
+`BATCH_EVAL_CONCURRENCY` (10) **concurrent** child `ScreenPatientWorkflow` runs, then scores with
+`score_eval_results` (criterion accuracy, evidence violations, per-case errors). Exit code **9** if
+accuracy &lt; 0.90 or errors present — same threshold posture as sync `prescreen eval`.
+
+**3. Workstream verification gate (copilot release readiness)**
+
+```bash
+uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot
+```
+
+This gate checks scale datasets, conformance, atomizer coverage, gold accuracy, evidence
+violations, and determinism. It uses the **sync** orchestrator today; durable batch eval is the
+path for re-running the gold set under Temporal when validating worker deployments.
+
+### Data tiers the copilot uses
+
+| Tier | Location | Used by |
+|---|---|---|
+| CI micro-fixtures | `tests/fixtures/prescreen/` | pytest, quick `screen` / durable E2E |
+| Workstream gold | `.workstream/prescreen-copilot/l0_cases.jsonl` | `eval`, `eval-temporal` |
+| Scale corpus | `~/.clinique/datasets/prescreen-copilot/` | `verify-workstream`, scale eval |
+| Manifest | `.workstream/prescreen-copilot/datasets.manifest.json` | `datasets.py` path resolution |
+
+Override dataset root with `CLINIQUE_DATASETS_DIR` or `--datasets-dir`.
+
+### Failure and retry semantics (why durable matters for copilot)
+
+| Failure | Behavior |
+|---|---|
+| Transient error in retrieve/judge for one criterion | That criterion's activity retries (up to 3); other criteria already completed stay done |
+| Evidence-provenance violation | Non-retryable — workflow fails; packet never reaches ledger (same invariant as sync exit 8) |
+| Missing patient in batch eval | Per-case error collected; other cases continue |
+| Worker crash mid-screen | Temporal replays workflow; completed activities are not re-run |
+
+This is why the design keeps **per-criterion activities** instead of one monolithic
+`PrescreenOrchestrator.screen()` activity: the copilot's expensive unit is one criterion, and
+coordinators need visibility into which criterion failed when reviewing Temporal history.
+
+### Observability
+
+- **Temporal Web UI:** http://localhost:8233 (dev server) — inspect workflow history per screen
+- **Workflow IDs:** `prescreen/{trial_id}/{patient_id}/{snapshot}/{tool_fingerprint}` for idempotent re-runs
+- **Ledger:** JSONL append via `--ledger` on `screen --temporal`; `HumanReview.status` starts `pending`
+
+### Quick validation checklist
+
+```bash
+uv sync --group temporal
+uv run pytest tests/test_durable_models.py tests/test_durable_prescreen.py -q
+uv run pytest tests/test_durable_prescreen_e2e.py -v
+uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot
+```
+
+---
+
 ## Deferred
 
 - Human-review signals (`HumanReview.status` wait)

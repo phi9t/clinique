@@ -262,7 +262,7 @@ src/clinique/prescreen/
   aggregator.py     ✅ deterministic overall recommendation (library; no CLI yet)
   evidence_gate.py  ✅ evidence-provenance hard gate
   vocab.py          ✅ deterministic drug-class / synonym lookup (RxNorm/ATC subset)
-  orchestrator.py   ✅ sync graph; durable wrapper in `clinique/durable/` (see temporal-prescreen.md)
+  orchestrator.py   ✅ sync graph; durable wrapper in `clinique/durable/` ([walkthrough](temporal-prescreen.md#walkthrough-copilot-pipeline-on-temporal))
   eval.py           ✅ L0 eval + verify-workstream
   datasets.py       ✅ ~/.clinique/datasets path resolution
 tests/
