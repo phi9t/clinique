@@ -134,17 +134,18 @@ def _source_paths(manifest_path: str | Path) -> dict[str, Path]:
     root = manifest_file.parent
     paths: dict[str, Path] = {}
     for source in manifest["sources"]:
+        source_type = source["source_type"].strip()
         export_path = Path(source["export_path"])
         if export_path.is_absolute():
-            paths[source["source_type"]] = export_path
+            paths[source_type] = export_path
             continue
         resolved_root = root.resolve()
         resolved_export_path = (root / export_path).resolve()
         if not resolved_export_path.is_relative_to(resolved_root):
             raise ValueError(
-                f"relative export_path escapes manifest directory: {source['source_type']}"
+                f"relative export_path escapes manifest directory: {source_type}"
             )
-        paths[source["source_type"]] = resolved_export_path
+        paths[source_type] = resolved_export_path
     return paths
 
 

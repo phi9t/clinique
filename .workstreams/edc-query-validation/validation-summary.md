@@ -31,7 +31,8 @@ Evidence:
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
   --reports-dir reports/edc-query` validates the approved-export import path on synthetic
   fixture data, resolves relative export paths from the manifest directory, rejects relative
-  export paths that escape that directory, and returns a controlled validation failure for
+  export paths that escape that directory, uses the same normalized source identity accepted by
+  preflight when locating payload directories, and returns a controlled validation failure for
   missing, invalid, non-list, item-indexed non-object, malformed object, or structurally invalid
   export payloads. Import-time preflight failures preserve source-specific diagnostics, including
   missing and duplicate schema fields, for remediation before payload review.
@@ -80,9 +81,10 @@ Evidence:
   source identity, source-type, and source-specific schema-sketch enforcement, silent-log
   query-category, schema-field duplicate rejection, preflight path traversal rejection,
   manifest-relative export paths, manifest-relative path traversal rejection, malformed
-  approved-export payload, item-indexed payload-object rejection, source-context structural
-  validation errors, payload-file-context unblinded snapshot rejection, evidence, and
-  recommendation-ID enforcement, silent evidence-citation validation, safety-label consistency,
+  approved-export payload, preflight-normalized source identity during payload path resolution,
+  item-indexed payload-object rejection, source-context structural validation errors,
+  payload-file-context unblinded snapshot rejection, evidence, and recommendation-ID enforcement,
+  silent evidence-citation validation, safety-label consistency,
   finite tolerance validation, signed timing metrics, and evaluation, controlled-rollout gate
   rate/integer-count/integer-delta validation, finite-number validation, threshold-direction
   validation, randomization-unit validation, and evaluation, approved-export import, bundled

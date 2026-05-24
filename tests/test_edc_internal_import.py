@@ -342,6 +342,25 @@ def test_load_internal_export_bundle_resolves_relative_paths_from_manifest_direc
     assert [query.query_id for query in bundle.query_logs] == ["Q-001"]
 
 
+def test_load_internal_export_bundle_uses_preflight_normalized_source_types(tmp_path):
+    export_root = tmp_path / "approved-export"
+    manifest = _write_manifest(export_root, relative_export_paths=True)
+    payload = json.loads(manifest.read_text())
+    payload["sources"][0]["source_type"] = " edc_snapshots "
+    manifest.write_text(json.dumps(payload))
+
+    bundle = load_internal_export_bundle(
+        manifest,
+        labels_path=FIXTURES / "labels.json",
+        lock_issues_path=FIXTURES / "lock_issues.json",
+    )
+
+    assert [snapshot.snapshot_id for snapshot in bundle.snapshots] == [
+        "snap-2026-03-01",
+        "snap-2026-03-08",
+    ]
+
+
 def test_load_internal_export_bundle_rejects_relative_paths_outside_manifest_directory(
     tmp_path,
 ):
