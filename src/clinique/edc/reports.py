@@ -121,11 +121,25 @@ def _count_lock_issues_found_early(
     replayed_at: datetime,
 ) -> int:
     candidate_keys = {
-        (candidate.subject_id, candidate.form, candidate.field) for candidate in candidates
+        (
+            candidate.study_id,
+            candidate.site_id,
+            candidate.subject_id,
+            candidate.form,
+            candidate.field,
+        )
+        for candidate in candidates
     }
     return sum(
         1
         for issue in lock_issues
-        if (issue.subject_id, issue.form, issue.field) in candidate_keys
+        if (
+            issue.study_id,
+            issue.site_id,
+            issue.subject_id,
+            issue.form,
+            issue.field,
+        )
+        in candidate_keys
         and replayed_at < issue.discovered_at
     )
