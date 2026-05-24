@@ -1,0 +1,29 @@
+[
+  {
+    "core_id": "CG0021",
+    "message": "Variable label mismatch with the published library",
+    "domain": "AE",
+    "variable": "AEDECOD",
+    "severity": "Error",
+    "count": 3,
+    "gold": "true_error"
+  },
+  {
+    "core_id": "SD0064",
+    "message": "Variable length is too long for actual data",
+    "domain": "AE",
+    "variable": "AETERM",
+    "severity": "Warning",
+    "count": 1,
+    "gold": "waiver_candidate"
+  },
+  {
+    "core_id": "SD1077",
+    "message": "Define.xml metadata note for derived variable",
+    "domain": "DM",
+    "variable": "",
+    "severity": "Notice",
+    "count": 1,
+    "gold": "expected"
+  }
+]
