@@ -66,6 +66,7 @@ class InternalPreflightResult:
     incomplete_sources: tuple[str, ...]
     missing_schema_fields: dict[str, tuple[str, ...]]
     duplicate_schema_fields: dict[str, tuple[str, ...]]
+    escaped_export_paths: tuple[str, ...]
     invalid_metadata: tuple[str, ...]
 
     def as_dict(self) -> dict[str, object]:
@@ -86,12 +87,14 @@ class InternalPreflightResult:
                 source_type: list(fields)
                 for source_type, fields in self.duplicate_schema_fields.items()
             },
+            "escaped_export_paths": list(self.escaped_export_paths),
             "invalid_metadata": list(self.invalid_metadata),
         }
 
 
 def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
-    with Path(path).open() as handle:
+    manifest_path = Path(path)
+    with manifest_path.open() as handle:
         manifest = json.load(handle)
     if not isinstance(manifest, dict):
         raise ValueError("manifest must be a JSON object")
@@ -109,6 +112,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     incomplete: list[str] = []
     missing_schema_fields: dict[str, tuple[str, ...]] = {}
     duplicate_schema_fields: dict[str, tuple[str, ...]] = {}
+    escaped_export_paths: list[str] = []
     for source in sources:
         if not isinstance(source, dict):
             raise ValueError("each manifest source must be an object")
@@ -133,6 +137,11 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         duplicate_fields = _duplicate_schema_fields(source.get("schema_sketch"), source_type)
         if duplicate_fields:
             duplicate_schema_fields[source_type] = duplicate_fields
+        if _relative_export_path_escapes_manifest_dir(
+            source.get("export_path"),
+            manifest_path.parent,
+        ):
+            escaped_export_paths.append(source_type)
 
     missing = tuple(source for source in REQUIRED_SOURCES if source not in set(present))
     ok = (
@@ -143,6 +152,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         and not non_read_only
         and not incomplete
         and not duplicate_schema_fields
+        and not escaped_export_paths
         and not invalid_metadata
     )
     return InternalPreflightResult(
@@ -156,6 +166,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         incomplete_sources=tuple(incomplete),
         missing_schema_fields=missing_schema_fields,
         duplicate_schema_fields=duplicate_schema_fields,
+        escaped_export_paths=tuple(escaped_export_paths),
         invalid_metadata=invalid_metadata,
     )
 
@@ -222,6 +233,15 @@ def _duplicate_schema_fields(value: Any, source_type: Any) -> tuple[str, ...]:
             duplicates.add(normalized)
         seen.add(normalized)
     return tuple(sorted(duplicates))
+
+
+def _relative_export_path_escapes_manifest_dir(value: Any, root: Path) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    export_path = Path(value)
+    if export_path.is_absolute():
+        return False
+    return not (root / export_path).resolve().is_relative_to(root.resolve())
 
 
 def _date_coverage_complete(value: Any) -> bool:

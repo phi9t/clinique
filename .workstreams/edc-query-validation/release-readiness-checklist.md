@@ -59,7 +59,8 @@
       `edc_snapshots`, `query_logs`, and `edit_check_history`; owner/export path metadata and
       schema sketches must contain
       nonblank strings and the source-specific fields required by the approved-export importer;
-      missing and duplicate schema fields are reported per source type.
+      missing and duplicate schema fields are reported per source type, and manifest-relative
+      export paths that escape the manifest directory are rejected before payload reads.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent
@@ -83,6 +84,8 @@
       approved-export access boundary.
 - [x] Approved-export payload loaders reject missing files, invalid JSON, non-list payloads, and
       non-object payload entries with controlled validation failures.
+- [x] Approved-export import failures preserve preflight diagnostics needed to remediate access
+      boundary issues before payload review.
 
 ## Internal Data Validation
 

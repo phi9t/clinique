@@ -24,14 +24,16 @@ Evidence:
   source types outside the approved EDC snapshots, query logs, and edit-check history inventory,
   requires owner/export path metadata to be nonblank strings, and requires schema sketches to
   list nonblank source-specific fields needed by the approved-export importer, with missing
-  and duplicate fields reported per source type.
+  and duplicate fields reported per source type. It also rejects manifest-relative export paths
+  that escape the manifest directory before reading any export payload.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
   --reports-dir reports/edc-query` validates the approved-export import path on synthetic
   fixture data, resolves relative export paths from the manifest directory, rejects relative
   export paths that escape that directory, and returns a controlled validation failure for
-  missing, invalid, non-list, or non-object export payloads.
+  missing, invalid, non-list, or non-object export payloads. Import-time preflight failures
+  preserve access-boundary diagnostics for remediation.
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces reviewer-week normalized false-positive
@@ -75,9 +77,9 @@ Evidence:
   detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight object-shape, timezone-aware metadata,
   source identity, source-type, and source-specific schema-sketch enforcement, silent-log
-  query-category, schema-field duplicate rejection, manifest-relative export paths,
-  manifest-relative path traversal rejection, malformed approved-export payload rejection,
-  evidence, and
+  query-category, schema-field duplicate rejection, preflight path traversal rejection,
+  manifest-relative export paths, manifest-relative path traversal rejection, malformed
+  approved-export payload rejection, evidence, and
   recommendation-ID enforcement, silent evidence-citation validation, safety-label consistency,
   finite tolerance validation, signed timing metrics, and evaluation, controlled-rollout gate
   rate/integer-count/integer-delta validation, finite-number validation, threshold-direction

@@ -87,6 +87,7 @@ def test_preflight_internal_manifest_accepts_minimum_complete_manifest(tmp_path)
     assert result.missing_required_sources == ()
     assert result.missing_schema_fields == {}
     assert result.duplicate_schema_fields == {}
+    assert result.escaped_export_paths == ()
     assert result.unblinded_sources == ()
     assert result.non_read_only_sources == ()
     assert result.invalid_metadata == ()
@@ -312,6 +313,23 @@ def test_preflight_internal_manifest_rejects_malformed_source_identity_metadata(
 
     assert result.ok is False
     assert result.incomplete_sources == ("edc_snapshots", "query_logs")
+
+
+def test_preflight_internal_manifest_rejects_escaped_relative_export_paths(tmp_path):
+    root = tmp_path / "approved-export"
+    root.mkdir()
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "export_path": "../outside-export",
+    }
+    path = root / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.escaped_export_paths == ("edc_snapshots",)
 
 
 def test_preflight_internal_manifest_rejects_invalid_controlled_metadata_values(tmp_path):

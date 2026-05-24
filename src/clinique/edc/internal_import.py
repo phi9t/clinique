@@ -29,7 +29,7 @@ def load_internal_export_bundle(
 ) -> FixtureBundle:
     preflight = preflight_internal_manifest(manifest_path)
     if not preflight.ok:
-        raise ValueError("internal export manifest failed preflight")
+        raise ValueError(_preflight_error_message(preflight))
 
     sources = _source_paths(manifest_path)
     snapshots = tuple(
@@ -74,6 +74,16 @@ def load_internal_export_bundle(
         labels=labels,
         lock_issues=lock_issues,
     )
+
+
+def _preflight_error_message(preflight: object) -> str:
+    escaped = getattr(preflight, "escaped_export_paths", ())
+    if escaped:
+        return (
+            "internal export manifest failed preflight: "
+            f"relative export_path escapes manifest directory: {', '.join(escaped)}"
+        )
+    return "internal export manifest failed preflight"
 
 
 def _source_paths(manifest_path: str | Path) -> dict[str, Path]:
