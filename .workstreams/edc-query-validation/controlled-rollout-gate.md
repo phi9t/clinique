@@ -9,7 +9,8 @@
 
 ## Design Options
 
-Randomize by study, site, form family, or data-manager queue. Use the smallest unit that avoids
+Randomize by study, site, form family, or data-manager queue. Gate manifests must encode this as
+`study`, `site`, `form_family`, or `data_manager_queue`. Use the smallest unit that avoids
 operational contamination while preserving staffing practicality.
 
 ## Primary Endpoints

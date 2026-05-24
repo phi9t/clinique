@@ -39,7 +39,8 @@ Evidence:
   against structured synthetic evidence and rejects incomplete threshold, observed-metric, or
   safety endpoint packages, including string values where numeric, boolean, or safety-count
   fields are required, negative or fractional values where count endpoints are required, and
-  fractional values where true-discrepancy delta endpoints are required.
+  fractional values where true-discrepancy delta endpoints are required. It also rejects
+  rollout manifests with randomization units outside the design-supported set.
 - `uv run clinique edc-query verify-workstream --fixtures tests/fixtures/edc_query --manifest
   .workstreams/edc-query-validation/internal-data-manifest.template.json --silent-log
   tests/fixtures/edc_query/silent_log.json --rollout-gate
@@ -66,8 +67,8 @@ Evidence:
   annotation-manual alignment, internal-data preflight, silent-log query-category, evidence, and
   recommendation-ID enforcement, silent evidence-citation validation, safety-label consistency,
   signed timing metrics, and evaluation, controlled-rollout gate rate/integer-count/integer-delta
-  validation and evaluation, approved-export import, bundled workstream verification, and report
-  serialization.
+  validation, randomization-unit validation, and evaluation, approved-export import, bundled
+  workstream verification, and report serialization.
 
 ## Not Yet Proven
 

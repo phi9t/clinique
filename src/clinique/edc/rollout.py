@@ -54,6 +54,12 @@ INTEGER_DELTA_KEYS = {
     "min_true_discrepancy_delta",
     "true_discrepancy_delta",
 }
+ALLOWED_RANDOMIZATION_UNITS = {
+    "study",
+    "site",
+    "form_family",
+    "data_manager_queue",
+}
 
 
 @dataclass(frozen=True)
@@ -96,7 +102,11 @@ class RolloutGate:
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
-            randomization_unit=raw["randomization_unit"],
+            randomization_unit=_require_one_of(
+                "randomization_unit",
+                raw["randomization_unit"],
+                ALLOWED_RANDOMIZATION_UNITS,
+            ),
             human_approval_path_validated=human_approval_path_validated,
             thresholds=thresholds,
             observed=observed,
@@ -115,6 +125,13 @@ def _require_keys(label: str, value: Any, required: set[str]) -> None:
 def _require_bool(label: str, value: Any) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{label} must be a boolean")
+    return value
+
+
+def _require_one_of(label: str, value: Any, allowed: set[str]) -> str:
+    if value not in allowed:
+        values = ", ".join(sorted(allowed))
+        raise ValueError(f"{label} must be one of: {values}")
     return value
 
 
