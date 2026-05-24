@@ -134,6 +134,10 @@ class EditCheckRule:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> "EditCheckRule":
+        effective_at = require_timestamp("effective_at", raw["effective_at"])
+        retired_at = parse_timestamp(raw.get("retired_at"))
+        if retired_at is not None and retired_at < effective_at:
+            raise ValueError("rule retired_at cannot be before effective_at")
         return cls(
             rule_id=raw["rule_id"],
             kind=raw["kind"],
@@ -145,8 +149,8 @@ class EditCheckRule:
                 ALLOWED_QUERY_CATEGORIES,
             ),
             message=raw["message"],
-            effective_at=require_timestamp("effective_at", raw["effective_at"]),
-            retired_at=parse_timestamp(raw.get("retired_at")),
+            effective_at=effective_at,
+            retired_at=retired_at,
             compare_to_related=raw.get("compare_to_related"),
             operator=raw.get("operator"),
         )
@@ -319,6 +323,14 @@ def validate_unique_query_log_ids(query_logs: tuple[QueryLog, ...]) -> None:
         if query.query_id in seen:
             raise ValueError(f"duplicate query log id: {query.query_id}")
         seen.add(query.query_id)
+
+
+def validate_unique_rule_ids(rules: tuple[EditCheckRule, ...]) -> None:
+    seen: set[str] = set()
+    for rule in rules:
+        if rule.rule_id in seen:
+            raise ValueError(f"duplicate rule id: {rule.rule_id}")
+        seen.add(rule.rule_id)
 
 
 def validate_unique_label_keys(labels: tuple[QueryLabel, ...]) -> None:

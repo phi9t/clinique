@@ -19,6 +19,7 @@
 - [x] Fixture and approved-export loaders reject duplicate query-log IDs before provenance can
       become ambiguous.
 - [x] Fixture and approved-export loaders reject duplicate adjudication label keys.
+- [x] Rule-history loaders reject duplicate rule IDs and impossible effective/retired chronology.
 - [x] Annotation manual defines the same study/site-scoped unit used by loaders and metrics.
 - [x] Offline report exists.
 - [x] Retrospective replay report exists.

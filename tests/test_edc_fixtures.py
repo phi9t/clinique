@@ -291,6 +291,53 @@ def test_fixture_bundle_rejects_missing_rule_effective_timestamps(tmp_path):
         raise AssertionError("expected missing rule effective timestamp rejection")
 
 
+def test_fixture_bundle_rejects_rules_retired_before_effective(tmp_path):
+    fixture_dir = tmp_path / "bad_rule_chronology"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        rules=[
+            {
+                "rule_id": "RULE-BAD",
+                "kind": "required_field",
+                "form": "AE",
+                "field": "term",
+                "query_category": "missing",
+                "message": "AE term is required.",
+                "effective_at": "2026-03-05T00:00:00Z",
+                "retired_at": "2026-03-04T00:00:00Z",
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "rule retired_at cannot be before effective_at" in str(exc)
+    else:
+        raise AssertionError("expected rule chronology rejection")
+
+
+def test_fixture_bundle_rejects_duplicate_rule_ids(tmp_path):
+    fixture_dir = tmp_path / "duplicate_rule_ids"
+    rule = {
+        "rule_id": "RULE-DUP",
+        "kind": "required_field",
+        "form": "AE",
+        "field": "term",
+        "query_category": "missing",
+        "message": "AE term is required.",
+        "effective_at": "2026-03-01T00:00:00Z",
+    }
+    _write_minimal_fixture_dir(fixture_dir, rules=[rule, dict(rule)])
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "duplicate rule id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate rule id rejection")
+
+
 def test_fixture_bundle_rejects_query_logs_closed_before_opened(tmp_path):
     fixture_dir = tmp_path / "bad_query_log_chronology"
     _write_minimal_fixture_dir(

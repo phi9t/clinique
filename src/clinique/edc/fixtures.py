@@ -12,6 +12,7 @@ from clinique.edc.records import (
     QueryLog,
     validate_unique_label_keys,
     validate_unique_query_log_ids,
+    validate_unique_rule_ids,
 )
 
 
@@ -43,10 +44,12 @@ def load_fixture_bundle(path: str | Path) -> FixtureBundle:
         QueryLog.from_json(raw) for raw in _read_json(fixture_dir / "query_logs.json")
     )
     validate_unique_query_log_ids(query_logs)
+    rules = tuple(EditCheckRule.from_json(raw) for raw in _read_json(fixture_dir / "rules.json"))
+    validate_unique_rule_ids(rules)
 
     return FixtureBundle(
         snapshots=snapshots,
-        rules=tuple(EditCheckRule.from_json(raw) for raw in _read_json(fixture_dir / "rules.json")),
+        rules=rules,
         query_logs=query_logs,
         labels=labels,
         lock_issues=tuple(

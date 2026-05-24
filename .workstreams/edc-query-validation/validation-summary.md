@@ -54,9 +54,10 @@ Evidence:
   query-log status, and human resolutions, required replay timestamps, query/label open-close
   chronology, study/site-scoped task and workflow metric attribution, evidence-availability
   guards for true detections, duplicate source-record, query-log ID, and adjudication-label
-  rejection, detection, metrics, CLI execution, annotation-manual alignment, internal-data
-  preflight, silent-log evaluation, controlled-rollout gate evaluation, approved-export import,
-  bundled workstream verification, and report serialization.
+  rejection, rule-history ID and chronology validation, detection, metrics, CLI execution,
+  annotation-manual alignment, internal-data preflight, silent-log evaluation, controlled-rollout
+  gate evaluation, approved-export import, bundled workstream verification, and report
+  serialization.
 
 ## Not Yet Proven
 
