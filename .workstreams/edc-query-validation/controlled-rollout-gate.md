@@ -32,3 +32,16 @@ excessive reviewer burden.
 Rollback immediately for any boundary violation, privacy incident, blinding concern, or sustained
 false-query burden above the predefined tolerance.
 
+## Executable Gate Evaluation
+
+Use the structured gate evaluator before any draft-only rollout decision:
+
+```bash
+uv run clinique edc-query evaluate-rollout-gate \
+  --gate tests/fixtures/edc_query/controlled_rollout_gate.json \
+  --output reports/edc-query/controlled-rollout-gate.json
+```
+
+The evaluator checks primary endpoint thresholds, safety endpoints, and the human approval path.
+It returns a nonzero exit code when the gate fails. The bundled fixture is synthetic and verifies
+the gate mechanics; it is not evidence that a live rollout is approved.

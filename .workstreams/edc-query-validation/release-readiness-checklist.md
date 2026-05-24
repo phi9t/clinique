@@ -14,6 +14,8 @@
 - [x] Internal-data manifest preflight command exists and validates readiness metadata without
       reading PHI-bearing exports.
 - [x] Silent-log evaluator exists and validates silent-mode logs without affecting operations.
+- [x] Controlled-rollout gate evaluator exists and validates thresholds, safety endpoints, and
+      human approval path from structured evidence.
 
 ## Internal Data Validation
 

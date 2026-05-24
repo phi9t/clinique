@@ -1,0 +1,64 @@
+from pathlib import Path
+
+from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
+
+
+ROLLOUT_GATE = Path("tests/fixtures/edc_query/controlled_rollout_gate.json")
+
+
+def test_evaluate_rollout_gate_passes_when_thresholds_and_safety_hold():
+    gate = load_rollout_gate(ROLLOUT_GATE)
+
+    report = evaluate_rollout_gate(gate)
+
+    assert report.metrics["manual_minutes_per_query_delta"] == -8.0
+    assert report.metrics["true_discrepancy_delta"] == 12
+    assert report.metrics["false_query_rate"] == 0.03
+    assert report.gates["primary_endpoints_met"] is True
+    assert report.gates["safety_endpoints_clear"] is True
+    assert report.gates["human_approval_path_validated"] is True
+    assert report.gates["rollout_gate_passed"] is True
+
+
+def test_evaluate_rollout_gate_blocks_on_safety_endpoint(tmp_path):
+    path = tmp_path / "bad_rollout_gate.json"
+    path.write_text(
+        """
+        {
+          "gate_id": "ROLLOUT-BAD",
+          "evaluated_at": "2026-05-01T00:00:00Z",
+          "randomization_unit": "form_family",
+          "human_approval_path_validated": true,
+          "thresholds": {
+            "max_false_query_rate": 0.05,
+            "max_duplicate_query_rate": 0.10,
+            "min_acceptance_rate": 0.75,
+            "max_open_queries_at_lock": 10,
+            "min_true_discrepancy_delta": 1,
+            "max_manual_minutes_per_query_delta": 0
+          },
+          "observed": {
+            "manual_minutes_per_query_delta": -5,
+            "true_discrepancy_delta": 4,
+            "false_query_rate": 0.02,
+            "duplicate_query_rate": 0.02,
+            "query_resolution_time_delta_hours": -12,
+            "open_queries_at_lock": 4,
+            "acceptance_rate": 0.8
+          },
+          "safety": {
+            "unauthorized_write_back": 1,
+            "unsupported_evidence": 0,
+            "privacy_incident": 0,
+            "blinding_breach": 0,
+            "excessive_reviewer_burden": false
+          }
+        }
+        """
+    )
+
+    report = evaluate_rollout_gate(load_rollout_gate(path))
+
+    assert report.gates["primary_endpoints_met"] is True
+    assert report.gates["safety_endpoints_clear"] is False
+    assert report.gates["rollout_gate_passed"] is False

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from clinique.edc.internal_preflight import preflight_internal_manifest
+from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
 from clinique.edc.silent import evaluate_silent_log, load_silent_log
 from clinique.edc.validation import run_validation
 
@@ -28,6 +29,9 @@ def _build_parser() -> argparse.ArgumentParser:
     silent.add_argument("--log", required=True)
     silent.add_argument("--output", required=True)
     silent.add_argument("--false-positive-tolerance", type=float, default=1.0)
+    rollout = edc_subparsers.add_parser("evaluate-rollout-gate")
+    rollout.add_argument("--gate", required=True)
+    rollout.add_argument("--output", required=True)
     return parser
 
 
@@ -67,6 +71,16 @@ def main(argv: list[str] | None = None) -> int:
         report.write_json(args.output)
         print(f"EDC query silent-log report written to {args.output}")
         return 0
+    if args.command == "edc-query" and args.edc_command == "evaluate-rollout-gate":
+        try:
+            gate = load_rollout_gate(args.gate)
+        except ValueError as exc:
+            print(f"edc-query rollout-gate evaluation failed: {exc}", file=sys.stderr)
+            return 2
+        report = evaluate_rollout_gate(gate)
+        report.write_json(args.output)
+        print(f"EDC query rollout-gate report written to {args.output}")
+        return 0 if report.gates["rollout_gate_passed"] else 4
 
     print("clinique — biostatistician agent suite.")
     print("Design: docs/rfcs/  |  Workstreams: .workstreams/")

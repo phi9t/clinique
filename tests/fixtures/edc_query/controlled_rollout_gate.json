@@ -1,0 +1,30 @@
+{
+  "gate_id": "ROLLOUT-001",
+  "evaluated_at": "2026-05-01T00:00:00Z",
+  "randomization_unit": "form_family",
+  "human_approval_path_validated": true,
+  "thresholds": {
+    "max_false_query_rate": 0.05,
+    "max_duplicate_query_rate": 0.1,
+    "min_acceptance_rate": 0.75,
+    "max_open_queries_at_lock": 10,
+    "min_true_discrepancy_delta": 1,
+    "max_manual_minutes_per_query_delta": 0
+  },
+  "observed": {
+    "manual_minutes_per_query_delta": -8.0,
+    "true_discrepancy_delta": 12,
+    "false_query_rate": 0.03,
+    "duplicate_query_rate": 0.04,
+    "query_resolution_time_delta_hours": -24,
+    "open_queries_at_lock": 6,
+    "acceptance_rate": 0.82
+  },
+  "safety": {
+    "unauthorized_write_back": 0,
+    "unsupported_evidence": 0,
+    "privacy_incident": 0,
+    "blinding_breach": 0,
+    "excessive_reviewer_burden": false
+  }
+}

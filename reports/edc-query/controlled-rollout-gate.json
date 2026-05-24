@@ -1,0 +1,36 @@
+{
+  "gates": {
+    "human_approval_path_validated": true,
+    "primary_endpoints_met": true,
+    "rollout_gate_passed": true,
+    "safety_endpoints_clear": true
+  },
+  "generated_at": "2026-05-01T00:00:00Z",
+  "inputs": {
+    "gate_id": "ROLLOUT-001",
+    "randomization_unit": "form_family",
+    "thresholds": {
+      "max_duplicate_query_rate": 0.1,
+      "max_false_query_rate": 0.05,
+      "max_manual_minutes_per_query_delta": 0.0,
+      "max_open_queries_at_lock": 10.0,
+      "min_acceptance_rate": 0.75,
+      "min_true_discrepancy_delta": 1.0
+    }
+  },
+  "metrics": {
+    "acceptance_rate": 0.82,
+    "blinding_breach": 0,
+    "duplicate_query_rate": 0.04,
+    "excessive_reviewer_burden": false,
+    "false_query_rate": 0.03,
+    "manual_minutes_per_query_delta": -8.0,
+    "open_queries_at_lock": 6.0,
+    "privacy_incident": 0,
+    "query_resolution_time_delta_hours": -24.0,
+    "true_discrepancy_delta": 12.0,
+    "unauthorized_write_back": 0,
+    "unsupported_evidence": 0
+  },
+  "report_type": "edc_query_controlled_rollout_gate"
+}
