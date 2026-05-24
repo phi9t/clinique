@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Database, 
@@ -75,6 +75,7 @@ export default function App() {
   const [loadingSummary, setLoadingSummary] = useState(true)
   const [loadingContent, setLoadingContent] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [contentError, setContentError] = useState<string | null>(null)
   
   // Interactive Data Table states
   const [searchQuery, setSearchQuery] = useState('')
@@ -83,14 +84,14 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1)
   const rowsPerPage = 25
 
-  // 1. Fetch Global Summary and Define Metadata
+  // 1. Fetch Global Summary and Define Metadata (bypassing browser cache)
   useEffect(() => {
     async function loadGlobalData() {
       try {
         setLoadingSummary(true)
         const [sumRes, metaRes] = await Promise.all([
-          fetch('/data/summary.json'),
-          fetch('/data/metadata.json')
+          fetch(`/data/summary.json?t=${Date.now()}`),
+          fetch(`/data/metadata.json?t=${Date.now()}`)
         ])
         
         if (!sumRes.ok || !metaRes.ok) {
@@ -117,31 +118,38 @@ export default function App() {
     loadGlobalData()
   }, [])
 
-  // 2. Fetch Selected Dataset Observations
-  useEffect(() => {
-    if (!selectedDatasetName) return
-    
-    async function loadDatasetContent() {
-      try {
-        setLoadingContent(true)
-        setSearchQuery('')
-        setSortColumn('')
-        setCurrentPage(1)
-        
-        const res = await fetch(`/data/${selectedDatasetName.toLowerCase()}.json`)
-        if (!res.ok) {
-          throw new Error(`Failed to load data for dataset ${selectedDatasetName}`)
-        }
-        const data = await res.json()
-        setDatasetContent(data)
-      } catch (err: any) {
-        console.error(err)
-      } finally {
-        setLoadingContent(false)
+  // 2. Fetch Selected Dataset Observations (bypassing browser cache)
+  const loadDatasetContent = useCallback(async (datasetName: string) => {
+    if (!datasetName) return
+    try {
+      setLoadingContent(true)
+      setContentError(null)
+      setDatasetContent(null) // Clear old content to prevent displaying stale data
+      setSearchQuery('')
+      setSortColumn('')
+      setCurrentPage(1)
+      
+      const res = await fetch(`/data/${datasetName.toLowerCase()}.json?t=${Date.now()}`)
+      if (!res.ok) {
+        throw new Error(`Failed to load data for dataset ${datasetName} (HTTP ${res.status})`)
       }
+      const data = await res.json()
+      setDatasetContent(data)
+    } catch (err: any) {
+      console.error(err)
+      setContentError(err.message || 'Unknown error loading dataset')
+    } finally {
+      setLoadingContent(false)
     }
-    loadDatasetContent()
-  }, [selectedDatasetName])
+  }, [])
+
+  useEffect(() => {
+    loadDatasetContent(selectedDatasetName)
+  }, [selectedDatasetName, loadDatasetContent])
+
+  const selectedSummary = useMemo(() => {
+    return summary.find(s => s.name === selectedDatasetName) || null
+  }, [summary, selectedDatasetName])
 
   // Get active dataset details from metadata
   const activeDatasetMeta = useMemo(() => {
@@ -350,13 +358,17 @@ export default function App() {
                   <div className="attr-badge">
                     <Database size={14} className="text-primary" />
                     <span>Total Rows:</span>
-                    <strong className="text-primary">{datasetContent?.total_rows.toLocaleString() || 0}</strong>
+                    <strong className="text-primary">
+                      {((datasetContent?.total_rows !== undefined ? datasetContent?.total_rows : selectedSummary?.total_rows) ?? 0).toLocaleString()}
+                    </strong>
                   </div>
-                  {datasetContent?.unique_subjects !== null && (
+                  {((datasetContent?.unique_subjects !== undefined ? datasetContent?.unique_subjects : selectedSummary?.unique_subjects) ?? null) !== null && (
                     <div className="attr-badge">
                       <Users size={14} className="text-secondary" />
                       <span>Subjects:</span>
-                      <strong className="text-secondary">{datasetContent?.unique_subjects}</strong>
+                      <strong className="text-secondary">
+                        {datasetContent?.unique_subjects !== undefined ? datasetContent?.unique_subjects : selectedSummary?.unique_subjects}
+                      </strong>
                     </div>
                   )}
                   {activeDatasetMeta?.repeating && (
@@ -403,11 +415,24 @@ export default function App() {
                 >
                   {/* DATA VIEW TAB */}
                   {activeTab === 'data' && (
-                    <div>
+                    <div key={selectedDatasetName}>
                       {loadingContent ? (
                         <div className="loading-container" style={{ minHeight: '300px' }}>
                           <div className="spinner" />
                           <p>Loading records for {selectedDatasetName}...</p>
+                        </div>
+                      ) : contentError ? (
+                        <div className="loading-container text-danger" style={{ minHeight: '300px' }}>
+                          <Info size={48} className="text-danger" />
+                          <h3>Error Loading Data</h3>
+                          <p>{contentError}</p>
+                          <button 
+                            className="pg-btn" 
+                            style={{ marginTop: '16px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                            onClick={() => loadDatasetContent(selectedDatasetName)}
+                          >
+                            Retry
+                          </button>
                         </div>
                       ) : datasetContent ? (
                         <div>
