@@ -6,6 +6,7 @@
 - [x] Fixture provenance exists.
 - [x] Timestamp gating is tested.
 - [x] Draft-only/no-write boundary is tested.
+- [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans.
 - [x] Offline report exists.
 - [x] Retrospective replay report exists.
 - [x] CLI validation command regenerates reports and audit summary.

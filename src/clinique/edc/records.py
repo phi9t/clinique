@@ -16,6 +16,12 @@ def parse_timestamp(value: str | None) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def require_bool(label: str, value: Any) -> bool:
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be a boolean")
+    return value
+
+
 @dataclass(frozen=True)
 class EdcRecord:
     record_id: str
@@ -60,8 +66,11 @@ class EdcSnapshot:
             snapshot_at=parse_timestamp(raw["snapshot_at"]) or datetime.min.replace(
                 tzinfo=timezone.utc
             ),
-            contains_phi=bool(raw.get("contains_phi", False)),
-            contains_unblinded=bool(raw.get("contains_unblinded", False)),
+            contains_phi=require_bool("contains_phi", raw.get("contains_phi", False)),
+            contains_unblinded=require_bool(
+                "contains_unblinded",
+                raw.get("contains_unblinded", False),
+            ),
             records=tuple(EdcRecord.from_json(record) for record in raw.get("records", [])),
         )
 
@@ -159,12 +168,15 @@ class QueryLabel:
             subject_id=raw["subject_id"],
             form=raw["form"],
             field=raw["field"],
-            gold_query_needed=bool(raw["gold_query_needed"]),
+            gold_query_needed=require_bool("gold_query_needed", raw["gold_query_needed"]),
             query_category=raw["query_category"],
             human_resolution=raw["human_resolution"],
             opened_at=parse_timestamp(raw.get("opened_at")),
             closed_at=parse_timestamp(raw.get("closed_at")),
-            evidence_available_at_agent_time=bool(raw["evidence_available_at_agent_time"]),
+            evidence_available_at_agent_time=require_bool(
+                "evidence_available_at_agent_time",
+                raw["evidence_available_at_agent_time"],
+            ),
         )
 
 
