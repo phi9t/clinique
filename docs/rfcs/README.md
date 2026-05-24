@@ -28,6 +28,7 @@ Every RFC here obeys the same posture, established in [RFC-0000](0000-platform-c
 | [0003](0003-sample-size-power-orchestrator.md) | Sample size & power orchestrator | high | no | no |
 | [0004](0004-submission-docs-and-cdisc-conformance.md) | Submission docs & CDISC conformance triage | high | no | no |
 | [0005](0005-pre-unblinding-dry-run-harness.md) | Pre-unblinding dry-run / mock-analysis harness | high | no | **no — synthetic only by construction** |
+| [0006](0006-validation-and-evaluation-framework.md) | Validation & evaluation framework (full stack + roadmap) | cross-cutting | no | no |
 
 ## Recommended build order
 
@@ -37,6 +38,12 @@ Every RFC here obeys the same posture, established in [RFC-0000](0000-platform-c
 4. **RFC-0003** — orchestrator pattern; self-contained.
 5. **RFC-0002** — programming copilot; gated by the QC-independence constraint.
 6. **RFC-0005** — dry-run harness; consumes outputs of 0002 and specs from 0001.
+
+**RFC-0006** is cross-cutting: it defines how every capability above is proven useful and safe.
+Read it alongside each functional RFC's §8 Validation plan — 0006 is the framework, the §8
+sections are the per-capability instances. It also carries the **roadmap** for validating the
+future patient-facing personas (recruitment / safety / monitoring) once Clinique expands beyond
+the biostatistician.
 
 ## Status legend
 
