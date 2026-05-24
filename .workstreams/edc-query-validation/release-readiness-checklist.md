@@ -8,6 +8,7 @@
 - [x] Draft-only/no-write boundary is tested.
 - [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans and
       schema-defined query category/resolution enums.
+- [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.
 - [x] Offline report exists.
 - [x] Retrospective replay report exists.
 - [x] CLI validation command regenerates reports and audit summary.

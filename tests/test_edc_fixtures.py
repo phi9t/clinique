@@ -206,3 +206,86 @@ def test_fixture_bundle_rejects_unknown_query_log_categories(tmp_path):
         assert "query_category must be one of" in str(exc)
     else:
         raise AssertionError("expected unknown query-log category rejection")
+
+
+def test_fixture_bundle_rejects_missing_snapshot_timestamps(tmp_path):
+    fixture_dir = tmp_path / "missing_snapshot_time"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        '[{"snapshot_id":"snap","snapshot_at":null,"contains_phi":false,'
+        '"contains_unblinded":false,"records":[]}]'
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "query_logs.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "snapshot_at is required" in str(exc)
+    else:
+        raise AssertionError("expected missing snapshot timestamp rejection")
+
+
+def test_fixture_bundle_rejects_missing_record_timestamps(tmp_path):
+    fixture_dir = tmp_path / "missing_record_time"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-01T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": [
+              {
+                "record_id": "REC-BAD",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "",
+                "collected_at": null
+              }
+            ]
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "query_logs.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "collected_at is required" in str(exc)
+    else:
+        raise AssertionError("expected missing record timestamp rejection")
+
+
+def test_fixture_bundle_rejects_missing_rule_effective_timestamps(tmp_path):
+    fixture_dir = tmp_path / "missing_rule_time"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        rules=[
+            {
+                "rule_id": "RULE-BAD",
+                "kind": "required_field",
+                "form": "AE",
+                "field": "term",
+                "query_category": "missing",
+                "message": "AE term is required.",
+                "effective_at": None,
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "effective_at is required" in str(exc)
+    else:
+        raise AssertionError("expected missing rule effective timestamp rejection")

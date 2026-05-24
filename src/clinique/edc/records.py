@@ -33,6 +33,13 @@ def parse_timestamp(value: str | None) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
+def require_timestamp(label: str, value: str | None) -> datetime:
+    parsed = parse_timestamp(value)
+    if parsed is None:
+        raise ValueError(f"{label} is required")
+    return parsed
+
+
 def require_bool(label: str, value: Any) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{label} must be a boolean")
@@ -68,9 +75,7 @@ class EdcRecord:
             form=raw["form"],
             field=raw["field"],
             value=raw.get("value", ""),
-            collected_at=parse_timestamp(raw["collected_at"]) or datetime.min.replace(
-                tzinfo=timezone.utc
-            ),
+            collected_at=require_timestamp("collected_at", raw["collected_at"]),
             related=dict(raw.get("related", {})),
         )
 
@@ -87,9 +92,7 @@ class EdcSnapshot:
     def from_json(cls, raw: dict[str, Any]) -> "EdcSnapshot":
         return cls(
             snapshot_id=raw["snapshot_id"],
-            snapshot_at=parse_timestamp(raw["snapshot_at"]) or datetime.min.replace(
-                tzinfo=timezone.utc
-            ),
+            snapshot_at=require_timestamp("snapshot_at", raw["snapshot_at"]),
             contains_phi=require_bool("contains_phi", raw.get("contains_phi", False)),
             contains_unblinded=require_bool(
                 "contains_unblinded",
@@ -125,9 +128,7 @@ class EditCheckRule:
                 ALLOWED_QUERY_CATEGORIES,
             ),
             message=raw["message"],
-            effective_at=parse_timestamp(raw["effective_at"]) or datetime.min.replace(
-                tzinfo=timezone.utc
-            ),
+            effective_at=require_timestamp("effective_at", raw["effective_at"]),
             retired_at=parse_timestamp(raw.get("retired_at")),
             compare_to_related=raw.get("compare_to_related"),
             operator=raw.get("operator"),
