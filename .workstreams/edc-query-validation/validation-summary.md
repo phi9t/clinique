@@ -28,7 +28,8 @@ Evidence:
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces false-positive burden, time-delta, and
-  stop-criteria metrics.
+  stop-criteria metrics. It writes the report and exits nonzero when silent gates fail, including
+  safety-risk stop criteria.
 - `uv run clinique edc-query evaluate-rollout-gate --gate
   tests/fixtures/edc_query/controlled_rollout_gate.json --output
   reports/edc-query/controlled-rollout-gate.json` validates the controlled-rollout gate mechanics

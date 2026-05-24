@@ -84,7 +84,12 @@ def main(argv: list[str] | None = None) -> int:
         )
         report.write_json(args.output)
         print(f"EDC query silent-log report written to {args.output}")
-        return 0
+        silent_gates_passed = (
+            report.gates["no_operational_impact"]
+            and report.gates["false_positive_burden_controlled"]
+            and not report.gates["stop_criteria_triggered"]
+        )
+        return 0 if silent_gates_passed else 6
     if args.command == "edc-query" and args.edc_command == "evaluate-rollout-gate":
         try:
             gate = load_rollout_gate(args.gate)

@@ -13,7 +13,8 @@
       evidence exists.
 - [x] Internal-data manifest preflight command exists and validates readiness metadata without
       reading PHI-bearing exports.
-- [x] Silent-log evaluator exists and validates silent-mode logs without affecting operations.
+- [x] Silent-log evaluator exists, writes gate reports, and exits nonzero for stop criteria or
+      uncontrolled false-positive burden.
 - [x] Controlled-rollout gate evaluator exists and validates thresholds, safety endpoints, and
       human approval path from structured evidence.
 - [x] Bundled workstream verifier regenerates local synthetic reports, optional approved-export

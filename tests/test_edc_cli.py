@@ -180,7 +180,9 @@ def test_edc_query_preflight_internal_data_returns_nonzero_for_unready_manifest(
     assert exit_code == 3
 
 
-def test_edc_query_evaluate_silent_log_writes_report(tmp_path):
+def test_edc_query_evaluate_silent_log_writes_report_and_returns_nonzero_on_stop_criteria(
+    tmp_path,
+):
     output = tmp_path / "silent-report.json"
 
     exit_code = main(
@@ -196,7 +198,7 @@ def test_edc_query_evaluate_silent_log_writes_report(tmp_path):
         ]
     )
 
-    assert exit_code == 0
+    assert exit_code == 6
     report = json.loads(output.read_text())
     assert report["report_type"] == "edc_query_silent_prospective"
     assert report["metrics"]["false_positive_burden_per_reviewer_week"] == 0.5
