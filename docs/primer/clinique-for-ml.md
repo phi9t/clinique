@@ -54,6 +54,67 @@ worth shipping — see [primer §1](clinical-trials-for-ml.md#1-the-simplest-men
 
 ## MLsys architecture notes
 
+### Data flow (the two reference pipelines)
+
+The package map above is the *static* structure; these are the *runtime* DAGs. Each node is tagged
+by stage type so the central design claim — **LLM stages are narrow; everything around them is
+deterministic and gated** — is legible at a glance:
+
+`[NET]` network / non-deterministic · `[FIXED]` frozen fixture (the test of record) ·
+`[PURE]` deterministic pure function · `[ENGINE]` validated, versioned compute ·
+`[LLM]` narrow model stage · `[GATE]` hard pass/fail before any write · `[LEDGER]` append-only.
+
+**A. Trial prescreening — record-and-replay** (`src/clinique/prescreen/`)
+
+```
+[NET]   ClinicalTrials.gov v2 API
+          │  fetch_study_raw()              non-deterministic, rate-limited; not exercised by tests
+          ▼
+        raw JSON payload
+          │  record_studies()              write-once snapshot, reviewable in git
+          ▼
+[FIXED] tests/fixtures/prescreen/trials.jsonl
+          │  load_recorded_studies()       ◀── the eval boundary: everything below is offline
+          ▼
+[PURE]  Trial records ───────────┐
+                                 ├─▶ [LLM]* atomizer ─▶ Criterion (atomic, typed)
+[PURE]  PatientCorpus /          │                          │
+        PatientDocument ─────────┘                          ▼
+        (normalize_synthea())                    [LLM]* criterion judge
+                                                            │
+                                          [GATE]* evidence-provenance
+                                                  (no met/not_met without a locatable quote)
+                                                            ▼
+                                          Judgment { met | not_met | unknown }
+                                                  + evidence quote + rationale
+```
+
+`*` proposed (see [trial-prescreening.md](../design/trial-prescreening.md)); **L0 ships the
+`[NET]`/`[FIXED]`/`[PURE]` path today** — ingestion, the frozen corpus, and the Synthea normalizer.
+
+**B. Sample-size orchestrator — the validated-engine pattern** (`src/clinique/power/orchestrator.py`)
+
+```
+[PURE]   DesignIntake ─ select_method() ─▶ method + typed Assumptions
+           ▼
+[ENGINE] validated engine: two_sample_means() | two_proportions() | survival_logrank()
+           │  RpactDockerEngine (canonical, rpact) ‖ ReferenceEngine (pure-Python oracle)
+           │  — engine name + version are recorded; the orchestrator computes no statistic itself
+           ▼
+         EngineResult outputs
+           │  sensitivity sweep ×0.8 / ×1.0 / ×1.2 around the swept assumption
+           ▼
+[PURE]   ComputationRecord     narrative assembled ONLY from blessed numbers
+           │
+[GATE]   check_numeric_provenance()   HARD GATE — every number must trace (within tolerance) to
+           │                          an EngineResult output or an Assumption value
+           ▼
+[LEDGER] ProvenanceLedger (append-only JSONL)
+```
+
+The same shape recurs across capabilities: typed records → narrow/validated compute → a hard gate →
+an append-only or read-only sink. That repetition is the point — it is what makes outputs auditable.
+
 ### Deterministic typed pipeline
 
 LLM stages are narrow (future: atomizer, criterion judge). Aggregation, unit conversion, temporal
