@@ -116,6 +116,23 @@ def test_load_internal_export_bundle_requires_passing_preflight(tmp_path):
         raise AssertionError("expected unblinded manifest rejection")
 
 
+def test_load_internal_export_bundle_names_preflight_source_failures(tmp_path):
+    manifest = _write_manifest(tmp_path, read_only=False, unblinded=True)
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        message = str(exc)
+        assert "unblinded_sources=edc_snapshots" in message
+        assert "non_read_only_sources=edc_snapshots" in message
+    else:
+        raise AssertionError("expected source-specific preflight diagnostics")
+
+
 def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path):
     manifest = _write_manifest(
         tmp_path,

@@ -33,7 +33,7 @@ Evidence:
   fixture data, resolves relative export paths from the manifest directory, rejects relative
   export paths that escape that directory, and returns a controlled validation failure for
   missing, invalid, non-list, or non-object export payloads. Import-time preflight failures
-  preserve access-boundary diagnostics for remediation.
+  preserve source-specific diagnostics for remediation before payload review.
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces reviewer-week normalized false-positive

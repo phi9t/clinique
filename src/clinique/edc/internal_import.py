@@ -77,13 +77,27 @@ def load_internal_export_bundle(
 
 
 def _preflight_error_message(preflight: object) -> str:
-    escaped = getattr(preflight, "escaped_export_paths", ())
-    if escaped:
-        return (
-            "internal export manifest failed preflight: "
-            f"relative export_path escapes manifest directory: {', '.join(escaped)}"
-        )
-    return "internal export manifest failed preflight"
+    details = []
+    for field in (
+        "missing_required_sources",
+        "duplicate_sources",
+        "unknown_sources",
+        "unblinded_sources",
+        "non_read_only_sources",
+        "incomplete_sources",
+        "escaped_export_paths",
+        "invalid_metadata",
+    ):
+        values = getattr(preflight, field, ())
+        if values:
+            if field == "escaped_export_paths":
+                details.append(
+                    f"relative export_path escapes manifest directory={','.join(values)}"
+                )
+                continue
+            details.append(f"{field}={','.join(values)}")
+    prefix = "internal export manifest failed preflight"
+    return f"{prefix}: {'; '.join(details)}" if details else prefix
 
 
 def _source_paths(manifest_path: str | Path) -> dict[str, Path]:

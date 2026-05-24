@@ -84,8 +84,9 @@
       approved-export access boundary.
 - [x] Approved-export payload loaders reject missing files, invalid JSON, non-list payloads, and
       non-object payload entries with controlled validation failures.
-- [x] Approved-export import failures preserve preflight diagnostics needed to remediate access
-      boundary issues before payload review.
+- [x] Approved-export import failures preserve source-specific preflight diagnostics needed to
+      remediate missing, duplicate, unknown, unblinded, non-read-only, incomplete, metadata, and
+      access-boundary issues before payload review.
 
 ## Internal Data Validation
 
