@@ -18,6 +18,8 @@
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,
       form, and field.
 - [x] True-detection metrics require label evidence to be available at the replay timestamp.
+- [x] Fixture loaders reject duplicate snapshot IDs before replay provenance can become
+      ambiguous.
 - [x] Snapshot loaders reject duplicate source-record keys before detection can overwrite them.
 - [x] Fixture and approved-export loaders reject duplicate query-log IDs before provenance can
       become ambiguous.

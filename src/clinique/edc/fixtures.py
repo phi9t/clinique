@@ -10,6 +10,7 @@ from clinique.edc.records import (
     FixtureBundle,
     QueryLabel,
     QueryLog,
+    validate_unique_snapshot_ids,
     validate_unique_label_keys,
     validate_unique_query_log_ids,
     validate_unique_rule_ids,
@@ -32,6 +33,7 @@ def load_fixture_bundle(path: str | Path) -> FixtureBundle:
             key=lambda snapshot: snapshot.snapshot_at,
         )
     )
+    validate_unique_snapshot_ids(snapshots)
     for snapshot in snapshots:
         if snapshot.contains_phi:
             raise ValueError(f"Snapshot {snapshot.snapshot_id} is marked as containing PHI")

@@ -341,6 +341,14 @@ def validate_unique_snapshot_record_keys(snapshot_id: str, records: tuple[EdcRec
         seen.add(key)
 
 
+def validate_unique_snapshot_ids(snapshots: tuple[EdcSnapshot, ...]) -> None:
+    seen: set[str] = set()
+    for snapshot in snapshots:
+        if snapshot.snapshot_id in seen:
+            raise ValueError(f"duplicate snapshot id: {snapshot.snapshot_id}")
+        seen.add(snapshot.snapshot_id)
+
+
 def validate_query_log_status_timestamp(*, status: str, closed_at: datetime | None) -> None:
     if status == "closed" and closed_at is None:
         raise ValueError("closed query logs require closed_at")

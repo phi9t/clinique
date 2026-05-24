@@ -697,6 +697,41 @@ def test_fixture_bundle_rejects_duplicate_snapshot_record_keys(tmp_path):
         raise AssertionError("expected duplicate snapshot record rejection")
 
 
+def test_fixture_bundle_rejects_duplicate_snapshot_ids(tmp_path):
+    fixture_dir = tmp_path / "duplicate_snapshot_ids"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-01T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": []
+          },
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-02T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": []
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "query_logs.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "duplicate snapshot id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate snapshot id rejection")
+
+
 def test_fixture_bundle_rejects_duplicate_query_log_ids(tmp_path):
     fixture_dir = tmp_path / "duplicate_query_ids"
     query = {
