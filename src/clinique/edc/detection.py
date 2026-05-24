@@ -68,7 +68,10 @@ def detect_candidate_queries(
                         evidence,
                         record,
                         query_category=rule.query_category,
-                        query_text=f"{rule.message} Subject {record.subject_id}, {record.form}.{record.field}.",
+                        query_text=(
+                            f"{rule.message} Subject {record.subject_id}, "
+                            f"{record.form}.{record.field}."
+                        ),
                         rule_id=rule.rule_id,
                     )
                 )
@@ -116,7 +119,9 @@ def detect_candidate_queries(
                 evidence,
                 record,
                 query_category="duplicate",
-                query_text=f"Existing query {query.query_id} already covers {query.form}.{query.field}.",
+                query_text=(
+                    f"Existing query {query.query_id} already covers {query.form}.{query.field}."
+                ),
                 rule_id=None,
                 is_duplicate=True,
                 extra_sources=(SourceRef("query_log", query.query_id, query.opened_at),),

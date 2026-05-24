@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from clinique.edc.audit import audit_release_checklist
@@ -13,8 +13,7 @@ from clinique.edc.reports import build_offline_report, build_retrospective_repor
 from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
 from clinique.edc.silent import evaluate_silent_log, load_silent_log
 
-
-DEFAULT_REPLAY_AT = datetime(2026, 3, 8, tzinfo=timezone.utc)
+DEFAULT_REPLAY_AT = datetime(2026, 3, 8, tzinfo=UTC)
 
 
 def run_validation(

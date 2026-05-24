@@ -8,7 +8,6 @@ from typing import Any
 
 from clinique.edc.records import ValidationReport, parse_timestamp
 
-
 REQUIRED_THRESHOLD_KEYS = {
     "max_false_query_rate",
     "max_duplicate_query_rate",
@@ -74,7 +73,7 @@ class RolloutGate:
     safety: dict[str, object]
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "RolloutGate":
+    def from_json(cls, raw: dict[str, Any]) -> RolloutGate:
         evaluated_at = parse_timestamp(raw["evaluated_at"])
         if evaluated_at is None:
             raise ValueError("rollout gate evaluated_at is required")

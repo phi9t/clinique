@@ -3,7 +3,6 @@ from pathlib import Path
 
 from clinique.cli import main
 
-
 FIXTURES = Path("tests/fixtures/edc_query")
 
 

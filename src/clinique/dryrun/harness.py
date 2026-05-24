@@ -34,7 +34,8 @@ class DryRunHarness:
     def __init__(self, provider: SyntheticDataProvider):
         if not isinstance(provider, SyntheticDataProvider):
             raise RealDataForbidden(
-                "DryRunHarness accepts only SyntheticDataProvider; real/unblinded data is walled off"
+                "DryRunHarness accepts only SyntheticDataProvider; "
+                "real/unblinded data is walled off"
             )
         self.provider = provider
 

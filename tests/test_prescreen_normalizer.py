@@ -17,20 +17,39 @@ TABLES = {
         {"Id": "P2", "BIRTHDATE": "1990-01-01", "GENDER": "F"},
     ],
     "conditions": [
-        {"PATIENT": "P1", "START": "2025-09-10", "CODE": "254637007",
-         "DESCRIPTION": "Non-small cell lung cancer"},
-        {"PATIENT": "P2", "START": "2024-01-01", "CODE": "999",
-         "DESCRIPTION": "Other patient condition"},
+        {
+            "PATIENT": "P1",
+            "START": "2025-09-10",
+            "CODE": "254637007",
+            "DESCRIPTION": "Non-small cell lung cancer",
+        },
+        {
+            "PATIENT": "P2",
+            "START": "2024-01-01",
+            "CODE": "999",
+            "DESCRIPTION": "Other patient condition",
+        },
     ],
     "observations": [
-        {"PATIENT": "P1", "DATE": "2026-02-20T09:00:00Z", "CODE": "751-8",
-         "DESCRIPTION": "Absolute Neutrophil Count", "VALUE": "2.1", "UNITS": "10*3/uL"},
-        {"PATIENT": "P1", "DATE": "2026-02-20T09:00:00Z", "CODE": "718-7",
-         "DESCRIPTION": "Hemoglobin", "VALUE": "11.2", "UNITS": "g/dL"},
+        {
+            "PATIENT": "P1",
+            "DATE": "2026-02-20T09:00:00Z",
+            "CODE": "751-8",
+            "DESCRIPTION": "Absolute Neutrophil Count",
+            "VALUE": "2.1",
+            "UNITS": "10*3/uL",
+        },
+        {
+            "PATIENT": "P1",
+            "DATE": "2026-02-20T09:00:00Z",
+            "CODE": "718-7",
+            "DESCRIPTION": "Hemoglobin",
+            "VALUE": "11.2",
+            "UNITS": "g/dL",
+        },
     ],
     "medications": [
-        {"PATIENT": "P1", "START": "2025-10-01", "CODE": "860975",
-         "DESCRIPTION": "metformin"},
+        {"PATIENT": "P1", "START": "2025-10-01", "CODE": "860975", "DESCRIPTION": "metformin"},
     ],
 }
 

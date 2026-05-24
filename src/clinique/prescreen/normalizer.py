@@ -21,7 +21,8 @@ from typing import Any
 
 from .schemas import SYNTHEA, PatientCorpus, PatientDocument
 
-# Synthea CSV file stem -> (PatientDocument source_type, date column, code column, description column)
+# Synthea CSV file stem -> (PatientDocument source_type, date column, code column,
+# description column)
 _DOMAINS = {
     "conditions": ("condition", "START", "CODE", "DESCRIPTION"),
     "medications": ("medication", "START", "CODE", "DESCRIPTION"),
@@ -82,7 +83,9 @@ def _render(source_type: str, row: dict[str, str], code_col: str, desc_col: str)
     return f"{description} (code {row.get(code_col, '').strip()})".strip()
 
 
-def _structured(source_type: str, row: dict[str, str], code_col: str, desc_col: str) -> dict[str, Any]:
+def _structured(
+    source_type: str, row: dict[str, str], code_col: str, desc_col: str
+) -> dict[str, Any]:
     structured: dict[str, Any] = {
         "code": row.get(code_col, "").strip() or None,
         "description": row.get(desc_col, "").strip() or None,
@@ -101,9 +104,7 @@ def normalize_synthea(
     Only rows whose ``PATIENT`` equals ``patient_id`` are included. Documents are emitted in a
     deterministic order and given stable ids of the form ``<patient>:<domain>:<NNNN>``.
     """
-    patient_row = next(
-        (r for r in tables.get("patients", []) if r.get("Id") == patient_id), None
-    )
+    patient_row = next((r for r in tables.get("patients", []) if r.get("Id") == patient_id), None)
     if patient_row is None:
         raise ValueError(f"patient {patient_id!r} not found in Synthea patients table")
 

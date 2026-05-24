@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-
 
 ALLOWED_QUERY_CATEGORIES = {
     "missing",
@@ -40,8 +39,8 @@ def parse_timestamp(value: str | None) -> datetime | None:
     normalized = value.replace("Z", "+00:00")
     parsed = datetime.fromisoformat(normalized)
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def require_timestamp(label: str, value: str | None) -> datetime:
@@ -91,7 +90,7 @@ class EdcRecord:
     related: dict[str, str] = field(default_factory=dict)
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "EdcRecord":
+    def from_json(cls, raw: dict[str, Any]) -> EdcRecord:
         return cls(
             record_id=raw["record_id"],
             study_id=raw["study_id"],
@@ -114,7 +113,7 @@ class EdcSnapshot:
     records: tuple[EdcRecord, ...]
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "EdcSnapshot":
+    def from_json(cls, raw: dict[str, Any]) -> EdcSnapshot:
         snapshot_at = require_timestamp("snapshot_at", raw["snapshot_at"])
         records = tuple(EdcRecord.from_json(record) for record in raw.get("records", []))
         validate_unique_snapshot_record_keys(raw["snapshot_id"], records)
@@ -145,7 +144,7 @@ class EditCheckRule:
     operator: str | None = None
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "EditCheckRule":
+    def from_json(cls, raw: dict[str, Any]) -> EditCheckRule:
         effective_at = require_timestamp("effective_at", raw["effective_at"])
         retired_at = parse_timestamp(raw.get("retired_at"))
         if retired_at is not None and retired_at < effective_at:
@@ -196,7 +195,7 @@ class QueryLog:
     resolution: str
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "QueryLog":
+    def from_json(cls, raw: dict[str, Any]) -> QueryLog:
         opened_at = parse_timestamp(raw["opened_at"])
         if opened_at is None:
             raise ValueError("query log opened_at is required")
@@ -255,7 +254,7 @@ class QueryLabel:
     evidence_available_at_agent_time: bool
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "QueryLabel":
+    def from_json(cls, raw: dict[str, Any]) -> QueryLabel:
         opened_at = parse_timestamp(raw.get("opened_at"))
         closed_at = parse_timestamp(raw.get("closed_at"))
         validate_open_close_chronology(
@@ -312,7 +311,7 @@ class DatabaseLockIssue:
     description: str
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "DatabaseLockIssue":
+    def from_json(cls, raw: dict[str, Any]) -> DatabaseLockIssue:
         discovered_at = parse_timestamp(raw["discovered_at"])
         if discovered_at is None:
             raise ValueError("lock issue discovered_at is required")

@@ -122,9 +122,10 @@ class Trial:
 class PatientDocument:
     """One normalized evidence unit (a lab result, a condition, a med, a note chunk).
 
-    ``text`` is the human-readable rendering the retriever indexes and the judge cites; ``structured``
-    carries the machine-parsed facts (value, unit, code) so deterministic tools can check thresholds
-    without re-parsing free text. ``date`` anchors temporal-window reasoning.
+    ``text`` is the human-readable rendering the retriever indexes and the judge
+    cites; ``structured`` carries the machine-parsed facts (value, unit, code) so
+    deterministic tools can check thresholds without re-parsing free text. ``date``
+    anchors temporal-window reasoning.
     """
 
     doc_id: str

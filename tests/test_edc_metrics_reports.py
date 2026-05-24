@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from clinique.edc.detection import detect_candidate_queries
@@ -12,13 +12,12 @@ from clinique.edc.reports import (
     build_retrospective_report,
 )
 
-
 FIXTURES = Path("tests/fixtures/edc_query")
 
 
 def test_evaluate_candidates_reports_task_and_workflow_metrics():
     bundle = load_fixture_bundle(FIXTURES)
-    evidence = evidence_at(bundle, datetime(2026, 3, 8, tzinfo=timezone.utc))
+    evidence = evidence_at(bundle, datetime(2026, 3, 8, tzinfo=UTC))
     candidates = detect_candidate_queries(evidence, existing_queries=bundle.query_logs)
 
     metrics = evaluate_candidates(candidates, bundle.labels, replayed_at=evidence.replayed_at)
@@ -30,7 +29,7 @@ def test_evaluate_candidates_reports_task_and_workflow_metrics():
 
 
 def test_evaluate_candidates_does_not_match_labels_across_sites():
-    replayed_at = datetime(2026, 3, 8, tzinfo=timezone.utc)
+    replayed_at = datetime(2026, 3, 8, tzinfo=UTC)
     candidate = CandidateQuery(
         snapshot_id="snap-2026-03-08",
         study_id="STUDY-EDC-001",
@@ -64,7 +63,7 @@ def test_evaluate_candidates_does_not_match_labels_across_sites():
 
 
 def test_evaluate_candidates_does_not_match_labels_across_snapshots():
-    replayed_at = datetime(2026, 3, 1, tzinfo=timezone.utc)
+    replayed_at = datetime(2026, 3, 1, tzinfo=UTC)
     candidate = CandidateQuery(
         snapshot_id="snap-2026-03-01",
         study_id="STUDY-EDC-001",
@@ -86,7 +85,7 @@ def test_evaluate_candidates_does_not_match_labels_across_snapshots():
         gold_query_needed=True,
         query_category="missing",
         human_resolution="corrected",
-        opened_at=datetime(2026, 3, 8, tzinfo=timezone.utc),
+        opened_at=datetime(2026, 3, 8, tzinfo=UTC),
         closed_at=None,
         evidence_available_at_agent_time=True,
     )
@@ -98,7 +97,7 @@ def test_evaluate_candidates_does_not_match_labels_across_snapshots():
 
 
 def test_evaluate_candidates_does_not_count_unavailable_evidence_as_true_detection():
-    replayed_at = datetime(2026, 3, 8, tzinfo=timezone.utc)
+    replayed_at = datetime(2026, 3, 8, tzinfo=UTC)
     candidate = CandidateQuery(
         snapshot_id="snap-2026-03-08",
         study_id="STUDY-EDC-001",
@@ -133,7 +132,7 @@ def test_evaluate_candidates_does_not_count_unavailable_evidence_as_true_detecti
 
 
 def test_lock_issue_early_detection_does_not_match_across_sites():
-    replayed_at = datetime(2026, 3, 8, tzinfo=timezone.utc)
+    replayed_at = datetime(2026, 3, 8, tzinfo=UTC)
     candidate = CandidateQuery(
         snapshot_id="snap-2026-03-08",
         study_id="STUDY-EDC-001",
@@ -153,7 +152,7 @@ def test_lock_issue_early_detection_does_not_match_across_sites():
         form="Vitals",
         field="visit_date",
         severity="major",
-        discovered_at=datetime(2026, 3, 20, tzinfo=timezone.utc),
+        discovered_at=datetime(2026, 3, 20, tzinfo=UTC),
         description="Future visit date remained open.",
     )
 
@@ -162,7 +161,7 @@ def test_lock_issue_early_detection_does_not_match_across_sites():
 
 def test_reports_are_json_serializable_and_include_ship_gates(tmp_path):
     bundle = load_fixture_bundle(FIXTURES)
-    offline = build_offline_report(bundle, replayed_at=datetime(2026, 3, 8, tzinfo=timezone.utc))
+    offline = build_offline_report(bundle, replayed_at=datetime(2026, 3, 8, tzinfo=UTC))
     replay = build_retrospective_report(bundle)
 
     offline_path = tmp_path / "offline.json"

@@ -2,7 +2,6 @@ from pathlib import Path
 
 from clinique.edc.silent import SilentLogEntry, evaluate_silent_log, load_silent_log
 
-
 SILENT_LOG = Path("tests/fixtures/edc_query/silent_log.json")
 
 

@@ -30,7 +30,9 @@ def est_timepoint_align(g: ArtifactGraph) -> list[Finding]:
                         f"Endpoint '{name}' has conflicting timepoints across artifacts: "
                         + ", ".join(f"{a}={per_artifact[a]}wk" for a in sorted(per_artifact))
                     ),
-                    suggested_resolution=f"Align the '{name}' timepoint across protocol, SAP, ADaM, and shells.",
+                    suggested_resolution=(
+                        f"Align the '{name}' timepoint across protocol, SAP, ADaM, and shells."
+                    ),
                     evidence=tuple(
                         {"artifact": a, "timepoint_weeks": str(per_artifact[a])}
                         for a in sorted(per_artifact)
@@ -55,8 +57,12 @@ def pop_def_consistent(g: ArtifactGraph) -> list[Finding]:
                     severity="major",
                     estimand_attribute="population",
                     artifacts_involved=tuple(sorted(per_artifact)),
-                    explanation=f"Analysis population '{name}' is defined inconsistently across artifacts.",
-                    suggested_resolution=f"Reconcile the '{name}' population definition to a single wording.",
+                    explanation=(
+                        f"Analysis population '{name}' is defined inconsistently across artifacts."
+                    ),
+                    suggested_resolution=(
+                        f"Reconcile the '{name}' population definition to a single wording."
+                    ),
                     evidence=tuple(
                         {"artifact": a, "definition": per_artifact[a]} for a in sorted(per_artifact)
                     ),
@@ -80,8 +86,13 @@ def shell_backed(g: ArtifactGraph) -> list[Finding]:
                     severity="blocker",
                     estimand_attribute="endpoint_variable",
                     artifacts_involved=("tlf_shells", "adam_spec"),
-                    explanation=f"Shell '{shell.shell_id}' references missing derivation(s): {', '.join(missing)}.",
-                    suggested_resolution="Add the missing derivation(s) to the ADaM spec or fix the shell reference.",
+                    explanation=(
+                        f"Shell '{shell.shell_id}' references missing "
+                        f"derivation(s): {', '.join(missing)}."
+                    ),
+                    suggested_resolution=(
+                        "Add the missing derivation(s) to the ADaM spec or fix the shell reference."
+                    ),
                     evidence=({"artifact": "tlf_shells", "shell": shell.shell_id},),
                 )
             )
@@ -93,7 +104,10 @@ def shell_backed(g: ArtifactGraph) -> list[Finding]:
                     severity="major",
                     estimand_attribute="endpoint_variable",
                     artifacts_involved=("adam_spec", "tlf_shells"),
-                    explanation=f"Primary derivation '{d.derivation_id}' ({d.target_var}) has no backing shell.",
+                    explanation=(
+                        f"Primary derivation '{d.derivation_id}' "
+                        f"({d.target_var}) has no backing shell."
+                    ),
                     suggested_resolution="Add a TLF shell for the primary derivation or demote it.",
                     evidence=({"artifact": "adam_spec", "derivation": d.derivation_id},),
                 )

@@ -6,7 +6,6 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-
 SUPPORTED_MANIFEST_VERSION = "1"
 REQUIRED_SOURCES = ("edc_snapshots", "query_logs", "edit_check_history")
 ALLOWED_SOURCES = set(REQUIRED_SOURCES)

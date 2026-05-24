@@ -4,9 +4,9 @@ from clinique.edc.fixtures import load_fixture_bundle
 from clinique.edc.records import (
     CandidateQuery,
     DatabaseLockIssue,
-    EditCheckRule,
     EdcRecord,
     EdcSnapshot,
+    EditCheckRule,
     FixtureBundle,
     QueryLabel,
     QueryLog,

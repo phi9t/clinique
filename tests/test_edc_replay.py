@@ -1,16 +1,15 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from clinique.edc.fixtures import load_fixture_bundle
 from clinique.edc.replay import evidence_at
-
 
 FIXTURES = Path("tests/fixtures/edc_query")
 
 
 def test_evidence_at_excludes_future_snapshots_and_rules():
     bundle = load_fixture_bundle(FIXTURES)
-    evidence = evidence_at(bundle, datetime(2026, 3, 2, tzinfo=timezone.utc))
+    evidence = evidence_at(bundle, datetime(2026, 3, 2, tzinfo=UTC))
 
     assert evidence.snapshot.snapshot_id == "snap-2026-03-01"
     assert {rule.rule_id for rule in evidence.active_rules} == {
@@ -24,7 +23,7 @@ def test_evidence_at_refuses_dates_before_first_snapshot():
     bundle = load_fixture_bundle(FIXTURES)
 
     try:
-        evidence_at(bundle, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        evidence_at(bundle, datetime(2026, 2, 1, tzinfo=UTC))
     except ValueError as exc:
         assert "No snapshot" in str(exc)
     else:
@@ -33,7 +32,7 @@ def test_evidence_at_refuses_dates_before_first_snapshot():
 
 def test_replay_evidence_exposes_no_write_methods():
     bundle = load_fixture_bundle(FIXTURES)
-    evidence = evidence_at(bundle, datetime(2026, 3, 8, tzinfo=timezone.utc))
+    evidence = evidence_at(bundle, datetime(2026, 3, 8, tzinfo=UTC))
 
     forbidden = {"write", "update", "delete", "close_query", "issue_query"}
 

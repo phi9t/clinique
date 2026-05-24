@@ -87,7 +87,8 @@ def _narrative(
     ]
     if method != "survival_logrank":
         lines.append(
-            f"Required total: {n} {unit} ({int(primary.outputs['n1'])} + {int(primary.outputs['n2'])})."
+            f"Required total: {n} {unit} "
+            f"({int(primary.outputs['n1'])} + {int(primary.outputs['n2'])})."
         )
     else:
         lines.append(f"Required total: {n} {unit}.")

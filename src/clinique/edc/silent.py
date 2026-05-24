@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import json
-from math import ceil, isfinite
 from dataclasses import dataclass
+from math import ceil, isfinite
 from pathlib import Path
 from statistics import median
 from typing import Any
 
 from clinique.edc.records import ALLOWED_QUERY_CATEGORIES, ValidationReport, parse_timestamp
-
 
 ALLOWED_GROUND_TRUTH = {"true_positive", "false_positive", "true_negative", "safety_risk"}
 
@@ -33,7 +32,7 @@ class SilentLogEntry:
     safety_risk: bool
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> "SilentLogEntry":
+    def from_json(cls, raw: dict[str, Any]) -> SilentLogEntry:
         logged_at = parse_timestamp(raw["logged_at"])
         human_action_at = parse_timestamp(raw["human_action_at"])
         if logged_at is None or human_action_at is None:
@@ -116,7 +115,9 @@ def evaluate_silent_log(
         inputs={
             "recommendation_ids": [entry.recommendation_id for entry in entries],
             "reviewer_count": len(reviewers),
-            "false_positive_tolerance_per_reviewer_week": false_positive_tolerance_per_reviewer_week,
+            "false_positive_tolerance_per_reviewer_week": (
+                false_positive_tolerance_per_reviewer_week
+            ),
         },
         metrics={
             "recommendations_total": len(entries),

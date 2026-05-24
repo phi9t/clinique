@@ -54,7 +54,10 @@ class PowerEngine(Protocol):
 
 
 def _minimal_n1(power_fn, target: float, seed: float) -> int:
-    """Smallest integer n1 >= 2 with power_fn(n1) >= target (power_fn assumed monotone increasing)."""
+    """Smallest integer n1 >= 2 with power_fn(n1) >= target.
+
+    power_fn is assumed monotone increasing.
+    """
     n1 = max(2, math.ceil(seed))
     while n1 > 2 and power_fn(n1 - 1) >= target:
         n1 -= 1

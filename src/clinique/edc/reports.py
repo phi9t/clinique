@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from clinique.edc.detection import detect_candidate_queries
 from clinique.edc.metrics import evaluate_candidates
@@ -17,7 +17,7 @@ from clinique.edc.replay import evidence_at
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _metrics_dict(metrics: EvaluationMetrics) -> dict[str, object]:

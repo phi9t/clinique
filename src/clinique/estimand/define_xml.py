@@ -126,7 +126,8 @@ def check_define_vs_dataset(
             _finding(
                 "DEFINE-DATASET-VARMATCH",
                 "major",
-                f"Variable '{missing}' is defined in define.xml ({group_name}) but absent from the dataset.",
+                f"Variable '{missing}' is defined in define.xml ({group_name}) "
+                "but absent from the dataset.",
                 "Add the variable to the dataset or remove it from define.xml.",
             )
         )
@@ -135,7 +136,8 @@ def check_define_vs_dataset(
             _finding(
                 "DEFINE-DATASET-VARMATCH",
                 "major",
-                f"Variable '{extra}' is in the dataset ({group_name}) but not described in define.xml.",
+                f"Variable '{extra}' is in the dataset ({group_name}) "
+                "but not described in define.xml.",
                 "Document the variable in define.xml or drop it from the dataset.",
             )
         )

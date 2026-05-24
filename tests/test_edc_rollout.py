@@ -2,7 +2,6 @@ from pathlib import Path
 
 from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
 
-
 ROLLOUT_GATE = Path("tests/fixtures/edc_query/controlled_rollout_gate.json")
 
 

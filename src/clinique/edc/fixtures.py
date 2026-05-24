@@ -5,18 +5,18 @@ from pathlib import Path
 
 from clinique.edc.records import (
     DatabaseLockIssue,
-    EditCheckRule,
     EdcSnapshot,
+    EditCheckRule,
     FixtureBundle,
     QueryLabel,
     QueryLog,
     validate_lock_issue_record_references,
+    validate_snapshot_references,
     validate_unique_label_keys,
     validate_unique_lock_issue_ids,
     validate_unique_query_log_ids,
     validate_unique_rule_ids,
     validate_unique_snapshot_ids,
-    validate_snapshot_references,
 )
 
 

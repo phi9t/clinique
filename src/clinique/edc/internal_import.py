@@ -6,8 +6,8 @@ from pathlib import Path
 from clinique.edc.internal_preflight import preflight_internal_manifest
 from clinique.edc.records import (
     DatabaseLockIssue,
-    EditCheckRule,
     EdcSnapshot,
+    EditCheckRule,
     FixtureBundle,
     QueryLabel,
     QueryLog,
