@@ -43,5 +43,9 @@ jobs:
       - name: Test (pytest)
         run: uv run pytest
 
+      - name: Build explorer (GitHub Pages base)
+        working-directory: explorer
+        run: npm ci && npm run build:pages
+
       - name: Build sdist + wheel
         run: uv build

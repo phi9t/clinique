@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
+import { REPO_HOME } from './lib/assets'
 import CdiscExplorer from './cdisc/CdiscExplorer'
 import PrescreenExplorer from './prescreen/PrescreenExplorer'
 
@@ -18,7 +19,12 @@ export default function App() {
             <a href="#main-content" className="skip-link">
               Skip to main content
             </a>
-            <a href="/" className="back-home-link">
+            <a
+              href={REPO_HOME}
+              className="back-home-link"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <ArrowLeft size={16} aria-hidden="true" />
               <span>Back to Clinique Suite</span>
             </a>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { dataUrl } from '../lib/assets'
 import {
   Database,
   FileSpreadsheet,
@@ -110,8 +111,8 @@ export default function CdiscExplorer() {
       try {
         setLoadingSummary(true)
         const [sumRes, metaRes] = await Promise.all([
-          fetch(`/data/summary.json?t=${Date.now()}`),
-          fetch(`/data/metadata.json?t=${Date.now()}`),
+          fetch(`${dataUrl('data/summary.json')}?t=${Date.now()}`),
+          fetch(`${dataUrl('data/metadata.json')}?t=${Date.now()}`),
         ])
 
         if (!sumRes.ok || !metaRes.ok) {
@@ -150,7 +151,7 @@ export default function CdiscExplorer() {
       setCurrentPage(1)
       setStatusMessage(`Loading records for ${datasetName}...`)
 
-      const res = await fetch(`/data/${datasetName.toLowerCase()}.json?t=${Date.now()}`)
+      const res = await fetch(`${dataUrl(`data/${datasetName.toLowerCase()}.json`)}?t=${Date.now()}`)
       if (!res.ok) {
         throw new Error(`Failed to load data for dataset ${datasetName} (HTTP ${res.status})`)
       }

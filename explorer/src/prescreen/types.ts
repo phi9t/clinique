@@ -1,3 +1,5 @@
+import { dataUrl } from '../lib/assets'
+
 export interface Provenance {
   license: string
   fixture_path: string
@@ -143,7 +145,7 @@ export const PRESCREEN_TAB_ORDER: PrescreenTabId[] = [
   'validation',
 ]
 
-export const DATA_BASE = '/data/prescreen'
+export const DATA_BASE = dataUrl('data/prescreen')
 
 export async function fetchPrescreenJson<T>(filename: string): Promise<T> {
   const res = await fetch(`${DATA_BASE}/${filename}?t=${Date.now()}`)

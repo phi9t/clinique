@@ -104,6 +104,8 @@ See [validation summary](docs/edc-query-validation/validation-summary.md) for st
 
 ## Dataset explorer
 
+**Live demo:** [https://phi9t.github.io/clinique/](https://phi9t.github.io/clinique/)
+
 The [`explorer/`](explorer/) app is a Vite + React dashboard with two dataset families:
 
 - **Regulatory CDISC** — FDA-pilot ADaM datasets and Define-XML metadata under `explorer/public/data/`
@@ -113,7 +115,13 @@ The [`explorer/`](explorer/) app is a Vite + React dashboard with two dataset fa
 cd explorer && npm install && npm run dev
 ```
 
-Build for production with `npm run build`.
+Build for production with `npm run build`. For GitHub Pages (project site at `/clinique/`):
+
+```bash
+npm run build:pages
+```
+
+**One-time setup:** In the GitHub repo, go to **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**. Pushes to `main` that touch `explorer/` trigger an automatic deploy via [`.github/workflows/pages.yml`](.github/workflows/pages.yml).
 
 Regenerate prescreen explorer JSON from committed fixtures:
 
