@@ -120,11 +120,18 @@ def _source_complete(source: dict[str, Any]) -> bool:
     if any(not source.get(key) for key in required_keys):
         return False
     return (
-        isinstance(source.get("schema_sketch"), list)
-        and bool(source["schema_sketch"])
+        _schema_sketch_complete(source.get("schema_sketch"))
         and source.get("sensitivity") in ALLOWED_SENSITIVITY
         and source.get("blinding_status") in ALLOWED_BLINDING_STATUS
         and _date_coverage_complete(source.get("date_coverage"))
+    )
+
+
+def _schema_sketch_complete(value: Any) -> bool:
+    return (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(field, str) and field.strip() for field in value)
     )
 
 

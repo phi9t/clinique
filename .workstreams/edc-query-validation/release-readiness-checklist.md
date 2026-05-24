@@ -56,7 +56,7 @@
 - [x] Internal-data manifest preflight command exists and validates readiness metadata without
       reading PHI-bearing exports, including top-level manifest version/timestamp checks and
       rejection of unknown source types outside `edc_snapshots`, `query_logs`, and
-      `edit_check_history`.
+      `edit_check_history`; schema sketches must contain nonblank field names.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent
