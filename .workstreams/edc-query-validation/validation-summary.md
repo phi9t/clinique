@@ -81,7 +81,7 @@ Evidence:
   query-category, schema-field duplicate rejection, preflight path traversal rejection,
   manifest-relative export paths, manifest-relative path traversal rejection, malformed
   approved-export payload, item-indexed payload-object rejection, source-context structural
-  validation errors, evidence, and
+  validation errors, payload-file-context unblinded snapshot rejection, evidence, and
   recommendation-ID enforcement, silent evidence-citation validation, safety-label consistency,
   finite tolerance validation, signed timing metrics, and evaluation, controlled-rollout gate
   rate/integer-count/integer-delta validation, finite-number validation, threshold-direction

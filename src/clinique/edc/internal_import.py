@@ -49,7 +49,10 @@ def load_internal_export_bundle(
     _validate_payload(snapshots_path, validate_unique_snapshot_ids, snapshots)
     for snapshot in snapshots:
         if snapshot.contains_unblinded:
-            raise ValueError(f"Snapshot {snapshot.snapshot_id} is marked as unblinded")
+            raise ValueError(
+                f"invalid internal export payload: {snapshots_path}: "
+                f"Snapshot {snapshot.snapshot_id} is marked as unblinded"
+            )
 
     lock_issues = ()
     if lock_issues_file is not None:

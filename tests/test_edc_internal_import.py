@@ -173,7 +173,9 @@ def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path
             lock_issues_path=FIXTURES / "lock_issues.json",
         )
     except ValueError as exc:
-        assert "unblinded" in str(exc)
+        message = str(exc)
+        assert "snapshots.json" in message
+        assert "unblinded" in message
     else:
         raise AssertionError("expected unblinded snapshot rejection")
 
