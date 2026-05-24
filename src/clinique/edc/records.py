@@ -455,6 +455,7 @@ def validate_snapshot_references(
     query_logs: tuple[QueryLog, ...],
 ) -> None:
     snapshot_ids = {snapshot.snapshot_id for snapshot in snapshots}
+    snapshot_at_by_id = {snapshot.snapshot_id: snapshot.snapshot_at for snapshot in snapshots}
     record_keys_by_snapshot = {
         snapshot.snapshot_id: {
             (
@@ -496,6 +497,8 @@ def validate_snapshot_references(
         key = (query.study_id, query.site_id, query.subject_id, query.form, query.field)
         if key not in record_keys_by_snapshot[query.snapshot_id]:
             raise ValueError(f"unknown query log record key: {key}")
+        if query.opened_at < snapshot_at_by_id[query.snapshot_id]:
+            raise ValueError("query log opened_at cannot be before snapshot_at")
         collected_at = collected_at_by_snapshot_key[query.snapshot_id][key]
         if query.opened_at < collected_at:
             raise ValueError("query log opened_at cannot be before record collected_at")

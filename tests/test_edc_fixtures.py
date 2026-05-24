@@ -1088,30 +1088,6 @@ def test_fixture_bundle_rejects_events_before_referenced_record_collection(tmp_p
             },
             "label opened_at cannot be before record collected_at",
         ),
-        (
-            "query_before_record",
-            {
-                "labels": [],
-                "query_logs": [
-                    {
-                        "query_id": "Q-BAD",
-                        "snapshot_id": "snap",
-                        "study_id": "STUDY-EDC-001",
-                        "site_id": "SITE-01",
-                        "subject_id": "SUBJ-001",
-                        "form": "AE",
-                        "field": "term",
-                        "query_text": "Please confirm AE term.",
-                        "query_category": "missing",
-                        "opened_at": "2026-03-01T00:00:00Z",
-                        "closed_at": None,
-                        "status": "open",
-                        "resolution": "pending",
-                    }
-                ],
-            },
-            "query log opened_at cannot be before record collected_at",
-        ),
     ]
     for dirname, payload, expected_error in cases:
         case_dir = fixture_dir / dirname
@@ -1127,3 +1103,57 @@ def test_fixture_bundle_rejects_events_before_referenced_record_collection(tmp_p
             assert expected_error in str(exc)
         else:
             raise AssertionError("expected event-before-record chronology rejection")
+
+
+def test_fixture_bundle_rejects_query_logs_opened_before_referenced_snapshot(tmp_path):
+    fixture_dir = tmp_path / "query_before_snapshot"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-03T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": [
+              {
+                "record_id": "REC-001",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "",
+                "collected_at": "2026-03-01T00:00:00Z"
+              }
+            ]
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+    query = {
+        "query_id": "Q-BAD",
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "query_text": "Please confirm AE term.",
+        "query_category": "missing",
+        "opened_at": "2026-03-02T00:00:00Z",
+        "closed_at": None,
+        "status": "open",
+        "resolution": "pending",
+    }
+    (fixture_dir / "query_logs.json").write_text(json.dumps([query]))
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "query log opened_at cannot be before snapshot_at" in str(exc)
+    else:
+        raise AssertionError("expected query-before-snapshot chronology rejection")

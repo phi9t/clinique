@@ -314,3 +314,61 @@ def test_load_internal_export_bundle_rejects_unknown_snapshot_record_references(
         assert "unknown label record key" in str(exc)
     else:
         raise AssertionError("expected unknown label record reference rejection")
+
+
+def test_load_internal_export_bundle_rejects_query_logs_opened_before_snapshot(tmp_path):
+    manifest = _write_manifest(
+        tmp_path,
+        snapshot_payload=(
+            """
+            [
+              {
+                "snapshot_id": "snap",
+                "snapshot_at": "2026-03-03T00:00:00Z",
+                "contains_phi": false,
+                "contains_unblinded": false,
+                "records": [
+                  {
+                    "record_id": "REC-001",
+                    "study_id": "STUDY-EDC-001",
+                    "site_id": "SITE-01",
+                    "subject_id": "SUBJ-001",
+                    "form": "AE",
+                    "field": "term",
+                    "value": "",
+                    "collected_at": "2026-03-01T00:00:00Z"
+                  }
+                ]
+              }
+            ]
+            """
+        ),
+    )
+    labels_path = tmp_path / "query_before_snapshot_labels.json"
+    labels_path.write_text("[]")
+    query = {
+        "query_id": "Q-BAD",
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "query_text": "Please confirm AE term.",
+        "query_category": "missing",
+        "opened_at": "2026-03-02T00:00:00Z",
+        "closed_at": None,
+        "status": "open",
+        "resolution": "pending",
+    }
+    (tmp_path / "query_logs" / "query_logs.json").write_text(json.dumps([query]))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=labels_path,
+        )
+    except ValueError as exc:
+        assert "query log opened_at cannot be before snapshot_at" in str(exc)
+    else:
+        raise AssertionError("expected query-before-snapshot chronology rejection")
