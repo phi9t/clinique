@@ -32,6 +32,7 @@ def test_evaluate_candidates_reports_task_and_workflow_metrics():
 def test_evaluate_candidates_does_not_match_labels_across_sites():
     replayed_at = datetime(2026, 3, 8, tzinfo=timezone.utc)
     candidate = CandidateQuery(
+        snapshot_id="snap-2026-03-08",
         study_id="STUDY-EDC-001",
         site_id="SITE-01",
         subject_id="SUBJ-001",
@@ -62,9 +63,44 @@ def test_evaluate_candidates_does_not_match_labels_across_sites():
     assert metrics.false_queries == 1
 
 
+def test_evaluate_candidates_does_not_match_labels_across_snapshots():
+    replayed_at = datetime(2026, 3, 1, tzinfo=timezone.utc)
+    candidate = CandidateQuery(
+        snapshot_id="snap-2026-03-01",
+        study_id="STUDY-EDC-001",
+        site_id="SITE-01",
+        subject_id="SUBJ-001",
+        form="AE",
+        field="term",
+        query_category="missing",
+        query_text="AE term is required.",
+        evidence=(SourceRef("record", "REC-001", replayed_at),),
+    )
+    future_label = QueryLabel(
+        snapshot_id="snap-2026-03-08",
+        study_id="STUDY-EDC-001",
+        site_id="SITE-01",
+        subject_id="SUBJ-001",
+        form="AE",
+        field="term",
+        gold_query_needed=True,
+        query_category="missing",
+        human_resolution="corrected",
+        opened_at=datetime(2026, 3, 8, tzinfo=timezone.utc),
+        closed_at=None,
+        evidence_available_at_agent_time=True,
+    )
+
+    metrics = evaluate_candidates((candidate,), (future_label,), replayed_at=replayed_at)
+
+    assert metrics.true_discrepancies_detected == 0
+    assert metrics.false_queries == 1
+
+
 def test_evaluate_candidates_does_not_count_unavailable_evidence_as_true_detection():
     replayed_at = datetime(2026, 3, 8, tzinfo=timezone.utc)
     candidate = CandidateQuery(
+        snapshot_id="snap-2026-03-08",
         study_id="STUDY-EDC-001",
         site_id="SITE-01",
         subject_id="SUBJ-001",
@@ -99,6 +135,7 @@ def test_evaluate_candidates_does_not_count_unavailable_evidence_as_true_detecti
 def test_lock_issue_early_detection_does_not_match_across_sites():
     replayed_at = datetime(2026, 3, 8, tzinfo=timezone.utc)
     candidate = CandidateQuery(
+        snapshot_id="snap-2026-03-08",
         study_id="STUDY-EDC-001",
         site_id="SITE-01",
         subject_id="SUBJ-001",

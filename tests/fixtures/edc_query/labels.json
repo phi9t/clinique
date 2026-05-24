@@ -1,5 +1,33 @@
 [
   {
+    "snapshot_id": "snap-2026-03-01",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-01",
+    "subject_id": "SUBJ-001",
+    "form": "AE",
+    "field": "term",
+    "gold_query_needed": true,
+    "query_category": "missing",
+    "human_resolution": "corrected",
+    "opened_at": "2026-03-04T09:00:00Z",
+    "closed_at": "2026-03-05T12:00:00Z",
+    "evidence_available_at_agent_time": true
+  },
+  {
+    "snapshot_id": "snap-2026-03-01",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-01",
+    "subject_id": "SUBJ-001",
+    "form": "ConMeds",
+    "field": "start_date",
+    "gold_query_needed": true,
+    "query_category": "inconsistent",
+    "human_resolution": "corrected",
+    "opened_at": "2026-03-05T10:00:00Z",
+    "closed_at": "2026-03-07T16:00:00Z",
+    "evidence_available_at_agent_time": true
+  },
+  {
     "snapshot_id": "snap-2026-03-08",
     "study_id": "STUDY-EDC-001",
     "site_id": "SITE-01",

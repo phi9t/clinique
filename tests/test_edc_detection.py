@@ -76,3 +76,4 @@ def test_candidate_queries_are_draft_only_and_evidence_backed():
 
     assert all(candidate.draft_only for candidate in candidates)
     assert all(candidate.evidence for candidate in candidates)
+    assert {candidate.snapshot_id for candidate in candidates} == {evidence.snapshot.snapshot_id}

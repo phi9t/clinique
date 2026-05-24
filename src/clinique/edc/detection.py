@@ -35,6 +35,7 @@ def _candidate(
         sources.append(SourceRef("rule", rule.rule_id, rule.effective_at))
     sources.extend(extra_sources)
     return CandidateQuery(
+        snapshot_id=evidence.snapshot.snapshot_id,
         study_id=record.study_id,
         site_id=record.site_id,
         subject_id=record.subject_id,

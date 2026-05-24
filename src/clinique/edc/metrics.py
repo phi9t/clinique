@@ -6,8 +6,8 @@ from statistics import median
 from clinique.edc.records import CandidateQuery, EvaluationMetrics, QueryLabel
 
 
-def _key(item: CandidateQuery | QueryLabel) -> tuple[str, str, str, str, str]:
-    return (item.study_id, item.site_id, item.subject_id, item.form, item.field)
+def _key(item: CandidateQuery | QueryLabel) -> tuple[str, str, str, str, str, str]:
+    return (item.snapshot_id, item.study_id, item.site_id, item.subject_id, item.form, item.field)
 
 
 def evaluate_candidates(

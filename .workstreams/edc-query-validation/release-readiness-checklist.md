@@ -17,6 +17,8 @@
       `no_query_needed` combinations.
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,
       form, and field.
+- [x] Task metrics match labels by replay snapshot ID as well as study, site, subject, form,
+      and field to prevent cross-snapshot label leakage.
 - [x] True-detection metrics require label evidence to be available at the replay timestamp.
 - [x] Fixture and approved-export loaders reject duplicate snapshot IDs before replay
       provenance can become ambiguous.

@@ -449,6 +449,7 @@ class ReplayEvidence:
 
 @dataclass(frozen=True)
 class CandidateQuery:
+    snapshot_id: str
     study_id: str
     site_id: str
     subject_id: str
