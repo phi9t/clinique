@@ -32,42 +32,59 @@ def load_internal_export_bundle(
         raise ValueError(_preflight_error_message(preflight))
 
     sources = _source_paths(manifest_path)
+    snapshots_path = sources["edc_snapshots"] / "snapshots.json"
+    query_logs_path = sources["query_logs"] / "query_logs.json"
+    rules_path = sources["edit_check_history"] / "rules.json"
+    labels_file = Path(labels_path)
+    lock_issues_file = Path(lock_issues_path) if lock_issues_path is not None else None
     snapshots = tuple(
         sorted(
             _parse_payload_items(
-                sources["edc_snapshots"] / "snapshots.json",
+                snapshots_path,
                 EdcSnapshot.from_json,
             ),
             key=lambda snapshot: snapshot.snapshot_at,
         )
     )
-    validate_unique_snapshot_ids(snapshots)
+    _validate_payload(snapshots_path, validate_unique_snapshot_ids, snapshots)
     for snapshot in snapshots:
         if snapshot.contains_unblinded:
             raise ValueError(f"Snapshot {snapshot.snapshot_id} is marked as unblinded")
 
     lock_issues = ()
-    if lock_issues_path is not None:
+    if lock_issues_file is not None:
         lock_issues = _parse_payload_items(
-            Path(lock_issues_path),
+            lock_issues_file,
             DatabaseLockIssue.from_json,
         )
-    validate_unique_lock_issue_ids(lock_issues)
-    validate_lock_issue_record_references(snapshots, lock_issues)
+    if lock_issues_file is not None:
+        _validate_payload(lock_issues_file, validate_unique_lock_issue_ids, lock_issues)
+        _validate_payload(
+            lock_issues_file,
+            validate_lock_issue_record_references,
+            snapshots,
+            lock_issues,
+        )
 
-    labels = _parse_payload_items(Path(labels_path), QueryLabel.from_json)
-    validate_unique_label_keys(labels)
+    labels = _parse_payload_items(labels_file, QueryLabel.from_json)
+    _validate_payload(labels_file, validate_unique_label_keys, labels)
     query_logs = _parse_payload_items(
-        sources["query_logs"] / "query_logs.json",
+        query_logs_path,
         QueryLog.from_json,
     )
-    validate_unique_query_log_ids(query_logs)
-    validate_snapshot_references(snapshots, labels, query_logs)
+    _validate_payload(query_logs_path, validate_unique_query_log_ids, query_logs)
+    _validate_payload(
+        f"{labels_file}; {query_logs_path}",
+        validate_snapshot_references,
+        snapshots,
+        labels,
+        query_logs,
+    )
     rules = _parse_payload_items(
-        sources["edit_check_history"] / "rules.json",
+        rules_path,
         EditCheckRule.from_json,
     )
-    validate_unique_rule_ids(rules)
+    _validate_payload(rules_path, validate_unique_rule_ids, rules)
 
     return FixtureBundle(
         snapshots=snapshots,
@@ -138,6 +155,13 @@ def _parse_payload_items(path: Path, parser):
                 f"invalid internal export payload: {path}: item {index}: {exc}"
             ) from exc
     return tuple(items)
+
+
+def _validate_payload(path: object, validator, *args) -> None:
+    try:
+        validator(*args)
+    except ValueError as exc:
+        raise ValueError(f"invalid internal export payload: {path}: {exc}") from exc
 
 
 def _read_json(path: Path) -> list[dict]:

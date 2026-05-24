@@ -253,7 +253,9 @@ def test_load_internal_export_bundle_rejects_duplicate_snapshot_ids(tmp_path):
             lock_issues_path=FIXTURES / "lock_issues.json",
         )
     except ValueError as exc:
-        assert "duplicate snapshot id" in str(exc)
+        message = str(exc)
+        assert "snapshots.json" in message
+        assert "duplicate snapshot id" in message
     else:
         raise AssertionError("expected duplicate snapshot id rejection")
 
