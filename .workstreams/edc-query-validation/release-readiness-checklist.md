@@ -39,6 +39,8 @@
       become ambiguous.
 - [x] Fixture and approved-export loaders reject duplicate adjudication label keys.
 - [x] Fixture and approved-export loaders reject duplicate database-lock issue IDs.
+- [x] Fixture and approved-export loaders enforce schema-defined database-lock issue severity
+      values.
 - [x] Fixture and approved-export loaders reject database-lock issues that do not reference any
       record key present in replay snapshots.
 - [x] Fixture and approved-export loaders reject database-lock issue discovery timestamps that

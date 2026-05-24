@@ -29,6 +29,7 @@ ALLOWED_QUERY_LOG_RESOLUTIONS = {
     "waived",
 }
 ALLOWED_QUERY_LOG_STATUSES = {"open", "closed"}
+ALLOWED_LOCK_ISSUE_SEVERITIES = {"minor", "major", "critical"}
 ALLOWED_RULE_KINDS = {"required_field", "date_order", "future_date"}
 ALLOWED_DATE_ORDER_OPERATORS = {"<="}
 
@@ -322,7 +323,11 @@ class DatabaseLockIssue:
             subject_id=raw["subject_id"],
             form=raw["form"],
             field=raw["field"],
-            severity=raw["severity"],
+            severity=require_one_of(
+                "lock issue severity",
+                raw["severity"],
+                ALLOWED_LOCK_ISSUE_SEVERITIES,
+            ),
             discovered_at=discovered_at,
             description=raw["description"],
         )

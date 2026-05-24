@@ -944,6 +944,57 @@ def test_fixture_bundle_rejects_lock_issues_before_record_collection(tmp_path):
         raise AssertionError("expected lock issue chronology rejection")
 
 
+def test_fixture_bundle_rejects_unknown_lock_issue_severity(tmp_path):
+    fixture_dir = tmp_path / "unknown_lock_issue_severity"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-03T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": [
+              {
+                "record_id": "REC-001",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "",
+                "collected_at": "2026-03-02T00:00:00Z"
+              }
+            ]
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "query_logs.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+    issue = {
+        "issue_id": "LOCK-BAD",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "severity": "maybe_major",
+        "discovered_at": "2026-03-05T09:00:00Z",
+        "description": "Database lock issue.",
+    }
+    (fixture_dir / "lock_issues.json").write_text(json.dumps([issue]))
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "lock issue severity must be one of" in str(exc)
+    else:
+        raise AssertionError("expected unknown lock issue severity rejection")
+
+
 def test_fixture_bundle_rejects_unknown_snapshot_references(tmp_path):
     base_label = {
         "snapshot_id": "missing-snap",
