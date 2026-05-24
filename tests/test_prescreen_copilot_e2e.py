@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from clinique.prescreen.atomizer import ReferenceAtomizer
 from clinique.prescreen.ingestion import load_recorded_studies
 from clinique.prescreen.judge import RuleJudge
@@ -104,41 +102,3 @@ def test_keynote_screen_packet_is_deterministic():
     assert packet_fingerprint(orch.screen(trial, corpus)) == packet_fingerprint(
         orch.screen(trial, corpus)
     )
-
-
-@pytest.mark.temporal
-@pytest.mark.asyncio
-async def test_temporal_screen_surfaces_condition_evidence(trial_and_corpus):
-    pytest.importorskip("temporalio")
-    from temporalio.testing import WorkflowEnvironment
-
-    from clinique.durable.activities import ALL_ACTIVITIES
-    from clinique.durable.converter import DATA_CONVERTER
-    from clinique.durable.models import PatientCorpusModel, ScreenPatientInput, TrialModel
-    from clinique.durable.workflows import ALL_WORKFLOWS
-    from clinique.durable.workflows.prescreen import ScreenPatientWorkflow
-    from durable_e2e_harness import run_with_worker
-
-    trial, corpus = trial_and_corpus
-    if trial.trial_id != KEYNOTE:
-        pytest.skip("fixture trial is not KEY-NOTE")
-
-    async with await WorkflowEnvironment.start_local(data_converter=DATA_CONVERTER) as env:
-
-        async def run(client, task_queue):
-            return await client.execute_workflow(
-                ScreenPatientWorkflow.run,
-                ScreenPatientInput(
-                    trial=TrialModel.from_domain(trial),
-                    corpus=PatientCorpusModel.from_domain(corpus),
-                ),
-                id="copilot-e2e-keynote",
-                task_queue=task_queue,
-            )
-
-        packet = await run_with_worker(env.client, ALL_WORKFLOWS, ALL_ACTIVITIES, run)
-    i002 = _judgment(packet.to_domain(), "I-002")
-    assert i002.prediction == "unknown"
-    assert i002.evidence
-    assert any("lung cancer" in ev.quote.lower() for ev in i002.evidence)
-

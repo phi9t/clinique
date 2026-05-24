@@ -64,6 +64,28 @@ async def test_screen_workflow_matches_sync_orchestrator(trial_and_corpus):
 
 @pytest.mark.temporal
 @pytest.mark.asyncio
+async def test_temporal_screen_surfaces_condition_evidence(trial_and_corpus):
+    """Copilot Phase 10: Temporal path surfaces NSCLC evidence on I-002."""
+    trial, corpus = trial_and_corpus
+    async with await WorkflowEnvironment.start_local(data_converter=DATA_CONVERTER) as env:
+
+        async def run(client, task_queue):
+            return await client.execute_workflow(
+                ScreenPatientWorkflow.run,
+                _screen_input(trial, corpus),
+                id=str(uuid.uuid4()),
+                task_queue=task_queue,
+            )
+
+        packet = await run_with_worker(env.client, ALL_WORKFLOWS, ALL_ACTIVITIES, run)
+    i002 = next(j for j in packet.to_domain().judgments if j.criterion_id == "I-002")
+    assert i002.prediction == "unknown"
+    assert i002.evidence
+    assert any("lung cancer" in ev.quote.lower() for ev in i002.evidence)
+
+
+@pytest.mark.temporal
+@pytest.mark.asyncio
 async def test_screen_workflow_is_deterministic(trial_and_corpus):
     trial, corpus = trial_and_corpus
     payload = _screen_input(trial, corpus)

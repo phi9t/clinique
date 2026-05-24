@@ -13,6 +13,7 @@ def prescreen_task_queue() -> str:
     """Task queue name; override in tests via CLINIQUE_DURABLE_TASK_QUEUE."""
     return os.environ.get("CLINIQUE_DURABLE_TASK_QUEUE", PRESCREEN_TASK_QUEUE)
 
+
 ACTIVITY_TIMEOUT = timedelta(seconds=60)
 GATE_TIMEOUT = timedelta(seconds=30)
 LEDGER_TIMEOUT = timedelta(seconds=30)

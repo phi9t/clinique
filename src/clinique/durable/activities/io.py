@@ -25,9 +25,7 @@ from clinique.prescreen.ingestion import load_recorded_studies
 @activity.defn
 def load_eval_inputs(payload: BatchEvalInput) -> LoadEvalInputsResult:
     cases = load_eval_cases(payload.cases_path)
-    trials = tuple(
-        TrialModel.from_domain(t) for t in load_recorded_studies(payload.trials_path)
-    )
+    trials = tuple(TrialModel.from_domain(t) for t in load_recorded_studies(payload.trials_path))
     corpora_by_source: dict[str, tuple[PatientCorpusModel, ...]] = {}
     if payload.synthea_patients_path:
         corpora_by_source["synthea"] = tuple(

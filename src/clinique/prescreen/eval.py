@@ -98,9 +98,7 @@ def run_eval_cases(
     metrics = EvalMetrics()
     orchestrator = PrescreenOrchestrator()
     trials_by_id = _index_trials(trials)
-    corpora_index = {
-        source: _index_corpora(items) for source, items in corpora_by_source.items()
-    }
+    corpora_index = {source: _index_corpora(items) for source, items in corpora_by_source.items()}
 
     for case in cases:
         trial = trials_by_id.get(case.trial_id)
@@ -109,9 +107,7 @@ def run_eval_cases(
             continue
         corpus = corpora_index.get(case.patient_source, {}).get(case.patient_id)
         if corpus is None:
-            metrics.errors.append(
-                f"missing patient {case.patient_id} source={case.patient_source}"
-            )
+            metrics.errors.append(f"missing patient {case.patient_id} source={case.patient_source}")
             continue
         if case.snapshot_date and corpus.snapshot_date != case.snapshot_date:
             corpus = PatientCorpus(

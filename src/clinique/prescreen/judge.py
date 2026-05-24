@@ -59,9 +59,7 @@ def _enrich_evidence(
                 criterion_id=criterion_id,
                 doc_id=ev.doc_id,
                 quote=ev.quote,
-                normalized_fact=ev.normalized_fact
-                or doc.structured.get("description")
-                or doc.text,
+                normalized_fact=ev.normalized_fact or doc.structured.get("description") or doc.text,
             )
         )
     return tuple(hits)
@@ -249,9 +247,8 @@ class RuleJudge:
             return _judge_condition(criterion, evidence, docs)
 
         if criterion.clinical_domain == "medication":
-            if (
-                criterion.criterion_type == "inclusion"
-                and is_prior_systemic_criterion(criterion.raw_text)
+            if criterion.criterion_type == "inclusion" and is_prior_systemic_criterion(
+                criterion.raw_text
             ):
                 oncology = _medication_hits(
                     criterion.criterion_id,

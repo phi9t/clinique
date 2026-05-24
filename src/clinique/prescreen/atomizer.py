@@ -28,9 +28,7 @@ _LAB_RE = re.compile(
     re.I,
 )
 
-_EXCLUSION_ABSENCE_RE = re.compile(
-    r"\b(no prior|without prior|must not have|history of)\b", re.I
-)
+_EXCLUSION_ABSENCE_RE = re.compile(r"\b(no prior|without prior|must not have|history of)\b", re.I)
 
 _SECTION_RE = re.compile(
     r"(?P<kind>Inclusion|Exclusion)\s+Criteria\s*:?\s*\n",
