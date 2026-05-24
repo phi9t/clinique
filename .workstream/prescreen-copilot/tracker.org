@@ -1,7 +1,7 @@
 #+TITLE: Prescreen Copilot Workstream
 #+STARTUP: overview indent
 
-* Prescreen Copilot [9/9]
+* Prescreen Copilot [10/10]
 ** DONE Bootstrap workstream directory
 ** DONE Phase 0 — Record scale corpus
 Evidence :: ~/.clinique/datasets/prescreen-copilot/ (1000 trials; PMC fallback documented)
@@ -14,3 +14,5 @@ Evidence :: ~/.clinique/datasets/prescreen-copilot/ (1000 trials; PMC fallback d
 ** DONE Phase 7 — CLI
 ** DONE Phase 8 — Scale verification
 Evidence :: reports/prescreen/workstream-verification.json goal_complete=True
+** DONE Phase 9 — Durable execution (Temporal.io)
+Evidence :: tests/test_durable_*.py (15 passed); docs/design/temporal-prescreen.md

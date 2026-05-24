@@ -41,6 +41,31 @@ uv run clinique prescreen normalize-mimic-demo \
   --out "$DATASETS/mimic_demo_patients.jsonl"
 ```
 
+## Durable eval (Temporal.io)
+
+Same dataset paths as sync eval. Requires `uv sync --group temporal`, a running dev server, and
+`clinique prescreen worker` in another terminal:
+
+```bash
+temporal server start-dev &
+uv sync --group temporal
+uv run clinique prescreen worker &
+
+uv run clinique prescreen eval-temporal \
+  --cases .workstream/prescreen-copilot/l0_cases.jsonl \
+  --trials "$DATASETS/trials.jsonl" \
+  --synthea-patients "$DATASETS/synthea_patients.jsonl" \
+  --pmc-patients "$DATASETS/pmc_patients.jsonl" \
+  --mimic-patients "$DATASETS/mimic_demo_patients.jsonl" \
+  --reports-dir reports/prescreen
+```
+
+Writes `reports/prescreen/l0-eval-temporal.json`. Exit **9** if criterion accuracy &lt; 0.90 or
+errors present — same threshold posture as sync `prescreen eval`.
+
+CI covers durable behavior without scale data via `tests/test_durable_prescreen*.py` (embedded
+and session-scoped dev server).
+
 ## Sensitivity
 
 All listed sources are public / synthetic. n2c2 2018 and full MIMIC-IV require DUAs and stay

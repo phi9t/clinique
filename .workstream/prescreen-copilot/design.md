@@ -48,6 +48,7 @@ Override dataset root with `CLINIQUE_DATASETS_DIR` or `--datasets-dir`.
 | `orchestrator.py` | Typed graph + ledger |
 | `eval.py` | L0 cases + `verify_workstream()` |
 | `datasets.py` | Path resolution |
+| `clinique/durable/` | Temporal.io wrapper — same copilot graph, durable orchestration ([walkthrough](../../docs/design/temporal-prescreen.md)) |
 
 ## CLI
 
@@ -55,9 +56,15 @@ Override dataset root with `CLINIQUE_DATASETS_DIR` or `--datasets-dir`.
 |---|---|
 | `prescreen atomize` | 0 / 2 |
 | `prescreen screen` | 0 / 2 / 8 (evidence gate) |
+| `prescreen screen --temporal` | 0 / 2 / 3 (requires Temporal worker) |
 | `prescreen eval` | 0 / 9 |
+| `prescreen eval-temporal` | 0 / 2 / 3 / 9 |
+| `prescreen worker` | 0 running / 2 connect or missing SDK |
 | `prescreen verify-workstream` | 0 goal complete / 3 missing datasets / 9 thresholds fail |
 | `prescreen normalize-mimic-demo` | 0 / 2 |
+
+Sync commands implement the copilot graph in-process. Temporal commands wrap the **same**
+activities over the same `l0_cases.jsonl` gold set — see `data-inventory.md` § Durable eval.
 
 ## verify-workstream gates
 
@@ -70,6 +77,21 @@ Override dataset root with `CLINIQUE_DATASETS_DIR` or `--datasets-dir`.
 | Exclusion false negatives | 0 |
 | Scale smoke | 50 random (trial, patient) screens without crash |
 | Determinism | Identical packet hash on re-run |
+
+## Durable execution (Temporal.io)
+
+`verify-workstream` gates above use the **sync** orchestrator — that keeps `goal_complete`
+meaningful without a running Temporal cluster. Durable parity and ops behavior are verified
+separately:
+
+| Check | Command | Evidence |
+|---|---|---|
+| Wire model round-trip | `uv run pytest tests/test_durable_models.py -q` | Pydantic ↔ domain |
+| Sync parity + determinism | `uv run pytest tests/test_durable_prescreen.py -q` | `packet_fingerprint` vs orchestrator |
+| Real server + failure injection | `uv run pytest tests/test_durable_prescreen_e2e.py -v` | dev server, worker, retry/gate cases |
+| Gold set under Temporal | `prescreen eval-temporal` (see data-inventory) | `reports/prescreen/l0-eval-temporal.json` |
+
+Design and extension guide: [`docs/design/temporal-prescreen.md`](../../docs/design/temporal-prescreen.md).
 
 ## Out of scope
 
