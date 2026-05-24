@@ -260,6 +260,105 @@ def test_load_silent_log_rejects_recommendations_without_evidence(tmp_path):
         raise AssertionError("expected missing evidence rejection")
 
 
+def test_load_silent_log_rejects_invalid_evidence_citations(tmp_path):
+    path = tmp_path / "invalid_evidence_silent_log.json"
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-BLANK-EVIDENCE",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": ["rec-ae-001", " "],
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "false_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": false
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "agent_evidence citations must be nonblank strings" in str(exc)
+    else:
+        raise AssertionError("expected blank evidence citation rejection")
+
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-NONSTRING-EVIDENCE",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": ["rec-ae-001", 123],
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "false_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": false
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "agent_evidence citations must be nonblank strings" in str(exc)
+    else:
+        raise AssertionError("expected non-string evidence citation rejection")
+
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-SCALAR-EVIDENCE",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": "rec-ae-001",
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "false_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": false
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "agent_evidence must be a JSON list" in str(exc)
+    else:
+        raise AssertionError("expected scalar evidence rejection")
+
+
 def test_load_silent_log_rejects_duplicate_recommendation_ids(tmp_path):
     path = tmp_path / "duplicate_recommendations_silent_log.json"
     path.write_text(

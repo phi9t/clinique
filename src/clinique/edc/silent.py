@@ -38,9 +38,7 @@ class SilentLogEntry:
         human_action_at = parse_timestamp(raw["human_action_at"])
         if logged_at is None or human_action_at is None:
             raise ValueError("silent log timestamps are required")
-        agent_evidence = tuple(raw.get("agent_evidence", []))
-        if not agent_evidence:
-            raise ValueError("silent recommendations require evidence")
+        agent_evidence = _require_evidence_citations(raw.get("agent_evidence", []))
         ground_truth = _require_one_of("ground_truth", raw["ground_truth"], ALLOWED_GROUND_TRUTH)
         safety_risk = _require_bool("safety_risk", raw["safety_risk"])
         _validate_safety_ground_truth_consistency(
@@ -159,6 +157,17 @@ def _validate_safety_ground_truth_consistency(*, ground_truth: str, safety_risk:
         raise ValueError("ground_truth safety_risk requires safety_risk true")
     if safety_risk and ground_truth != "safety_risk":
         raise ValueError("safety_risk true requires ground_truth safety_risk")
+
+
+def _require_evidence_citations(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise ValueError("agent_evidence must be a JSON list")
+    citations = tuple(value)
+    if not citations:
+        raise ValueError("silent recommendations require evidence")
+    if any(not isinstance(citation, str) or not citation.strip() for citation in citations):
+        raise ValueError("agent_evidence citations must be nonblank strings")
+    return citations
 
 
 def _require_bool(label: str, value: Any) -> bool:
