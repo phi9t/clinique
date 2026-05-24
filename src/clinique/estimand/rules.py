@@ -31,7 +31,10 @@ def est_timepoint_align(g: ArtifactGraph) -> list[Finding]:
                         + ", ".join(f"{a}={per_artifact[a]}wk" for a in sorted(per_artifact))
                     ),
                     suggested_resolution=f"Align the '{name}' timepoint across protocol, SAP, ADaM, and shells.",
-                    evidence=tuple({"artifact": a, "timepoint_weeks": str(per_artifact[a])} for a in sorted(per_artifact)),
+                    evidence=tuple(
+                        {"artifact": a, "timepoint_weeks": str(per_artifact[a])}
+                        for a in sorted(per_artifact)
+                    ),
                 )
             )
     return findings
@@ -54,7 +57,9 @@ def pop_def_consistent(g: ArtifactGraph) -> list[Finding]:
                     artifacts_involved=tuple(sorted(per_artifact)),
                     explanation=f"Analysis population '{name}' is defined inconsistently across artifacts.",
                     suggested_resolution=f"Reconcile the '{name}' population definition to a single wording.",
-                    evidence=tuple({"artifact": a, "definition": per_artifact[a]} for a in sorted(per_artifact)),
+                    evidence=tuple(
+                        {"artifact": a, "definition": per_artifact[a]} for a in sorted(per_artifact)
+                    ),
                 )
             )
     return findings

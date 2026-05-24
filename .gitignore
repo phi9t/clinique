@@ -16,3 +16,4 @@ dist/
 # ledger / run artifacts (never commit trial-run data)
 *.ledger.jsonl
 .runs/
+.antigravitycli/

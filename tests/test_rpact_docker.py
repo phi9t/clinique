@@ -26,7 +26,9 @@ def _image_present() -> bool:
 @pytest.fixture(scope="module")
 def rpact():
     if not _image_present():
-        pytest.skip(f"image {DEFAULT_IMAGE} not built (docker build -t {DEFAULT_IMAGE} docker/r-engine)")
+        pytest.skip(
+            f"image {DEFAULT_IMAGE} not built (docker build -t {DEFAULT_IMAGE} docker/r-engine)"
+        )
     return RpactDockerEngine()
 
 

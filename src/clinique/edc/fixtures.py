@@ -55,8 +55,7 @@ def load_fixture_bundle(path: str | Path) -> FixtureBundle:
 
     lock_issues = (
         tuple(
-            DatabaseLockIssue.from_json(raw)
-            for raw in _read_json(fixture_dir / "lock_issues.json")
+            DatabaseLockIssue.from_json(raw) for raw in _read_json(fixture_dir / "lock_issues.json")
         )
         if (fixture_dir / "lock_issues.json").exists()
         else ()

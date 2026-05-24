@@ -70,14 +70,41 @@ class RpactDockerEngine:
         )
 
     def two_sample_means(self, *, delta, sd, alpha, power, ratio=1.0, sides=2) -> EngineResult:
-        inputs = {"delta": delta, "sd": sd, "alpha": alpha, "power": power, "ratio": ratio, "sides": sides}
-        return self._result("two_sample_means", inputs, self._run({"method": "two_sample_means", **inputs}))
+        inputs = {
+            "delta": delta,
+            "sd": sd,
+            "alpha": alpha,
+            "power": power,
+            "ratio": ratio,
+            "sides": sides,
+        }
+        return self._result(
+            "two_sample_means", inputs, self._run({"method": "two_sample_means", **inputs})
+        )
 
     def two_proportions(self, *, p1, p2, alpha, power, ratio=1.0, sides=2) -> EngineResult:
-        inputs = {"p1": p1, "p2": p2, "alpha": alpha, "power": power, "ratio": ratio, "sides": sides}
-        return self._result("two_proportions", inputs, self._run({"method": "two_proportions", **inputs}))
+        inputs = {
+            "p1": p1,
+            "p2": p2,
+            "alpha": alpha,
+            "power": power,
+            "ratio": ratio,
+            "sides": sides,
+        }
+        return self._result(
+            "two_proportions", inputs, self._run({"method": "two_proportions", **inputs})
+        )
 
-    def survival_logrank(self, *, hazard_ratio, alpha, power, allocation=0.5, sides=2) -> EngineResult:
-        inputs = {"hazard_ratio": hazard_ratio, "alpha": alpha, "power": power,
-                  "allocation": allocation, "sides": sides}
-        return self._result("survival_logrank", inputs, self._run({"method": "survival_logrank", **inputs}))
+    def survival_logrank(
+        self, *, hazard_ratio, alpha, power, allocation=0.5, sides=2
+    ) -> EngineResult:
+        inputs = {
+            "hazard_ratio": hazard_ratio,
+            "alpha": alpha,
+            "power": power,
+            "allocation": allocation,
+            "sides": sides,
+        }
+        return self._result(
+            "survival_logrank", inputs, self._run({"method": "survival_logrank", **inputs})
+        )

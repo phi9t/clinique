@@ -59,6 +59,41 @@ L0 is traditional software QA: golden fixtures, property tests, regression, edge
 audit logs — directly supported by RFC-0000's provenance ledger and the ICH E6(R3) expectation
 that computerized systems be fit for purpose with secure, time-stamped audit trails.
 
+Concrete L0 examples:
+
+| Component | Validation target |
+|---|---|
+| Eligibility parser | Every criterion decomposes into atomic computable predicates |
+| OMOP / FHIR query generator | Query returns expected cohort on synthetic fixtures |
+| Visit-window checker | Correctly flags out-of-window visits and missing required assessments |
+| AE / SAE detector | Recognizes reportable events and seriousness triggers |
+| CDISC mapper | Produces correct SDTM / ADaM variable and domain mappings |
+| Blinding guard | Cannot access treatment assignment unless explicitly authorized |
+
+L1 metrics are task-specific. Recruitment benchmarks emphasize sensitivity, specificity, PPV,
+NPV, criterion-level F1, evidence-span accuracy, abstention quality, and ranking recall@K /
+NDCG. Protocol, data, safety, and statistics agents need labels for missing required items,
+contradictions, true-vs-false discrepancies, AE/SAE classification, MedDRA coding, seriousness /
+expectedness flags, sample-size assumptions, and estimand/SAP consistency.
+
+L2 replay labels must be timestamped to prevent future leakage:
+
+```json
+{
+  "case_id": "...",
+  "decision_date": "2025-05-01",
+  "ground_truth": "eligible",
+  "human_found_date": "2025-05-20",
+  "agent_found_date": "2025-05-05",
+  "evidence_available_at_agent_time": true
+}
+```
+
+L3 silent prospective labels add operational burden and safety risk: hidden agent
+recommendation, usual human action, later adjudicated truth, time delta, false-positive burden
+per coordinator/site/week, and any recommendation that would have been harmful, noncompliant,
+privacy-violating, or blinding-breaking.
+
 ## 4. Scope mapping — what applies NOW vs. on expansion
 
 The biostatistician agents are advisory, statistician-facing tools, not patient-facing
@@ -96,8 +131,12 @@ build-breaking defect.
 
 ## 6. Future-persona validation (on expansion beyond biostatistician)
 
-When Clinique adds patient-facing agents, the upper layers become mandatory. Captured here so
-the roadmap is honest, not built now.
+When Clinique expands beyond the biostatistician suite, the first future wedge should be the
+workflow with the strongest available labels. If historical EDC query logs and resolution
+history are available, **data-management / EDC-query** should precede recruitment: the labels
+already exist, the workflow is operational rather than patient-contacting, and draft-only
+human approval gives a lower-risk path to proving usefulness. Patient-facing agents still
+require the upper layers before live use.
 
 ### 6.1 Usefulness metrics by future agent
 
@@ -105,6 +144,16 @@ the roadmap is honest, not built now.
   screen-failure rate ↓, coordinator review-time/candidate ↓, recall of truly eligible high,
   false-positive burden controlled, candidate-pool diversity not worse, enrollment rate ↑,
   eligibility-deviation rate **not** increased.
+- **Protocol design / protocol review** — missing protocol elements detected with high recall,
+  internal contradictions detected with high precision, time to first draft ↓, avoidable
+  amendments ↓, IRB/regulatory review cycles ↓, ambiguous eligibility criteria ↓, protocol
+  deviations caused by ambiguity ↓.
+- **Eligibility-to-SQL / feasibility** — query semantic correctness high, cohort count agreement
+  with expert query high, false inclusion/exclusion low, hallucinated concepts/tables near zero,
+  time to feasibility estimate ↓, site feasibility prediction accuracy ↑.
+- **Data-management / EDC-query** — true discrepancy detection high, false query rate low, query
+  resolution time ↓, open queries at lock ↓, manual data-manager time ↓, duplicate queries ↓,
+  generated query text acceptable to a human reviewer.
 - **Safety / AE / SAE pre-review** — SAE sensitivity **very high**, serious-event false-negative
   rate **extremely low**, time-to-escalation ↓, MedDRA agreement high; expectedness/relatedness
   **human-reviewed only**; draft-and-triage only, never final reporting.
@@ -149,6 +198,37 @@ Recruitment criterion-label schema (future), retained for the expansion plan:
 }
 ```
 
+Other minimum future-agent label payloads:
+
+```json
+{
+  "protocol_review": {
+    "protocol_section": "Eligibility",
+    "issue_type": "ambiguity | contradiction | missing_item | operational_burden",
+    "severity": "minor | major | critical",
+    "gold_comment": "...",
+    "source": "expert review | IRB comment | amendment history"
+  },
+  "eligibility_sql": {
+    "criterion": "eGFR >= 45 mL/min/1.73m2 within 30 days",
+    "logical_form": "...",
+    "omop_concepts": ["..."],
+    "sql_gold": "...",
+    "expected_patient_ids_on_fixture": ["..."],
+    "expert_count_on_real_data": 421
+  },
+  "edc_query": {
+    "subject_id": "...",
+    "form": "ConMeds",
+    "field": "start_date",
+    "gold_query_needed": true,
+    "query_category": "missing | inconsistent | impossible | source_mismatch",
+    "human_resolution": "corrected | confirmed | no_query_needed",
+    "time_to_resolution_hours": 36
+  }
+}
+```
+
 ## 8. Data & label sources, ranked
 
 Note the **source mismatch**: the public EHR/recruitment corpora below are for the *future*
@@ -159,13 +239,16 @@ document-level, not patient-level EHR.
 **Tier 1 — own operational data (the moat).** Biostat: SAP/protocol versions, amendment history,
 EDC query logs, database-lock issue logs, QC discrepancy logs, validator reports. Future:
 screening logs, screen-failure reasons, CTMS timelines, monitoring reports, CAPA, eTMF/audit
-findings, safety narratives + MedDRA coding.
+findings, safety narratives + MedDRA coding, EDC query resolution history, monitoring visit
+reports, source-data verification findings, protocol amendments, and IRB/IEC comments.
 
 **Tier 2 — public benchmarks (prototype only, future personas).** TREC Clinical Trials Track
 (patient-to-trial retrieval), n2c2 2018 Track 1 (cohort selection from notes), MIMIC-IV
 (deidentified EHR), Synthea/SyntheticMass (synthetic FHIR/OMOP fixtures), ClinicalTrials.gov /
 AACT (trial metadata/eligibility), TrialGPT (matching baselines; 87.3% criterion-level accuracy
-and 42.6% screening-time reduction reported in its user study).
+and 42.6% screening-time reduction reported in its user study). AACT is especially useful for
+trial metadata and eligibility text, but it is not enough for workflow usefulness without
+screening, timeline, and outcome labels.
 
 **Tier 3 — controlled-access participant data (downstream stats/safety).** Vivli, YODA, Project
 Data Sphere — useful for endpoint/safety/synthetic-control work; weak for recruitment because
@@ -176,26 +259,30 @@ LLM eligibility-criteria→OMOP-SQL conversion. The mandated pattern for any gen
 step (and the spirit of RFC-0000 §7): *LLM proposes → deterministic validator → synthetic
 fixture test → terminology check → human review → real-data execution.*
 
-## 9. The MVP usefulness study (recruitment, future) — kept as the expansion template
+## 9. First future MVP — data-management / EDC-query
 
-Four phases, retained so expansion is plan-not-improvisation:
+Prefer this as the first non-biostat MVP when query logs, resolution history, EDC snapshots,
+and data-manager review capacity are available. It has unusually cheap labels: historical
+queries show whether a discrepancy was real, how it was resolved, and how long resolution took.
 
-- **Phase A Offline** — 200–500 historical patient snapshots × 5–20 trials, criterion-level +
-  evidence-span labels. Pass: no catastrophic false negatives on hard exclusion/safety criteria;
-  high recall for potentially eligible; FP low enough for coordinator workload; evidence correct
-  enough to trust.
-- **Phase B Retrospective replay** — strictly time-gated inputs (no future leakage). Measures:
-  eligible found earlier, median days earlier, additional true candidates, false alerts per true
-  candidate, review-minutes saved, screen-failure-rate delta.
-- **Phase C Silent prospective** — 4–12 weeks, no workflow change; agent recommendations logged
-  hidden. Measures misses (human-only, agent-only), FP workload, latency, evidence quality,
-  coordinator feedback. (75 silent-AI evaluations 2015–2025 per the cited 2026 scoping review —
-  this is the established minimal-risk bridge.)
-- **Phase D Controlled rollout** — randomize by site/coordinator/disease/time block. Primary:
-  time-to-identify, eligible-candidates/trial-month, coordinator-min/candidate, screen-failure
-  rate, enrollment rate, eligibility-deviation rate. Safety endpoints: wrong recommendation
-  causing inappropriate contact, missed exclusion, privacy incident, blinding breach, unsupported
-  citation, unauthorized tool action.
+- **Phase A Offline** — replay historical EDC snapshots against known query logs. Measure true
+  discrepancy detection, false query rate, duplicate query rate, query-category accuracy, and
+  draft-query text acceptability.
+- **Phase B Retrospective replay** — preserve snapshot timestamps. Measure whether the agent
+  would have found real discrepancies before manual review, reduced open-query time, or surfaced
+  database-lock issues earlier without increasing false queries.
+- **Phase C Silent prospective** — run hidden beside the data-management workflow for 4-12 weeks.
+  Compare silent agent suggestions with actual queries, no-query decisions, resolution outcomes,
+  and reviewer burden.
+- **Phase D Controlled rollout** — start draft-only, human approval required. Randomize by study,
+  site, form family, or data-manager queue. Primary endpoints: manual minutes/query, true
+  discrepancies found, false query rate, resolution time, open queries at lock, and data-manager
+  acceptance rate.
+
+Recruitment remains the first patient-facing expansion template: 200-500 historical patient
+snapshots across 5-20 trials, criterion-level and evidence-span labels, strict timestamped replay,
+4-12 week silent prospective evaluation, then site/coordinator/disease/time-block rollout only if
+false positives, missed exclusions, privacy risk, and eligibility-deviation risk stay controlled.
 
 ## 10. Ship gates
 
@@ -204,6 +291,11 @@ real defects/drift **before** the existing QC or reviewer step; (2) it does **no
 data-integrity, blinding, or compliance risk (structural invariants pass); (3) every output is
 auditable to source spans / tool calls; (4) false positives are low enough that the statistician
 keeps using it; (5) it can abstain when evidence is insufficient.
+
+**Future EDC/data-management agents.** Do not ship unless: true discrepancies are found earlier
+or with less manual effort; false queries and duplicate queries stay below the workflow's
+tolerance; query text remains human-reviewable; every recommendation is auditable; no write-back
+to EDC occurs without named human approval.
 
 **Future patient-facing agents.** Do not ship unless: finds additional true eligible candidates
 or finds them earlier; does not increase eligibility deviations; evidence citations correct
@@ -216,7 +308,8 @@ auditable; system can abstain.
    parsing, extraction, queries, code execution, audit logs (L0).
 2. **Benchmark harness** — biostat: seeded-defect + reproduction suites; future: TREC/n2c2/TrialGPT (L1).
 3. **Human-labeled internal retrospective set** — biostat: historical SAP/EDC/lock defects;
-   future: 200–500 real cases, criterion-level labels.
+   first future MVP: EDC snapshots + query logs + resolution outcomes; later patient-facing:
+   200–500 real cases, criterion-level labels.
 4. **Retrospective replay** — preserve timestamps, no leakage (L2).
 5. **Silent / shadow** — beside humans; measure workload, misses, false positives (L3).
 6. **Limited live rollout** — draft-only, human approval required.

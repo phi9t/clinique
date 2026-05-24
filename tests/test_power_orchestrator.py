@@ -36,7 +36,11 @@ def _ledger(tmp_path):
 
 
 def test_method_selection_corpus():
-    cases = {"continuous": "two_sample_means", "binary": "two_proportions", "time_to_event": "survival_logrank"}
+    cases = {
+        "continuous": "two_sample_means",
+        "binary": "two_proportions",
+        "time_to_event": "survival_logrank",
+    }
     for endpoint, expected in cases.items():
         intake = DesignIntake(endpoint_type=endpoint, alpha=_alpha(), power=_power())
         assert select_method(intake) == expected
@@ -58,7 +62,9 @@ def test_survival_end_to_end(tmp_path):
         endpoint_type="time_to_event",
         alpha=_alpha(),
         power=_power(),
-        params={"hazard_ratio": Assumption("hazard_ratio", 0.7, "ratio", "literature", "prior trial")},
+        params={
+            "hazard_ratio": Assumption("hazard_ratio", 0.7, "ratio", "literature", "prior trial")
+        },
     )
     rec = design_sample_size(intake, _ledger(tmp_path))
     assert rec.result["events_total"] == 247.0

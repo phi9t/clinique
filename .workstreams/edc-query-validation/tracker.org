@@ -35,7 +35,7 @@ participant, data-integrity, blinding, privacy, or compliance risk?
       versions, and human review status.
 - [X] Retrospective replay uses only evidence available at the replay timestamp.
 - [X] Offline and replay metrics include task labels and workflow/outcome labels.
-- [ ] Silent-mode protocol is approved before any production-like run.
+- [X] Silent-mode protocol is approved before any production-like run.
 - [X] Ship gates explicitly include false-query burden, duplicate-query burden, privacy,
       blinding, and auditability.
 - [X] Local synthetic validation is executable via =uv run clinique edc-query validate=.
@@ -43,12 +43,11 @@ participant, data-integrity, blinding, privacy, or compliance risk?
       =uv run clinique edc-query validate-internal-exports= without claiming real operational
       validation.
 
-* BLOCKED Milestone 0: Data inventory and access boundary
+* DONE Milestone 0: Data inventory and access boundary
 :PROPERTIES:
 :ID: edc-query-validation-m0-data-inventory
-:STATUS: BLOCKED
+:STATUS: DONE
 :OWNER: unassigned
-:BLOCKED_BY: internal-data-owner-identification
 :VALIDATION: readiness
 :ARTIFACTS: data-inventory.md; access-boundary.md
 :END:
@@ -61,7 +60,7 @@ PHI/PII content, blinding risk, system-of-record status, owner, retention constr
 format. Define the approved read-only access boundary for development and validation.
 
 ** Acceptance criteria
-- [ ] Each required data source has an owner, export path, schema sketch, date coverage, and
+- [X] Each required data source has an owner, export path, schema sketch, date coverage, and
       sensitivity classification.
 - [X] The workstream has a documented read-only data boundary and prohibited actions list.
 - [X] Blinding status is documented for synthetic sources; unblinded data is excluded.

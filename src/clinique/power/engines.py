@@ -74,7 +74,14 @@ class ReferenceEngine:
         return [{"name": self.name, "version": self.version}]
 
     def two_sample_means(
-        self, *, delta: float, sd: float, alpha: float, power: float, ratio: float = 1.0, sides: int = 2
+        self,
+        *,
+        delta: float,
+        sd: float,
+        alpha: float,
+        power: float,
+        ratio: float = 1.0,
+        sides: int = 2,
     ) -> EngineResult:
         za = _za(alpha, sides)
 
@@ -90,14 +97,28 @@ class ReferenceEngine:
             engine=self.name,
             version=self.version,
             method="two_sample_means",
-            inputs={"delta": delta, "sd": sd, "alpha": alpha, "power": power, "ratio": ratio, "sides": sides},
+            inputs={
+                "delta": delta,
+                "sd": sd,
+                "alpha": alpha,
+                "power": power,
+                "ratio": ratio,
+                "sides": sides,
+            },
             outputs={"n1": float(n1), "n2": float(n2), "n_total": float(n1 + n2)},
             achieved={"achieved_power": round(pwr(n1), _ACHIEVED_DP)},
             tools=self._tools,
         )
 
     def two_proportions(
-        self, *, p1: float, p2: float, alpha: float, power: float, ratio: float = 1.0, sides: int = 2
+        self,
+        *,
+        p1: float,
+        p2: float,
+        alpha: float,
+        power: float,
+        ratio: float = 1.0,
+        sides: int = 2,
     ) -> EngineResult:
         za = _za(alpha, sides)
         diff = abs(p1 - p2)
@@ -114,14 +135,27 @@ class ReferenceEngine:
             engine=self.name,
             version=self.version,
             method="two_proportions",
-            inputs={"p1": p1, "p2": p2, "alpha": alpha, "power": power, "ratio": ratio, "sides": sides},
+            inputs={
+                "p1": p1,
+                "p2": p2,
+                "alpha": alpha,
+                "power": power,
+                "ratio": ratio,
+                "sides": sides,
+            },
             outputs={"n1": float(n1), "n2": float(n2), "n_total": float(n1 + n2)},
             achieved={"achieved_power": round(pwr(n1), _ACHIEVED_DP)},
             tools=self._tools,
         )
 
     def survival_logrank(
-        self, *, hazard_ratio: float, alpha: float, power: float, allocation: float = 0.5, sides: int = 2
+        self,
+        *,
+        hazard_ratio: float,
+        alpha: float,
+        power: float,
+        allocation: float = 0.5,
+        sides: int = 2,
     ) -> EngineResult:
         za = _za(alpha, sides)
         ln_hr = math.log(hazard_ratio)
@@ -136,8 +170,13 @@ class ReferenceEngine:
             engine=self.name,
             version=self.version,
             method="survival_logrank",
-            inputs={"hazard_ratio": hazard_ratio, "alpha": alpha, "power": power,
-                    "allocation": allocation, "sides": sides},
+            inputs={
+                "hazard_ratio": hazard_ratio,
+                "alpha": alpha,
+                "power": power,
+                "allocation": allocation,
+                "sides": sides,
+            },
             outputs={"events_total": float(events)},
             achieved={"achieved_power": round(pwr(events), _ACHIEVED_DP)},
             tools=self._tools,

@@ -80,7 +80,8 @@
       fixture reports, requires the internal-data manifest preflight gate to be ready before
       writing consolidated evidence, records local gate failures, prevents completion when any
       local gate fails, internal-export L1/L2 reports are missing, or internal-export evidence is
-      synthetic fixture data, and consolidates remaining blockers in
+      synthetic fixture data or lacks an explicit approved evidence-kind declaration, and
+      consolidates remaining blockers in
       `reports/edc-query/workstream-verification.json`.
 - [x] Approved-export import path is executable against synthetic fixture exports and generates
       internal-style L1/L2 reports without claiming real operational validation; relative

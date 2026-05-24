@@ -194,8 +194,7 @@ def evaluate_rollout_gate(gate: RolloutGate) -> ValidationReport:
         and gate.observed["duplicate_query_rate"] <= gate.thresholds["max_duplicate_query_rate"]
         and gate.observed["acceptance_rate"] >= gate.thresholds["min_acceptance_rate"]
         and gate.observed["open_queries_at_lock"] <= gate.thresholds["max_open_queries_at_lock"]
-        and gate.observed["true_discrepancy_delta"]
-        >= gate.thresholds["min_true_discrepancy_delta"]
+        and gate.observed["true_discrepancy_delta"] >= gate.thresholds["min_true_discrepancy_delta"]
         and gate.observed["manual_minutes_per_query_delta"]
         <= gate.thresholds["max_manual_minutes_per_query_delta"]
     )
@@ -207,9 +206,7 @@ def evaluate_rollout_gate(gate: RolloutGate) -> ValidationReport:
         and bool(gate.safety["excessive_reviewer_burden"]) is False
     )
     rollout_gate_passed = (
-        primary_endpoints_met
-        and safety_endpoints_clear
-        and gate.human_approval_path_validated
+        primary_endpoints_met and safety_endpoints_clear and gate.human_approval_path_validated
     )
     return ValidationReport(
         report_type="edc_query_controlled_rollout_gate",

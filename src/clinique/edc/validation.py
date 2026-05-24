@@ -122,9 +122,8 @@ def verify_workstream(
         )
         reports.update(internal_export_result["reports"])
     local_reports_complete = all(Path(path).exists() for path in reports.values())
-    local_internal_export_reports_complete = (
-        internal_export_result is not None
-        and all(Path(path).exists() for path in internal_export_result["reports"].values())
+    local_internal_export_reports_complete = internal_export_result is not None and all(
+        Path(path).exists() for path in internal_export_result["reports"].values()
     )
     audit = validation["audit"]
     local_gate_failures = _local_gate_failures(
@@ -186,8 +185,10 @@ def _local_gate_failures(
     if internal_export_result is None:
         failures.append("internal_export.reports_missing")
         return failures
-    if internal_export_result["evidence_kind"] != "approved_internal_export":
+    if internal_export_result["evidence_kind"] == "synthetic_fixture":
         failures.append("internal_export.synthetic_fixture_evidence")
+    elif internal_export_result["evidence_kind"] != "approved_internal_export":
+        failures.append("internal_export.unverified_evidence_kind")
     failures.extend(
         _false_gate_names(
             "internal_export_offline",
@@ -258,11 +259,12 @@ def _internal_export_evidence_kind(manifest: str | Path) -> str:
     except (OSError, json.JSONDecodeError):
         return "unknown"
     sources = payload.get("sources", []) if isinstance(payload, dict) else []
-    owners = {
-        source.get("owner")
-        for source in sources
-        if isinstance(source, dict)
-    }
+    evidence_kind = payload.get("evidence_kind") if isinstance(payload, dict) else None
+    if evidence_kind == "approved_internal_export":
+        return "approved_internal_export"
+    if evidence_kind == "synthetic_fixture":
+        return "synthetic_fixture"
+    owners = {source.get("owner") for source in sources if isinstance(source, dict)}
     if owners and owners == {"synthetic-fixture"}:
         return "synthetic_fixture"
-    return "approved_internal_export"
+    return "unknown"

@@ -75,48 +75,68 @@ def check_define_integrity(m: DefineModel) -> list[Finding]:
     for ig_oid, ig in m.item_groups.items():
         for item_oid, method_oid in ig["item_refs"]:
             if item_oid not in m.items:
-                findings.append(_finding(
-                    "DEFINE-REF-INTEGRITY", "blocker",
-                    f"ItemGroup {ig_oid} references undefined ItemDef {item_oid}.",
-                    "Define the missing ItemDef or remove the ItemRef.",
-                ))
+                findings.append(
+                    _finding(
+                        "DEFINE-REF-INTEGRITY",
+                        "blocker",
+                        f"ItemGroup {ig_oid} references undefined ItemDef {item_oid}.",
+                        "Define the missing ItemDef or remove the ItemRef.",
+                    )
+                )
             if method_oid and method_oid not in m.methods:
-                findings.append(_finding(
-                    "DEFINE-REF-INTEGRITY", "blocker",
-                    f"ItemRef {item_oid} references undefined MethodDef {method_oid}.",
-                    "Define the missing MethodDef or remove the MethodOID.",
-                ))
+                findings.append(
+                    _finding(
+                        "DEFINE-REF-INTEGRITY",
+                        "blocker",
+                        f"ItemRef {item_oid} references undefined MethodDef {method_oid}.",
+                        "Define the missing MethodDef or remove the MethodOID.",
+                    )
+                )
     for item_oid, it in m.items.items():
         if it["codelist"] and it["codelist"] not in m.codelists:
-            findings.append(_finding(
-                "DEFINE-REF-INTEGRITY", "blocker",
-                f"ItemDef {item_oid} references undefined CodeList {it['codelist']}.",
-                "Define the missing CodeList or remove the CodeListRef.",
-            ))
+            findings.append(
+                _finding(
+                    "DEFINE-REF-INTEGRITY",
+                    "blocker",
+                    f"ItemDef {item_oid} references undefined CodeList {it['codelist']}.",
+                    "Define the missing CodeList or remove the CodeListRef.",
+                )
+            )
         if it["valuelist"] and it["valuelist"] not in m.valuelists:
-            findings.append(_finding(
-                "DEFINE-REF-INTEGRITY", "blocker",
-                f"ItemDef {item_oid} references undefined ValueList {it['valuelist']}.",
-                "Define the missing ValueListDef or remove the ValueListRef.",
-            ))
+            findings.append(
+                _finding(
+                    "DEFINE-REF-INTEGRITY",
+                    "blocker",
+                    f"ItemDef {item_oid} references undefined ValueList {it['valuelist']}.",
+                    "Define the missing ValueListDef or remove the ValueListRef.",
+                )
+            )
     return findings
 
 
-def check_define_vs_dataset(m: DefineModel, group_name: str, dataset_columns: list[str]) -> list[Finding]:
+def check_define_vs_dataset(
+    m: DefineModel, group_name: str, dataset_columns: list[str]
+) -> list[Finding]:
     """Variables declared in define.xml must match the actual dataset variables."""
     declared = {v.upper() for v in m.group_variable_names(group_name)}
     actual = {c.upper() for c in dataset_columns}
     findings: list[Finding] = []
     for missing in sorted(declared - actual):
-        findings.append(_finding(
-            "DEFINE-DATASET-VARMATCH", "major",
-            f"Variable '{missing}' is defined in define.xml ({group_name}) but absent from the dataset.",
-            "Add the variable to the dataset or remove it from define.xml.",
-        ))
+        findings.append(
+            _finding(
+                "DEFINE-DATASET-VARMATCH",
+                "major",
+                f"Variable '{missing}' is defined in define.xml ({group_name}) but absent from the dataset.",
+                "Add the variable to the dataset or remove it from define.xml.",
+            )
+        )
     for extra in sorted(actual - declared):
-        findings.append(_finding(
-            "DEFINE-DATASET-VARMATCH", "major",
-            f"Variable '{extra}' is in the dataset ({group_name}) but not described in define.xml.",
-            "Document the variable in define.xml or drop it from the dataset.",
-        ))
+        findings.append(
+            _finding(
+                "DEFINE-DATASET-VARMATCH",
+                "major",
+                f"Variable '{extra}' is in the dataset ({group_name}) but not described in define.xml.",
+                "Document the variable in define.xml or drop it from the dataset.",
+            )
+        )
     return findings

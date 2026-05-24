@@ -18,5 +18,7 @@ def draft_summary(issues: list[ConformanceIssue], triages: list[Triage]) -> str:
         cls = t.classification if t else "unclassified"
         loc = "/".join(p for p in (issue.domain, issue.variable) if p)
         where = f" in {loc}" if loc else ""
-        lines.append(f"- [{cls}] {issue.issue_id}{where}: {issue.message} ({issue.count} occurrence(s)).")
+        lines.append(
+            f"- [{cls}] {issue.issue_id}{where}: {issue.message} ({issue.count} occurrence(s))."
+        )
     return "\n".join(lines)

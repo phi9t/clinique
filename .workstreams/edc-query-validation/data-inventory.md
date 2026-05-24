@@ -52,6 +52,10 @@ uv run clinique edc-query validate-internal-exports \
   --reports-dir reports/edc-query
 ```
 
+Approved internal export manifests must declare `"evidence_kind": "approved_internal_export"`.
+Synthetic fixtures use `"evidence_kind": "synthetic_fixture"` and are never sufficient for the
+internal validation ship gate.
+
 The synthetic fixture manifest `tests/fixtures/edc_query/internal_export_manifest.json` exercises
 the import path without using real operational data. Missing or malformed expected payload files
 are treated as validation failures, not runtime crashes.

@@ -186,7 +186,10 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
 
 def _invalid_manifest_metadata(manifest: dict[str, Any]) -> tuple[str, ...]:
     invalid: list[str] = []
-    if manifest.get("generated_at") is None or _parse_timestamp(manifest.get("generated_at")) is None:
+    if (
+        manifest.get("generated_at") is None
+        or _parse_timestamp(manifest.get("generated_at")) is None
+    ):
         invalid.append("generated_at")
     if manifest.get("manifest_version") != SUPPORTED_MANIFEST_VERSION:
         invalid.append("manifest_version")

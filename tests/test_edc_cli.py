@@ -84,7 +84,9 @@ def _internal_manifest() -> dict[str, object]:
 def _write_internal_export_manifest(root: Path) -> Path:
     for dirname in ["edc_snapshots", "query_logs", "edit_check_history"]:
         (root / dirname).mkdir(parents=True)
-    (root / "edc_snapshots" / "snapshots.json").write_text((FIXTURES / "snapshots.json").read_text())
+    (root / "edc_snapshots" / "snapshots.json").write_text(
+        (FIXTURES / "snapshots.json").read_text()
+    )
     (root / "query_logs" / "query_logs.json").write_text((FIXTURES / "query_logs.json").read_text())
     (root / "edit_check_history" / "rules.json").write_text((FIXTURES / "rules.json").read_text())
     manifest = _internal_manifest()
@@ -120,8 +122,9 @@ def test_edc_query_validate_writes_reports_and_audit_summary(tmp_path):
     audit = json.loads((reports_dir / "audit-summary.json").read_text())
     assert audit["local_synthetic_validation_complete"] is True
     assert audit["goal_complete"] is False
-    assert "internal_data_validation__internal_edc_snapshots_approved_and_connected" in (
-        audit["blocked_requirements"]
+    assert (
+        "internal_data_validation__internal_edc_snapshots_approved_and_connected"
+        in (audit["blocked_requirements"])
     )
 
 
@@ -137,15 +140,9 @@ def test_edc_query_validate_outputs_are_repeatable(tmp_path):
     ]
 
     assert main(args) == 0
-    first = {
-        path.name: path.read_text()
-        for path in sorted(reports_dir.glob("*.json"))
-    }
+    first = {path.name: path.read_text() for path in sorted(reports_dir.glob("*.json"))}
     assert main(args) == 0
-    second = {
-        path.name: path.read_text()
-        for path in sorted(reports_dir.glob("*.json"))
-    }
+    second = {path.name: path.read_text() for path in sorted(reports_dir.glob("*.json"))}
 
     assert second == first
 
@@ -406,8 +403,9 @@ def test_edc_query_verify_workstream_writes_consolidated_evidence(tmp_path):
         "retrospective_replay",
         "silent_log_evaluation",
     }
-    assert "internal_data_validation__internal_edc_snapshots_approved_and_connected" in (
-        evidence["blocked_requirements"]
+    assert (
+        "internal_data_validation__internal_edc_snapshots_approved_and_connected"
+        in (evidence["blocked_requirements"])
     )
 
 
@@ -450,8 +448,9 @@ def test_edc_query_verify_workstream_can_include_internal_export_reports(tmp_pat
     )
     assert evidence["gates"]["internal_export_offline"]["no_write_back"] is True
     assert evidence["gates"]["internal_export_retrospective"]["timestamped_replay"] is True
-    assert "internal_data_validation__internal_l1_offline_report_generated" in (
-        evidence["blocked_requirements"]
+    assert (
+        "internal_data_validation__internal_l1_offline_report_generated"
+        in (evidence["blocked_requirements"])
     )
 
 

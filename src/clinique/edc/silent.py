@@ -108,9 +108,7 @@ def evaluate_silent_log(
     ]
     burden = false_positives / max(len(reviewers) * evaluation_weeks, 1)
     no_operational_impact = all(not entry.affected_operations for entry in entries)
-    false_positive_burden_controlled = (
-        burden <= false_positive_tolerance_per_reviewer_week
-    )
+    false_positive_burden_controlled = burden <= false_positive_tolerance_per_reviewer_week
     stop_criteria_triggered = safety_risks > 0
     return ValidationReport(
         report_type="edc_query_silent_prospective",

@@ -1,5 +1,6 @@
 {
   "manifest_version": "1",
+  "evidence_kind": "synthetic_fixture",
   "generated_at": "2026-05-24T00:00:00Z",
   "sources": [
     {

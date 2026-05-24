@@ -30,7 +30,9 @@ def read_xpt_columns(path: str | os.PathLike[str]) -> list[str]:
         obs_pos = ns_start + block + pad
         if b"OBS" in data[obs_pos : obs_pos + 80] or obs_pos >= len(data):
             return [
-                data[ns_start + k * size + 8 : ns_start + k * size + 16].decode("ascii", "replace").strip()
+                data[ns_start + k * size + 8 : ns_start + k * size + 16]
+                .decode("ascii", "replace")
+                .strip()
                 for k in range(count)
             ]
     raise ValueError("could not locate OBS header after NAMESTR block")

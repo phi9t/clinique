@@ -50,7 +50,11 @@ class DryRunHarness:
                 result, ran, detail = [], False, f"{type(exc).__name__}: {exc}"
             checks.append(StructuralCheck("PROGRAM-RUNS", output_id, ran, detail))
             checks.append(
-                StructuralCheck("SHELL-POPULATES", output_id, ran and len(result) > 0,
-                                "" if result else "produced no rows")
+                StructuralCheck(
+                    "SHELL-POPULATES",
+                    output_id,
+                    ran and len(result) > 0,
+                    "" if result else "produced no rows",
+                )
             )
         return checks

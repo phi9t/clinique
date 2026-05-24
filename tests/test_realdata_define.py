@@ -52,7 +52,10 @@ def test_seeded_missing_dataset_variable_detected():
     cols = read_xpt_columns(_ADSL)
     dropped = cols[10]
     findings = check_define_vs_dataset(m, "ADSL", [c for c in cols if c != dropped])
-    assert any(f.rule_id == "DEFINE-DATASET-VARMATCH" and dropped.upper() in f.explanation for f in findings)
+    assert any(
+        f.rule_id == "DEFINE-DATASET-VARMATCH" and dropped.upper() in f.explanation
+        for f in findings
+    )
 
 
 def test_seeded_dangling_codelist_detected():

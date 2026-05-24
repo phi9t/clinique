@@ -43,9 +43,7 @@ def audit_release_checklist(path: str | Path) -> ChecklistAudit:
             complete_sections.append(section)
         elif items:
             incomplete_sections.append(section)
-            blocked.extend(
-                _requirement_id(section, text) for checked, text in items if not checked
-            )
+            blocked.extend(_requirement_id(section, text) for checked, text in items if not checked)
 
     return ChecklistAudit(
         complete_sections=tuple(complete_sections),

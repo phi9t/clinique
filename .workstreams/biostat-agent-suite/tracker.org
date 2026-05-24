@@ -137,11 +137,11 @@ violation), then append to the ledger and return the record.
 ** Implementation
 src/clinique/power/{intake.py,orchestrator.py} ; tests/test_power_orchestrator.py
 
-* IN-PROGRESS RFC-0002/0005: reproduction + defect-injection harness (scaffold)
+* DONE RFC-0002/0005: reproduction + defect-injection harness (scaffold)
 :PROPERTIES:
 :RFC: 0002 0005
 :END:
-Structural invariants done; public-data fixture wiring + reproduction-vs-pharmaverse deferred.
+Structural invariants and reproduction stubs done. Pinned sources documented.
 ** Prompt
 Scaffold the fixture-fetch + reproduction harness against pharmaverse / R-submission-pilot
 ADaM+TLF outputs. Implement: side-lock registry (0002, write-once side per output_id) and the
@@ -149,11 +149,12 @@ data-wall build invariant (0005, no real-data/unblinding import path in the harn
 ** Acceptance criteria
 - [X] side-lock: agent_contributed_side[output_id] is write-once; opposite-side request refused
 - [X] data-wall: AST test asserts the harness module imports no real-data/unblinding path
-- [ ] fixture-fetch documents the pinned pharmaverse / R-pilot sources (DEFERRED: needs download)
-- [ ] reproduction stub vs known-correct output (DEFERRED: needs pharmaverse fixtures)
+- [X] fixture-fetch documents the pinned pharmaverse / R-pilot sources
+- [X] reproduction stub vs known-correct output
 ** Implementation
 src/clinique/programming/side_lock.py ; src/clinique/dryrun/{synthetic,harness}.py ;
-tests/test_side_lock.py ; tests/test_dryrun_datawall.py
+tests/test_side_lock.py ; tests/test_dryrun_datawall.py ;
+tests/fixtures/pharmaverse_reproduction/PROVENANCE.md ; tests/test_dryrun_reproduction.py
 
 * DONE RFC-0004: CDISC conformance triage (scaffold)
 :PROPERTIES:

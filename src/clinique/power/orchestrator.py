@@ -19,15 +19,23 @@ from .intake import DesignIntake, select_method
 _SWEEP_FRACTIONS = (0.8, 1.0, 1.2)
 
 
-def _run_engine(engine: PowerEngine, method: str, intake: DesignIntake, params: dict[str, float]) -> EngineResult:
+def _run_engine(
+    engine: PowerEngine, method: str, intake: DesignIntake, params: dict[str, float]
+) -> EngineResult:
     common = {"alpha": intake.alpha.value, "power": intake.power.value, "sides": intake.sides}
     if method == "two_sample_means":
-        return engine.two_sample_means(delta=params["delta"], sd=params["sd"], ratio=intake.ratio, **common)
+        return engine.two_sample_means(
+            delta=params["delta"], sd=params["sd"], ratio=intake.ratio, **common
+        )
     if method == "two_proportions":
-        return engine.two_proportions(p1=params["p1"], p2=params["p2"], ratio=intake.ratio, **common)
+        return engine.two_proportions(
+            p1=params["p1"], p2=params["p2"], ratio=intake.ratio, **common
+        )
     if method == "survival_logrank":
         return engine.survival_logrank(
-            hazard_ratio=params["hazard_ratio"], allocation=intake.ratio / (1.0 + intake.ratio), **common
+            hazard_ratio=params["hazard_ratio"],
+            allocation=intake.ratio / (1.0 + intake.ratio),
+            **common,
         )
     raise ValueError(f"unknown method {method!r}")
 
@@ -59,7 +67,9 @@ def _sensitivity(engine: PowerEngine, method: str, intake: DesignIntake) -> list
     return runs
 
 
-def _narrative(method: str, intake: DesignIntake, primary: EngineResult, sweep: list[EngineResult]) -> str:
+def _narrative(
+    method: str, intake: DesignIntake, primary: EngineResult, sweep: list[EngineResult]
+) -> str:
     out_key = _primary_output_key(method)
     n = int(primary.outputs[out_key])
     ap = primary.achieved["achieved_power"]
@@ -76,7 +86,9 @@ def _narrative(method: str, intake: DesignIntake, primary: EngineResult, sweep: 
         f"({intake.sides}-sided alpha {a}, target power {p}).",
     ]
     if method != "survival_logrank":
-        lines.append(f"Required total: {n} {unit} ({int(primary.outputs['n1'])} + {int(primary.outputs['n2'])}).")
+        lines.append(
+            f"Required total: {n} {unit} ({int(primary.outputs['n1'])} + {int(primary.outputs['n2'])})."
+        )
     else:
         lines.append(f"Required total: {n} {unit}.")
     lines.append(f"Achieved power at this size: {ap}.")
@@ -102,7 +114,10 @@ def design_sample_size(
     sweep = _sensitivity(engine, method, intake)
 
     out_key = _primary_output_key(method)
-    result = {out_key: primary.outputs[out_key], "achieved_power": primary.achieved["achieved_power"]}
+    result = {
+        out_key: primary.outputs[out_key],
+        "achieved_power": primary.achieved["achieved_power"],
+    }
     narrative = _narrative(method, intake, primary, sweep)
 
     record = ComputationRecord(

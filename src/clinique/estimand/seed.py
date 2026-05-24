@@ -34,7 +34,9 @@ def consistent_bundle() -> ArtifactGraph:
         TLFShell("T-14.2.1", "Primary endpoint at Week 12", "SAP 9.1", ("D-PRIM",)),
         TLFShell("T-14.2.2", "Key secondary at Week 24", "SAP 9.2", ("D-SEC",)),
     )
-    return ArtifactGraph(endpoints=endpoints, populations=populations, shells=shells, derivations=derivations)
+    return ArtifactGraph(
+        endpoints=endpoints, populations=populations, shells=shells, derivations=derivations
+    )
 
 
 def mutate_timepoint(g: ArtifactGraph) -> ArtifactGraph:
