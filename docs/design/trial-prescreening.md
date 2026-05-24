@@ -1,5 +1,9 @@
 # Trial prescreening agent — design
 
+**Background:** [Eligibility criteria primer §7–8](../primer/clinical-trials-for-ml.md#7-eligibility-criteria-are-the-first-great-mlagent-wedge),
+[ANC example §14](../primer/clinical-trials-for-ml.md#14-one-concrete-example),
+[minimum schema §13](../primer/clinical-trials-for-ml.md#13-how-to-think-about-the-data-model-for-your-proof-point).
+
 **Status:** `L0-PUBLIC-SCAFFOLD` (2026-05-24). The genuinely-public L0 path is implemented:
 ClinicalTrials.gov trial ingestion + JSONL fixture recorder and a Synthea patient normalizer, both
 deterministic and offline-tested. Atomizer, retriever, criterion judge, evidence-provenance gate,

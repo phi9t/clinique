@@ -8,8 +8,8 @@
 The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 
 `tests/` holds the pytest suite, with fixtures in `tests/fixtures/`. Design docs live in
-`docs/design/`; EDC governance artifacts in `docs/edc-query-validation/`. R-backed power tooling
-is isolated under `docker/r-engine/`.
+`docs/design/`; ML onboarding primer in `docs/primer/`; EDC governance artifacts in
+`docs/edc-query-validation/`. R-backed power tooling is isolated under `docker/r-engine/`.
 
 ## Build, Test, and Development Commands
 

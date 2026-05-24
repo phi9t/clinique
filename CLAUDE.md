@@ -11,8 +11,12 @@ prescreening — built on a shared governance **substrate**. A separate Vite + R
 `explorer/`.
 
 Design intent lives in `docs/design/` (`biostat-agent-suite.md`, `edc-query-validation.md`,
-`trial-prescreening.md`); start there for the "why" behind any module. Docstrings reference `RFC-NNNN §X` markers — these are a
-naming convention mapping to capabilities in the design docs, not separate RFC files.
+`trial-prescreening.md`); start there for the "why" behind any module. Docstrings reference
+`RFC-NNNN §X` markers — these are a naming convention mapping to capabilities in the design docs,
+not separate RFC files.
+
+**If you're new to clinical trials:** read `docs/primer/` first — domain mental model, then repo
+map and commands.
 
 ## Commands
 
@@ -23,6 +27,10 @@ uv run pytest tests/test_power_orchestrator.py            # one file
 uv run pytest tests/test_power_orchestrator.py::test_name # one test
 uv run ruff check .     # lint (line-length 100)
 uv run ruff format .    # format
+
+# Prescreen L0 (offline tests + fixture summary)
+uv run pytest tests/test_prescreen_ingestion.py tests/test_prescreen_normalizer.py -q
+uv run clinique prescreen show --fixtures tests/fixtures/prescreen/trials.jsonl
 ```
 
 R-backed engine (rpact) runs in a pinned Docker image. Bring up the daemon (`colima start` or

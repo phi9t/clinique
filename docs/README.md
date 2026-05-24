@@ -2,6 +2,14 @@
 
 Design and governance docs for the Clinique agent suite.
 
+## Primer (start here for ML backgrounds)
+
+| Doc | Description |
+|---|---|
+| [ML onboarding index](primer/README.md) | Reading order for ML researchers and MLsys engineers |
+| [Clinical trials for ML](primer/clinical-trials-for-ml.md) | Domain mental model in ML language |
+| [Clinique for ML](primer/clinique-for-ml.md) | Repo map, eval harness, commands, code pointers |
+
 ## Design
 
 | Doc | Status | Description |

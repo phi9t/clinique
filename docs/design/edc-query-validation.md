@@ -1,5 +1,8 @@
 # EDC query validation — design
 
+**Background:** [Trial lifecycle §5](../primer/clinical-trials-for-ml.md#5-what-happens-operationally),
+[`DataQuery` entity §4](../primer/clinical-trials-for-ml.md#4-the-main-entities-in-the-data-model).
+
 **Status:** `LOCAL-COMPLETE` (2026-05-24). Local synthetic L0–L2 validation is implemented and
 verified. `goal_complete` remains false until internal EDC exports and prospective validation
 evidence exist. See [validation summary](../edc-query-validation/validation-summary.md) and
