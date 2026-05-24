@@ -231,6 +231,7 @@ exist.
 ** Acceptance criteria
 - [X] Manifest preflight must pass before any export payload is loaded.
 - [X] Snapshot payloads marked as unblinded are rejected even when manifest metadata is blinded.
+- [X] Missing or malformed expected export payload files return controlled validation failures.
 - [X] Import path accepts labels and optional database-lock issue logs separately from source
       exports.
 - [X] CLI writes =internal-offline-benchmark.json= and

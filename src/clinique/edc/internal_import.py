@@ -68,8 +68,13 @@ def _source_paths(manifest_path: str | Path) -> dict[str, Path]:
 
 
 def _read_json(path: Path) -> list[dict]:
-    with path.open() as handle:
-        data = json.load(handle)
+    try:
+        with path.open() as handle:
+            data = json.load(handle)
+    except FileNotFoundError as exc:
+        raise ValueError(f"missing internal export payload: {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"invalid JSON in internal export payload: {path}") from exc
     if not isinstance(data, list):
         raise ValueError(f"{path} must contain a JSON list")
     return data

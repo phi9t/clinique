@@ -24,7 +24,7 @@ Evidence:
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
   --reports-dir reports/edc-query` validates the approved-export import path on synthetic
-  fixture data.
+  fixture data and returns a controlled validation failure for missing export payloads.
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces reviewer-week normalized false-positive

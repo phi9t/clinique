@@ -420,3 +420,24 @@ def test_edc_query_validate_internal_exports_writes_l1_l2_reports(tmp_path):
     assert (reports_dir / "internal-retrospective-replay.json").exists()
     offline = json.loads((reports_dir / "internal-offline-benchmark.json").read_text())
     assert offline["gates"]["no_write_back"] is True
+
+
+def test_edc_query_validate_internal_exports_returns_nonzero_for_missing_payload(tmp_path):
+    root = tmp_path / "exports"
+    manifest = _write_internal_export_manifest(root)
+    (root / "edit_check_history" / "rules.json").unlink()
+
+    exit_code = main(
+        [
+            "edc-query",
+            "validate-internal-exports",
+            "--manifest",
+            str(manifest),
+            "--labels",
+            "tests/fixtures/edc_query/labels.json",
+            "--reports-dir",
+            str(tmp_path / "reports"),
+        ]
+    )
+
+    assert exit_code == 2
