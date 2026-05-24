@@ -16,6 +16,8 @@
       form, and field.
 - [x] True-detection metrics require label evidence to be available at the replay timestamp.
 - [x] Snapshot loaders reject duplicate source-record keys before detection can overwrite them.
+- [x] Fixture and approved-export loaders reject duplicate query-log IDs before provenance can
+      become ambiguous.
 - [x] Fixture and approved-export loaders reject duplicate adjudication label keys.
 - [x] Annotation manual defines the same study/site-scoped unit used by loaders and metrics.
 - [x] Offline report exists.

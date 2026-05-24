@@ -313,6 +313,14 @@ def validate_unique_snapshot_record_keys(snapshot_id: str, records: tuple[EdcRec
         seen.add(key)
 
 
+def validate_unique_query_log_ids(query_logs: tuple[QueryLog, ...]) -> None:
+    seen: set[str] = set()
+    for query in query_logs:
+        if query.query_id in seen:
+            raise ValueError(f"duplicate query log id: {query.query_id}")
+        seen.add(query.query_id)
+
+
 def validate_unique_label_keys(labels: tuple[QueryLabel, ...]) -> None:
     seen: set[tuple[str, str, str, str, str, str]] = set()
     for label in labels:

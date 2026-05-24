@@ -488,3 +488,30 @@ def test_fixture_bundle_rejects_duplicate_snapshot_record_keys(tmp_path):
         assert "duplicate snapshot record key" in str(exc)
     else:
         raise AssertionError("expected duplicate snapshot record rejection")
+
+
+def test_fixture_bundle_rejects_duplicate_query_log_ids(tmp_path):
+    fixture_dir = tmp_path / "duplicate_query_ids"
+    query = {
+        "query_id": "Q-DUP",
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "query_text": "Please confirm AE term.",
+        "query_category": "missing",
+        "opened_at": "2026-03-03T09:00:00Z",
+        "closed_at": None,
+        "status": "open",
+        "resolution": "confirmed",
+    }
+    _write_minimal_fixture_dir(fixture_dir, query_logs=[query, dict(query)])
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "duplicate query log id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate query-log id rejection")
