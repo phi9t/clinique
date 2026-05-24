@@ -13,6 +13,7 @@
       evidence exists.
 - [x] Internal-data manifest preflight command exists and validates readiness metadata without
       reading PHI-bearing exports.
+- [x] Silent-log evaluator exists and validates silent-mode logs without affecting operations.
 
 ## Internal Data Validation
 

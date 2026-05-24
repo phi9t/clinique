@@ -20,8 +20,13 @@ Evidence:
   .workstreams/edc-query-validation/internal-data-manifest.template.json --output
   reports/edc-query/internal-preflight-template.json` validates the internal-data manifest
   contract without reading PHI-bearing exports.
+- `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
+  --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
+  validates the silent-log evaluation path and produces false-positive burden, time-delta, and
+  stop-criteria metrics.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
-  exposure, detection, metrics, CLI execution, internal-data preflight, and report serialization.
+  exposure, detection, metrics, CLI execution, internal-data preflight, silent-log evaluation,
+  and report serialization.
 
 ## Not Yet Proven
 

@@ -155,3 +155,67 @@ def test_edc_query_preflight_internal_data_returns_nonzero_for_unready_manifest(
     )
 
     assert exit_code == 3
+
+
+def test_edc_query_evaluate_silent_log_writes_report(tmp_path):
+    output = tmp_path / "silent-report.json"
+
+    exit_code = main(
+        [
+            "edc-query",
+            "evaluate-silent-log",
+            "--log",
+            "tests/fixtures/edc_query/silent_log.json",
+            "--output",
+            str(output),
+            "--false-positive-tolerance",
+            "1.0",
+        ]
+    )
+
+    assert exit_code == 0
+    report = json.loads(output.read_text())
+    assert report["report_type"] == "edc_query_silent_prospective"
+    assert report["metrics"]["false_positive_burden_per_reviewer_week"] == 0.5
+    assert report["gates"]["stop_criteria_triggered"] is True
+
+
+def test_edc_query_evaluate_silent_log_returns_nonzero_when_operations_were_affected(tmp_path):
+    path = tmp_path / "bad_silent_log.json"
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "recommendation_id": "SIL-BAD",
+                    "logged_at": "2026-04-01T00:00:00Z",
+                    "study_id": "STUDY-EDC-001",
+                    "site_id": "SITE-01",
+                    "subject_id": "SUBJ-001",
+                    "form": "AE",
+                    "field": "term",
+                    "query_category": "missing",
+                    "agent_recommendation": "Draft query",
+                    "agent_evidence": ["rec-ae-001"],
+                    "human_action": "opened_query",
+                    "human_action_at": "2026-04-02T00:00:00Z",
+                    "ground_truth": "true_positive",
+                    "reviewer_id": "DM-001",
+                    "affected_operations": True,
+                    "safety_risk": False,
+                }
+            ]
+        )
+    )
+
+    exit_code = main(
+        [
+            "edc-query",
+            "evaluate-silent-log",
+            "--log",
+            str(path),
+            "--output",
+            str(tmp_path / "silent-report.json"),
+        ]
+    )
+
+    assert exit_code == 2

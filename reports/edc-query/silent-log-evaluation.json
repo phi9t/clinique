@@ -1,0 +1,27 @@
+{
+  "gates": {
+    "false_positive_burden_controlled": true,
+    "no_operational_impact": true,
+    "stop_criteria_triggered": true
+  },
+  "generated_at": "2026-04-01T00:00:00Z",
+  "inputs": {
+    "false_positive_tolerance_per_reviewer_week": 1.0,
+    "recommendation_ids": [
+      "SIL-001",
+      "SIL-002",
+      "SIL-003",
+      "SIL-004"
+    ],
+    "reviewer_count": 2
+  },
+  "metrics": {
+    "false_positive_burden_per_reviewer_week": 0.5,
+    "false_positives": 1,
+    "median_hours_earlier": 24.0,
+    "recommendations_total": 4,
+    "safety_risks": 1,
+    "true_positives": 2
+  },
+  "report_type": "edc_query_silent_prospective"
+}

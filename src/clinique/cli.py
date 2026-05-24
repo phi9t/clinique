@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from clinique.edc.internal_preflight import preflight_internal_manifest
+from clinique.edc.silent import evaluate_silent_log, load_silent_log
 from clinique.edc.validation import run_validation
 
 
@@ -23,6 +24,10 @@ def _build_parser() -> argparse.ArgumentParser:
     preflight = edc_subparsers.add_parser("preflight-internal-data")
     preflight.add_argument("--manifest", required=True)
     preflight.add_argument("--output")
+    silent = edc_subparsers.add_parser("evaluate-silent-log")
+    silent.add_argument("--log", required=True)
+    silent.add_argument("--output", required=True)
+    silent.add_argument("--false-positive-tolerance", type=float, default=1.0)
     return parser
 
 
@@ -49,6 +54,19 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(text, end="")
         return 0 if result.ok else 3
+    if args.command == "edc-query" and args.edc_command == "evaluate-silent-log":
+        try:
+            entries = load_silent_log(args.log)
+        except ValueError as exc:
+            print(f"edc-query silent-log evaluation failed: {exc}", file=sys.stderr)
+            return 2
+        report = evaluate_silent_log(
+            entries,
+            false_positive_tolerance_per_reviewer_week=args.false_positive_tolerance,
+        )
+        report.write_json(args.output)
+        print(f"EDC query silent-log report written to {args.output}")
+        return 0
 
     print("clinique — biostatistician agent suite.")
     print("Design: docs/rfcs/  |  Workstreams: .workstreams/")
