@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 
+SUPPORTED_MANIFEST_VERSION = "1"
 REQUIRED_SOURCES = ("edc_snapshots", "query_logs", "edit_check_history")
 ALLOWED_SOURCES = set(REQUIRED_SOURCES)
 ALLOWED_SENSITIVITY = {"phi", "pii", "no_phi"}
@@ -23,6 +24,7 @@ class InternalPreflightResult:
     unblinded_sources: tuple[str, ...]
     non_read_only_sources: tuple[str, ...]
     incomplete_sources: tuple[str, ...]
+    invalid_metadata: tuple[str, ...]
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -34,6 +36,7 @@ class InternalPreflightResult:
             "unblinded_sources": list(self.unblinded_sources),
             "non_read_only_sources": list(self.non_read_only_sources),
             "incomplete_sources": list(self.incomplete_sources),
+            "invalid_metadata": list(self.invalid_metadata),
         }
 
 
@@ -43,6 +46,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     sources = manifest.get("sources", [])
     if not isinstance(sources, list):
         raise ValueError("manifest sources must be a list")
+    invalid_metadata = _invalid_manifest_metadata(manifest)
 
     present: list[str] = []
     seen: set[str] = set()
@@ -78,6 +82,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         and not unblinded
         and not non_read_only
         and not incomplete
+        and not invalid_metadata
     )
     return InternalPreflightResult(
         ok=ok,
@@ -88,7 +93,17 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         unblinded_sources=tuple(unblinded),
         non_read_only_sources=tuple(non_read_only),
         incomplete_sources=tuple(incomplete),
+        invalid_metadata=invalid_metadata,
     )
+
+
+def _invalid_manifest_metadata(manifest: dict[str, Any]) -> tuple[str, ...]:
+    invalid: list[str] = []
+    if manifest.get("generated_at") is None or _parse_timestamp(manifest.get("generated_at")) is None:
+        invalid.append("generated_at")
+    if manifest.get("manifest_version") != SUPPORTED_MANIFEST_VERSION:
+        invalid.append("manifest_version")
+    return tuple(invalid)
 
 
 def _source_complete(source: dict[str, Any]) -> bool:
@@ -126,5 +141,14 @@ def _parse_date(value: Any) -> date | None:
         return None
     try:
         return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
         return None

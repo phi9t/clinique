@@ -32,6 +32,7 @@
     "internal_preflight": {
       "duplicate_sources": [],
       "incomplete_sources": [],
+      "invalid_metadata": [],
       "missing_required_sources": [],
       "non_read_only_sources": [],
       "ok": true,

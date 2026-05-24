@@ -52,6 +52,20 @@ def test_preflight_internal_manifest_accepts_minimum_complete_manifest(tmp_path)
     assert result.missing_required_sources == ()
     assert result.unblinded_sources == ()
     assert result.non_read_only_sources == ()
+    assert result.invalid_metadata == ()
+
+
+def test_preflight_internal_manifest_rejects_invalid_manifest_metadata(tmp_path):
+    manifest = _valid_manifest()
+    manifest["manifest_version"] = "0"
+    manifest["generated_at"] = "not-a-timestamp"
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.invalid_metadata == ("generated_at", "manifest_version")
 
 
 def test_preflight_internal_manifest_rejects_missing_source_and_unblinded_data(tmp_path):
