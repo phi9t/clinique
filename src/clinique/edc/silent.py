@@ -10,6 +10,9 @@ from typing import Any
 from clinique.edc.records import ValidationReport, parse_timestamp
 
 
+ALLOWED_GROUND_TRUTH = {"true_positive", "false_positive", "true_negative", "safety_risk"}
+
+
 @dataclass(frozen=True)
 class SilentLogEntry:
     recommendation_id: str
@@ -48,7 +51,7 @@ class SilentLogEntry:
             agent_evidence=tuple(raw.get("agent_evidence", [])),
             human_action=raw["human_action"],
             human_action_at=human_action_at,
-            ground_truth=raw["ground_truth"],
+            ground_truth=_require_one_of("ground_truth", raw["ground_truth"], ALLOWED_GROUND_TRUTH),
             reviewer_id=raw["reviewer_id"],
             affected_operations=_require_bool(
                 "affected_operations",
@@ -132,4 +135,11 @@ def _evaluation_weeks(entries: tuple[SilentLogEntry, ...]) -> int:
 def _require_bool(label: str, value: Any) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{label} must be a boolean")
+    return value
+
+
+def _require_one_of(label: str, value: Any, allowed: set[str]) -> str:
+    if value not in allowed:
+        values = ", ".join(sorted(allowed))
+        raise ValueError(f"{label} must be one of: {values}")
     return value
