@@ -249,25 +249,41 @@ Implemented (L0 public path) marked ✅; proposed marked ◻:
 
 ```
 src/clinique/prescreen/
-  schemas.py        ✅ Trial, AgeBound, PatientDocument, PatientCorpus
-  ingestion.py      ✅ ClinicalTrials.gov v2 fetch/parse + JSONL fixture record/replay
+  schemas.py        ✅ Trial, AgeBound, PatientDocument, PatientCorpus, CriterionJudgment
+  ingestion.py      ✅ ClinicalTrials.gov v2 fetch/parse/search + JSONL fixture record/replay
   normalizer.py     ✅ Synthea CSV -> PatientCorpus (deterministic)
+  validation.py     ✅ L0 conformance gate (controlled vocab, age bounds, leakage)
+  pmc_patients.py   ✅ PMC-Patients open case-report ingestion
+  mimic_demo.py     ✅ MIMIC-IV demo structured normalizer
   atomizer.py       ◻ eligibility text -> atomic criteria (LLM, strict schema)
   retrieval.py      ◻ hybrid BM25 (rank-bm25, in-memory) + embeddings + structured + temporal filter
   judge.py          ◻ per-criterion LLM judge (constrained prompt, evidence-grounded)
-  aggregator.py     ◻ deterministic overall recommendation
+  aggregator.py     ◻ deterministic overall recommendation (library; no CLI yet)
   evidence_gate.py  ◻ evidence-provenance hard gate (quote fidelity + derived-fact correctness)
   vocab.py          ◻ deterministic drug-class / synonym lookup (RxNorm/ATC subset)
   orchestrator.py   ◻ the typed graph; builds packet, runs gate, appends to ProvenanceLedger
 tests/
   test_prescreen_ingestion.py ✅  test_prescreen_normalizer.py ✅
-  test_prescreen_atomizer.py ◻ ... _temporal ◻ _aggregation ◻ _unit_conversion ◻ _evidence_gate ◻
-tests/fixtures/prescreen/        ✅ trials.jsonl (real, recorded) + PROVENANCE.md
+  test_prescreen_validation.py ✅  test_prescreen_search.py ✅
+  test_prescreen_pmc.py ✅  test_prescreen_mimic.py ✅
+  test_prescreen_aggregation.py ◻  test_prescreen_cli.py ◻
+  test_prescreen_atomizer.py ◻ ... _temporal ◻ _unit_conversion ◻ _evidence_gate ◻
+tests/fixtures/prescreen/        ✅ trials.jsonl (real, recorded) + PROVENANCE.md + synthea/
 reports/prescreen/               ◻ eval metrics + error cases
 ```
 
-CLI: `clinique prescreen ingest` (record JSONL fixture) and `prescreen show` (offline summary) are
-implemented; `screen|atomize|eval` land with the corresponding stages, mirroring `edc-query`.
+CLI commands (implemented):
+
+| Command | Purpose | Exit codes |
+|---|---|---|
+| `prescreen ingest` | Record NCT ids from ClinicalTrials.gov | 0 success, 2 fetch/parse failure |
+| `prescreen search` | Record CT.gov search results | 0 success, 2 fetch/parse failure |
+| `prescreen show` | Offline trial summary from JSONL | 0 success, 2 load failure |
+| `prescreen normalize-synthea` | Synthea CSV dir → PatientCorpus JSONL | 0 success, 2 I/O or parse failure |
+| `prescreen ingest-pmc` | Record PMC-Patients sample | 0 success, 2 fetch/parse failure |
+| `prescreen validate` | L0 conformance report | 0 clean, 2 load failure, 7 conformance errors |
+
+`screen|atomize|eval` land with the corresponding stages, mirroring `edc-query`.
 
 **Deferred until after the proof point** (premature for L0–L2): Postgres + pgvector, FastAPI
 service, OpenSearch, Streamlit/Next.js UI. JSONL + in-memory retrieval + a CLI packet + offline

@@ -151,7 +151,11 @@ parsers.
 | Command | Purpose | Exit notes |
 |---|---|---|
 | `clinique prescreen ingest` | Fetch CT.gov → record JSONL | 2 on failure |
+| `clinique prescreen search` | Record CT.gov search results | 2 on failure |
 | `clinique prescreen show` | Offline trial summary | 2 on parse failure |
+| `clinique prescreen normalize-synthea` | Synthea CSV → PatientCorpus JSONL | 2 on I/O or parse failure |
+| `clinique prescreen ingest-pmc` | Record PMC-Patients sample | 2 on failure |
+| `clinique prescreen validate` | L0 conformance report | 7 when records fail vocab/leakage rules |
 | `clinique edc-query validate` | Regenerate L0–L2 reports | 2 on validation failure |
 | `clinique edc-query verify-workstream` | Bundled gate check | 5 when `goal_complete: false` (expected locally) |
 

@@ -13,7 +13,7 @@ Capability design docs:
 - [EDC query validation](docs/design/edc-query-validation.md) — draft-only EDC query validation
   (local synthetic phase complete; operational validation blocked on internal/prospective evidence)
 - [Trial prescreening agent](docs/design/trial-prescreening.md) — eligibility prescreening copilot
-  (L0 public scaffold: CT.gov ingestion + Synthea normalizer)
+  (L0 public path: CT.gov ingestion/search, Synthea/PMC/MIMIC normalizers, validation gate)
 
 ## Quickstart
 
@@ -43,8 +43,9 @@ oracle; Docker cross-check tests skip automatically when the daemon is unreachab
   import path; silent-log and controlled-rollout gate evaluators; bundled workstream verifier.
   Local synthetic validation is complete; `goal_complete` remains false until internal EDC data
   and prospective runs exist.
-- **Trial prescreening (L0):** ClinicalTrials.gov record-and-replay ingestion, Synthea patient
-  normalizer, frozen fixture corpus; atomizer/judge proposed (see prescreen design doc).
+- **Trial prescreening (L0):** ClinicalTrials.gov record-and-replay ingestion and search,
+  Synthea/PMC-Patients/MIMIC-IV demo normalizers, L0 conformance gate (`prescreen validate`);
+  frozen fixture corpus; atomizer/judge proposed (see prescreen design doc).
 
 ## Trial prescreening CLI
 
@@ -59,6 +60,22 @@ Record new trials from ClinicalTrials.gov (network):
 ```bash
 uv run clinique prescreen ingest --nct-ids NCT02578680,NCT06123754 \
   --out tests/fixtures/prescreen/trials.jsonl
+```
+
+Offline conformance check (exit 7 when records fail vocab / leakage rules):
+
+```bash
+uv run clinique prescreen validate \
+  --trials tests/fixtures/prescreen/trials.jsonl
+```
+
+Synthea CSV → PatientCorpus JSONL (offline; requires a Synthea export directory):
+
+```bash
+uv run clinique prescreen normalize-synthea \
+  --csv-dir tests/fixtures/prescreen/synthea \
+  --snapshot 2026-03-01 \
+  --out /tmp/patients.jsonl
 ```
 
 ## EDC query validation CLI

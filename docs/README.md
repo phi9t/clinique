@@ -16,7 +16,7 @@ Design and governance docs for the Clinique agent suite.
 |---|---|---|
 | [Biostatistician agent suite](design/biostat-agent-suite.md) | `SCAFFOLD-COMPLETE` | Platform substrate + biostat capabilities (provenance, power, estimand, programming, conformance, dry-run) |
 | [EDC query validation](design/edc-query-validation.md) | `LOCAL-COMPLETE` | Draft-only EDC query agent; L0–L2 synthetic validation complete |
-| [Trial prescreening agent](design/trial-prescreening.md) | `L0-PUBLIC-SCAFFOLD` | Draft-only eligibility prescreening copilot; ClinicalTrials.gov ingestion + Synthea normalizer built, judge/atomizer proposed |
+| [Trial prescreening agent](design/trial-prescreening.md) | `L0-PUBLIC-DATA` | Draft-only eligibility prescreening copilot; CT.gov ingestion/search, Synthea/PMC/MIMIC normalizers, validation gate, aggregator (library); judge/atomizer proposed |
 
 ## EDC governance artifacts
 
