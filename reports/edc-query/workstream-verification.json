@@ -30,6 +30,7 @@
       "timestamped_replay": true
     },
     "internal_preflight": {
+      "duplicate_schema_fields": {},
       "duplicate_sources": [],
       "incomplete_sources": [],
       "invalid_metadata": [],

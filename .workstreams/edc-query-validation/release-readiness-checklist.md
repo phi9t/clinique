@@ -59,7 +59,7 @@
       `edc_snapshots`, `query_logs`, and `edit_check_history`; owner/export path metadata and
       schema sketches must contain
       nonblank strings and the source-specific fields required by the approved-export importer;
-      missing schema fields are reported per source type.
+      missing and duplicate schema fields are reported per source type.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent

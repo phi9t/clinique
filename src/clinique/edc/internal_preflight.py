@@ -65,6 +65,7 @@ class InternalPreflightResult:
     non_read_only_sources: tuple[str, ...]
     incomplete_sources: tuple[str, ...]
     missing_schema_fields: dict[str, tuple[str, ...]]
+    duplicate_schema_fields: dict[str, tuple[str, ...]]
     invalid_metadata: tuple[str, ...]
 
     def as_dict(self) -> dict[str, object]:
@@ -80,6 +81,10 @@ class InternalPreflightResult:
             "missing_schema_fields": {
                 source_type: list(fields)
                 for source_type, fields in self.missing_schema_fields.items()
+            },
+            "duplicate_schema_fields": {
+                source_type: list(fields)
+                for source_type, fields in self.duplicate_schema_fields.items()
             },
             "invalid_metadata": list(self.invalid_metadata),
         }
@@ -103,6 +108,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     non_read_only: list[str] = []
     incomplete: list[str] = []
     missing_schema_fields: dict[str, tuple[str, ...]] = {}
+    duplicate_schema_fields: dict[str, tuple[str, ...]] = {}
     for source in sources:
         if not isinstance(source, dict):
             raise ValueError("each manifest source must be an object")
@@ -124,6 +130,9 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         missing_fields = _missing_schema_fields(source.get("schema_sketch"), source_type)
         if missing_fields:
             missing_schema_fields[source_type] = missing_fields
+        duplicate_fields = _duplicate_schema_fields(source.get("schema_sketch"), source_type)
+        if duplicate_fields:
+            duplicate_schema_fields[source_type] = duplicate_fields
 
     missing = tuple(source for source in REQUIRED_SOURCES if source not in set(present))
     ok = (
@@ -133,6 +142,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         and not unblinded
         and not non_read_only
         and not incomplete
+        and not duplicate_schema_fields
         and not invalid_metadata
     )
     return InternalPreflightResult(
@@ -145,6 +155,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         non_read_only_sources=tuple(non_read_only),
         incomplete_sources=tuple(incomplete),
         missing_schema_fields=missing_schema_fields,
+        duplicate_schema_fields=duplicate_schema_fields,
         invalid_metadata=invalid_metadata,
     )
 
@@ -167,6 +178,7 @@ def _source_complete(source: dict[str, Any]) -> bool:
         return False
     return (
         _schema_sketch_complete(source.get("schema_sketch"), source.get("source_type"))
+        and not _duplicate_schema_fields(source.get("schema_sketch"), source.get("source_type"))
         and source.get("sensitivity") in ALLOWED_SENSITIVITY
         and source.get("blinding_status") in ALLOWED_BLINDING_STATUS
         and _date_coverage_complete(source.get("date_coverage"))
@@ -193,6 +205,23 @@ def _missing_schema_fields(value: Any, source_type: Any) -> tuple[str, ...]:
         return ()
     present = {field.strip() for field in value if isinstance(field, str)}
     return tuple(sorted(required - present))
+
+
+def _duplicate_schema_fields(value: Any, source_type: Any) -> tuple[str, ...]:
+    if source_type not in REQUIRED_SCHEMA_FIELDS or not isinstance(value, list):
+        return ()
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+    for field in value:
+        if not isinstance(field, str):
+            continue
+        normalized = field.strip()
+        if not normalized:
+            continue
+        if normalized in seen:
+            duplicates.add(normalized)
+        seen.add(normalized)
+    return tuple(sorted(duplicates))
 
 
 def _date_coverage_complete(value: Any) -> bool:

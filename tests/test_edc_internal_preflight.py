@@ -86,6 +86,7 @@ def test_preflight_internal_manifest_accepts_minimum_complete_manifest(tmp_path)
     assert result.ok is True
     assert result.missing_required_sources == ()
     assert result.missing_schema_fields == {}
+    assert result.duplicate_schema_fields == {}
     assert result.unblinded_sources == ()
     assert result.non_read_only_sources == ()
     assert result.invalid_metadata == ()
@@ -272,6 +273,26 @@ def test_preflight_internal_manifest_rejects_source_specific_schema_gaps(tmp_pat
             "query_category",
         ),
     }
+
+
+def test_preflight_internal_manifest_rejects_duplicate_schema_fields(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "schema_sketch": [
+            *manifest["sources"][0]["schema_sketch"],
+            "study_id",
+            " field ",
+        ],
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.incomplete_sources == ("edc_snapshots",)
+    assert result.duplicate_schema_fields == {"edc_snapshots": ("field", "study_id")}
 
 
 def test_preflight_internal_manifest_rejects_malformed_source_identity_metadata(tmp_path):
