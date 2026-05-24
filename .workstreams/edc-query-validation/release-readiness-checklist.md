@@ -57,9 +57,9 @@
       reading PHI-bearing exports.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, and unknown
-      ground-truth labels, rejects duplicate recommendation IDs, and exits nonzero for stop
-      criteria or uncontrolled false-positive burden; negative burden tolerances are rejected as
-      invalid input.
+      query categories and ground-truth labels, rejects duplicate recommendation IDs, and exits
+      nonzero for stop criteria or uncontrolled false-positive burden; negative burden
+      tolerances are rejected as invalid input.
 - [x] Silent-log evaluator preserves signed timing deltas so late recommendations are not
       counted as neutral or early.
 - [x] Controlled-rollout gate evaluator exists, rejects incomplete gate packages, and validates

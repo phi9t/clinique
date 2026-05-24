@@ -7,7 +7,7 @@ from pathlib import Path
 from statistics import median
 from typing import Any
 
-from clinique.edc.records import ValidationReport, parse_timestamp
+from clinique.edc.records import ALLOWED_QUERY_CATEGORIES, ValidationReport, parse_timestamp
 
 
 ALLOWED_GROUND_TRUTH = {"true_positive", "false_positive", "true_negative", "safety_risk"}
@@ -49,7 +49,11 @@ class SilentLogEntry:
             subject_id=raw["subject_id"],
             form=raw["form"],
             field=raw["field"],
-            query_category=raw["query_category"],
+            query_category=_require_one_of(
+                "query_category",
+                raw["query_category"],
+                ALLOWED_QUERY_CATEGORIES,
+            ),
             agent_recommendation=raw["agent_recommendation"],
             agent_evidence=agent_evidence,
             human_action=raw["human_action"],
