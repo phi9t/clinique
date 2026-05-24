@@ -7,6 +7,23 @@ from clinique.edc.fixtures import load_fixture_bundle
 FIXTURES = Path("tests/fixtures/edc_query")
 
 
+def _write_minimal_fixture_dir(
+    fixture_dir: Path,
+    *,
+    rules: list[dict[str, object]] | None = None,
+    query_logs: list[dict[str, object]] | None = None,
+    labels: list[dict[str, object]] | None = None,
+) -> None:
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        '[{"snapshot_id":"snap","snapshot_at":"2026-03-01T00:00:00Z","contains_phi":false,'
+        '"contains_unblinded":false,"records":[]}]'
+    )
+    (fixture_dir / "rules.json").write_text(json.dumps(rules or []))
+    (fixture_dir / "query_logs.json").write_text(json.dumps(query_logs or []))
+    (fixture_dir / "labels.json").write_text(json.dumps(labels or []))
+
+
 def test_load_fixture_bundle_has_timestamped_snapshots_and_labels():
     bundle = load_fixture_bundle(FIXTURES)
 
@@ -101,3 +118,91 @@ def test_fixture_bundle_rejects_string_label_booleans(tmp_path):
             assert expected_error in str(exc)
         else:
             raise AssertionError("expected string label flag rejection")
+
+
+def test_fixture_bundle_rejects_unknown_label_enums(tmp_path):
+    base_label = {
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "gold_query_needed": True,
+        "query_category": "missing",
+        "human_resolution": "corrected",
+        "opened_at": "2026-03-02T09:00:00Z",
+        "closed_at": None,
+        "evidence_available_at_agent_time": True,
+    }
+    for field_name, invalid_value, expected_error in [
+        ("query_category", "maybe_missing", "query_category must be one of"),
+        ("human_resolution", "maybe_corrected", "human_resolution must be one of"),
+    ]:
+        fixture_dir = tmp_path / field_name
+        label = dict(base_label)
+        label[field_name] = invalid_value
+        _write_minimal_fixture_dir(fixture_dir, labels=[label])
+
+        try:
+            load_fixture_bundle(fixture_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected unknown label enum rejection")
+
+
+def test_fixture_bundle_rejects_unknown_source_query_categories(tmp_path):
+    fixture_dir = tmp_path / "bad_rule_category"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        rules=[
+            {
+                "rule_id": "RULE-BAD",
+                "kind": "required_field",
+                "form": "AE",
+                "field": "term",
+                "query_category": "maybe_missing",
+                "message": "AE term is required.",
+                "effective_at": "2026-03-01T00:00:00Z",
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "query_category must be one of" in str(exc)
+    else:
+        raise AssertionError("expected unknown rule category rejection")
+
+
+def test_fixture_bundle_rejects_unknown_query_log_categories(tmp_path):
+    fixture_dir = tmp_path / "bad_query_log_category"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        query_logs=[
+            {
+                "query_id": "Q-BAD",
+                "snapshot_id": "snap",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "query_text": "Please confirm AE term.",
+                "query_category": "maybe_missing",
+                "opened_at": "2026-03-02T09:00:00Z",
+                "closed_at": None,
+                "status": "open",
+                "resolution": "confirmed",
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "query_category must be one of" in str(exc)
+    else:
+        raise AssertionError("expected unknown query-log category rejection")

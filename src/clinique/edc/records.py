@@ -6,6 +6,23 @@ from pathlib import Path
 from typing import Any
 
 
+ALLOWED_QUERY_CATEGORIES = {
+    "missing",
+    "inconsistent",
+    "impossible",
+    "source_mismatch",
+    "duplicate",
+    "no_query",
+}
+ALLOWED_HUMAN_RESOLUTIONS = {
+    "corrected",
+    "confirmed",
+    "no_query_needed",
+    "duplicate",
+    "waived",
+}
+
+
 def parse_timestamp(value: str | None) -> datetime | None:
     if value is None:
         return None
@@ -19,6 +36,13 @@ def parse_timestamp(value: str | None) -> datetime | None:
 def require_bool(label: str, value: Any) -> bool:
     if not isinstance(value, bool):
         raise ValueError(f"{label} must be a boolean")
+    return value
+
+
+def require_one_of(label: str, value: Any, allowed: set[str]) -> str:
+    if value not in allowed:
+        values = ", ".join(sorted(allowed))
+        raise ValueError(f"{label} must be one of: {values}")
     return value
 
 
@@ -95,7 +119,11 @@ class EditCheckRule:
             kind=raw["kind"],
             form=raw["form"],
             field=raw["field"],
-            query_category=raw["query_category"],
+            query_category=require_one_of(
+                "query_category",
+                raw["query_category"],
+                ALLOWED_QUERY_CATEGORIES,
+            ),
             message=raw["message"],
             effective_at=parse_timestamp(raw["effective_at"]) or datetime.min.replace(
                 tzinfo=timezone.utc
@@ -136,7 +164,11 @@ class QueryLog:
             form=raw["form"],
             field=raw["field"],
             query_text=raw["query_text"],
-            query_category=raw["query_category"],
+            query_category=require_one_of(
+                "query_category",
+                raw["query_category"],
+                ALLOWED_QUERY_CATEGORIES,
+            ),
             opened_at=opened_at,
             closed_at=parse_timestamp(raw.get("closed_at")),
             status=raw["status"],
@@ -169,8 +201,16 @@ class QueryLabel:
             form=raw["form"],
             field=raw["field"],
             gold_query_needed=require_bool("gold_query_needed", raw["gold_query_needed"]),
-            query_category=raw["query_category"],
-            human_resolution=raw["human_resolution"],
+            query_category=require_one_of(
+                "query_category",
+                raw["query_category"],
+                ALLOWED_QUERY_CATEGORIES,
+            ),
+            human_resolution=require_one_of(
+                "human_resolution",
+                raw["human_resolution"],
+                ALLOWED_HUMAN_RESOLUTIONS,
+            ),
             opened_at=parse_timestamp(raw.get("opened_at")),
             closed_at=parse_timestamp(raw.get("closed_at")),
             evidence_available_at_agent_time=require_bool(
