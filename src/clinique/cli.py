@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import urllib.error
 from pathlib import Path
 
 from clinique.edc.internal_preflight import preflight_internal_manifest
@@ -176,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
         nct_ids = [n.strip() for n in args.nct_ids.split(",") if n.strip()]
         try:
             recorded = record_studies(nct_ids, args.out)
-        except Exception as exc:  # network/HTTP/parse errors surface as a clean nonzero exit
+        except (OSError, ValueError, urllib.error.URLError, json.JSONDecodeError) as exc:
             print(f"prescreen ingest failed: {exc}", file=sys.stderr)
             return 2
         print(f"recorded {len(recorded)} studies to {args.out}: {', '.join(recorded)}")
@@ -187,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
             recorded = record_search(
                 args.out, cond=args.cond, term=args.term, status=status, max_studies=args.max
             )
-        except Exception as exc:  # network/HTTP/parse errors surface as a clean nonzero exit
+        except (OSError, ValueError, urllib.error.URLError, json.JSONDecodeError) as exc:
             print(f"prescreen search failed: {exc}", file=sys.stderr)
             return 2
         print(f"recorded {len(recorded)} studies to {args.out}")
@@ -209,7 +210,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "prescreen" and args.prescreen_command == "ingest-pmc":
         try:
             count = record_pmc(args.out, limit=args.limit)
-        except Exception as exc:  # network/HTTP/parse errors surface as a clean nonzero exit
+        except (OSError, ValueError, urllib.error.URLError, json.JSONDecodeError) as exc:
             print(f"prescreen ingest-pmc failed: {exc}", file=sys.stderr)
             return 2
         print(f"recorded {count} PMC-Patients records to {args.out}")
