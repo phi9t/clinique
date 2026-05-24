@@ -123,6 +123,73 @@ def test_load_silent_log_rejects_unknown_ground_truth_values(tmp_path):
         raise AssertionError("expected ground-truth enum rejection")
 
 
+def test_load_silent_log_rejects_inconsistent_safety_risk_labels(tmp_path):
+    path = tmp_path / "inconsistent_safety_silent_log.json"
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-SAFETY-MISSING-FLAG",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": ["rec-ae-001"],
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "safety_risk",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": false
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "ground_truth safety_risk requires safety_risk true" in str(exc)
+    else:
+        raise AssertionError("expected missing safety-risk flag rejection")
+
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-SAFETY-SPURIOUS-FLAG",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": ["rec-ae-001"],
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "false_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": true
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "safety_risk true requires ground_truth safety_risk" in str(exc)
+    else:
+        raise AssertionError("expected spurious safety-risk flag rejection")
+
+
 def test_load_silent_log_rejects_unknown_query_categories(tmp_path):
     path = tmp_path / "unknown_query_category_silent_log.json"
     path.write_text(

@@ -41,6 +41,12 @@ class SilentLogEntry:
         agent_evidence = tuple(raw.get("agent_evidence", []))
         if not agent_evidence:
             raise ValueError("silent recommendations require evidence")
+        ground_truth = _require_one_of("ground_truth", raw["ground_truth"], ALLOWED_GROUND_TRUTH)
+        safety_risk = _require_bool("safety_risk", raw["safety_risk"])
+        _validate_safety_ground_truth_consistency(
+            ground_truth=ground_truth,
+            safety_risk=safety_risk,
+        )
         return cls(
             recommendation_id=raw["recommendation_id"],
             logged_at=logged_at,
@@ -58,13 +64,13 @@ class SilentLogEntry:
             agent_evidence=agent_evidence,
             human_action=raw["human_action"],
             human_action_at=human_action_at,
-            ground_truth=_require_one_of("ground_truth", raw["ground_truth"], ALLOWED_GROUND_TRUTH),
+            ground_truth=ground_truth,
             reviewer_id=raw["reviewer_id"],
             affected_operations=_require_bool(
                 "affected_operations",
                 raw["affected_operations"],
             ),
-            safety_risk=_require_bool("safety_risk", raw["safety_risk"]),
+            safety_risk=safety_risk,
         )
 
 
@@ -146,6 +152,13 @@ def _validate_unique_recommendation_ids(entries: tuple[SilentLogEntry, ...]) -> 
         if entry.recommendation_id in seen:
             raise ValueError(f"duplicate silent recommendation id: {entry.recommendation_id}")
         seen.add(entry.recommendation_id)
+
+
+def _validate_safety_ground_truth_consistency(*, ground_truth: str, safety_risk: bool) -> None:
+    if ground_truth == "safety_risk" and not safety_risk:
+        raise ValueError("ground_truth safety_risk requires safety_risk true")
+    if safety_risk and ground_truth != "safety_risk":
+        raise ValueError("safety_risk true requires ground_truth safety_risk")
 
 
 def _require_bool(label: str, value: Any) -> bool:
