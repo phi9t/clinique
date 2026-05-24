@@ -62,7 +62,7 @@ Evidence:
   event-chronology validation, rule-history ID, chronology, kind, and parameter validation,
   detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight, silent-log evidence and recommendation-ID
-  enforcement and evaluation,
+  enforcement, signed timing metrics, and evaluation,
   controlled-rollout gate rate validation and evaluation, approved-export import, bundled
   workstream verification, and report serialization.
 

@@ -92,7 +92,7 @@ def evaluate_silent_log(
     reviewers = {entry.reviewer_id for entry in entries}
     evaluation_weeks = _evaluation_weeks(entries)
     hours_earlier = [
-        max((entry.human_action_at - entry.logged_at).total_seconds() / 3600, 0.0)
+        (entry.human_action_at - entry.logged_at).total_seconds() / 3600
         for entry in entries
         if entry.ground_truth == "true_positive"
     ]

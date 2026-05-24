@@ -60,6 +60,8 @@
       ground-truth labels, rejects duplicate recommendation IDs, and exits nonzero for stop
       criteria or uncontrolled false-positive burden; negative burden tolerances are rejected as
       invalid input.
+- [x] Silent-log evaluator preserves signed timing deltas so late recommendations are not
+      counted as neutral or early.
 - [x] Controlled-rollout gate evaluator exists, rejects incomplete gate packages, and validates
       typed numeric thresholds, bounded rate values, nonnegative safety-count endpoints, and
       human approval path from structured evidence.

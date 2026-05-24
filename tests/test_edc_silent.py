@@ -274,3 +274,30 @@ def test_evaluate_silent_log_normalizes_false_positives_by_reviewer_weeks():
 
     assert report.metrics["evaluation_weeks"] == 2
     assert report.metrics["false_positive_burden_per_reviewer_week"] == 0.25
+
+
+def test_evaluate_silent_log_preserves_late_recommendation_time_deltas():
+    entry = SilentLogEntry.from_json(
+        {
+            "recommendation_id": "SIL-LATE-001",
+            "logged_at": "2026-04-02T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": ["rec-ae-001"],
+            "human_action": "opened_query",
+            "human_action_at": "2026-04-01T00:00:00Z",
+            "ground_truth": "true_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": False,
+            "safety_risk": False,
+        }
+    )
+
+    report = evaluate_silent_log((entry,), false_positive_tolerance_per_reviewer_week=1.0)
+
+    assert report.metrics["median_hours_earlier"] == -24.0
