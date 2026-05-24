@@ -72,6 +72,7 @@ def load_silent_log(path: str | Path) -> tuple[SilentLogEntry, ...]:
     if not raw_entries:
         raise ValueError("silent log must contain at least one recommendation")
     entries = tuple(SilentLogEntry.from_json(raw) for raw in raw_entries)
+    _validate_unique_recommendation_ids(entries)
     impacted = [entry.recommendation_id for entry in entries if entry.affected_operations]
     if impacted:
         raise ValueError(f"silent recommendations affected operations: {', '.join(impacted)}")
@@ -133,6 +134,14 @@ def _evaluation_weeks(entries: tuple[SilentLogEntry, ...]) -> int:
     last = max(entry.logged_at for entry in entries)
     elapsed_weeks = (last - first).total_seconds() / (7 * 24 * 60 * 60)
     return max(ceil(elapsed_weeks), 1)
+
+
+def _validate_unique_recommendation_ids(entries: tuple[SilentLogEntry, ...]) -> None:
+    seen: set[str] = set()
+    for entry in entries:
+        if entry.recommendation_id in seen:
+            raise ValueError(f"duplicate silent recommendation id: {entry.recommendation_id}")
+        seen.add(entry.recommendation_id)
 
 
 def _require_bool(label: str, value: Any) -> bool:
