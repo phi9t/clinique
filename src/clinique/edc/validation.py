@@ -21,7 +21,7 @@ def run_validation(
     *,
     fixtures: str | Path,
     reports_dir: str | Path,
-    checklist_path: str | Path = ".workstreams/edc-query-validation/release-readiness-checklist.md",
+    checklist_path: str | Path = "docs/edc-query-validation/release-readiness-checklist.md",
     replayed_at: datetime = DEFAULT_REPLAY_AT,
 ) -> dict[str, object]:
     bundle = load_fixture_bundle(fixtures)
@@ -72,7 +72,7 @@ def verify_workstream(
     silent_log: str | Path,
     rollout_gate: str | Path,
     reports_dir: str | Path,
-    checklist_path: str | Path = ".workstreams/edc-query-validation/release-readiness-checklist.md",
+    checklist_path: str | Path = "docs/edc-query-validation/release-readiness-checklist.md",
     internal_export_manifest: str | Path | None = None,
     internal_labels: str | Path | None = None,
     internal_lock_issues: str | Path | None = None,

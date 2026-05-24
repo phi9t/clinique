@@ -27,12 +27,12 @@ Internal data must be read-only, PHI-governed, and screened for unblinded fields
 
 ## Machine-Checkable Preflight
 
-Use `.workstreams/edc-query-validation/internal-data-manifest.template.json` as the manifest
+Use `docs/edc-query-validation/internal-data-manifest.template.json` as the manifest
 contract. The manifest can be validated without reading PHI-bearing exports:
 
 ```bash
 uv run clinique edc-query preflight-internal-data \
-  --manifest .workstreams/edc-query-validation/internal-data-manifest.template.json
+  --manifest docs/edc-query-validation/internal-data-manifest.template.json
 ```
 
 The command requires exactly one each of `edc_snapshots`, `query_logs`, and `edit_check_history`.

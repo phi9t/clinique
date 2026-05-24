@@ -7,7 +7,7 @@ from clinique.edc.validation import verify_workstream
 
 def test_audit_release_checklist_derives_open_items_by_section():
     audit = audit_release_checklist(
-        Path(".workstreams/edc-query-validation/release-readiness-checklist.md")
+        Path("docs/edc-query-validation/release-readiness-checklist.md")
     )
 
     assert audit.complete_sections == ("Synthetic Validation",)
@@ -41,7 +41,7 @@ def test_audit_release_checklist_marks_goal_complete_when_all_items_checked(tmp_
 
 
 def test_annotation_manual_uses_study_and_site_scoped_annotation_unit():
-    manual = Path(".workstreams/edc-query-validation/annotation-manual.md").read_text()
+    manual = Path("docs/edc-query-validation/annotation-manual.md").read_text()
 
     assert "(snapshot_id, study_id, site_id, subject_id, form, field)" in manual
 
@@ -62,7 +62,7 @@ def test_verify_workstream_blocks_completion_on_local_gate_failures(tmp_path):
 
     evidence = verify_workstream(
         fixtures="tests/fixtures/edc_query",
-        manifest=".workstreams/edc-query-validation/internal-data-manifest.template.json",
+        manifest="docs/edc-query-validation/internal-data-manifest.template.json",
         silent_log="tests/fixtures/edc_query/silent_log.json",
         rollout_gate="tests/fixtures/edc_query/controlled_rollout_gate.json",
         reports_dir=tmp_path / "reports",
@@ -120,7 +120,7 @@ def test_verify_workstream_blocks_completion_without_internal_export_evidence(tm
 
     evidence = verify_workstream(
         fixtures="tests/fixtures/edc_query",
-        manifest=".workstreams/edc-query-validation/internal-data-manifest.template.json",
+        manifest="docs/edc-query-validation/internal-data-manifest.template.json",
         silent_log=silent_log,
         rollout_gate="tests/fixtures/edc_query/controlled_rollout_gate.json",
         reports_dir=tmp_path / "reports",
@@ -178,7 +178,7 @@ def test_verify_workstream_blocks_completion_on_synthetic_internal_export_eviden
 
     evidence = verify_workstream(
         fixtures="tests/fixtures/edc_query",
-        manifest=".workstreams/edc-query-validation/internal-data-manifest.template.json",
+        manifest="docs/edc-query-validation/internal-data-manifest.template.json",
         silent_log=silent_log,
         rollout_gate="tests/fixtures/edc_query/controlled_rollout_gate.json",
         reports_dir=tmp_path / "reports",
@@ -259,7 +259,7 @@ def test_verify_workstream_blocks_completion_on_unverified_internal_export_kind(
 
     evidence = verify_workstream(
         fixtures="tests/fixtures/edc_query",
-        manifest=".workstreams/edc-query-validation/internal-data-manifest.template.json",
+        manifest="docs/edc-query-validation/internal-data-manifest.template.json",
         silent_log=silent_log,
         rollout_gate="tests/fixtures/edc_query/controlled_rollout_gate.json",
         reports_dir=tmp_path / "reports",

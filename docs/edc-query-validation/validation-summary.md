@@ -17,11 +17,11 @@ Evidence:
   snapshots with leakage checks true.
 - `reports/edc-query/audit-summary.json` records local synthetic validation as complete and
   derives the remaining blocked requirements from
-  `.workstreams/edc-query-validation/release-readiness-checklist.md`.
+  `docs/edc-query-validation/release-readiness-checklist.md`.
 - `uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir
   reports/edc-query` regenerates the reports and audit summary from source fixtures.
 - `uv run clinique edc-query preflight-internal-data --manifest
-  .workstreams/edc-query-validation/internal-data-manifest.template.json --output
+  docs/edc-query-validation/internal-data-manifest.template.json --output
   reports/edc-query/internal-preflight-template.json` validates the internal-data manifest
   contract without reading PHI-bearing exports, requires the manifest to be a top-level JSON
   object, checks top-level manifest version and timezone-aware `generated_at` metadata, rejects
@@ -62,7 +62,7 @@ Evidence:
   discrepancies or higher manual review time to pass, and rejects rollout manifests with
   randomization units outside the design-supported set.
 - `uv run clinique edc-query verify-workstream --fixtures tests/fixtures/edc_query --manifest
-  .workstreams/edc-query-validation/internal-data-manifest.template.json --silent-log
+  docs/edc-query-validation/internal-data-manifest.template.json --silent-log
   tests/fixtures/edc_query/silent_log.json --rollout-gate
   tests/fixtures/edc_query/controlled_rollout_gate.json --reports-dir reports/edc-query
   --internal-export-manifest tests/fixtures/edc_query/internal_export_manifest.json

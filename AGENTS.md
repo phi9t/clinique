@@ -3,11 +3,12 @@
 ## Project Structure & Module Organization
 
 `src/clinique/` contains the Python package. Major modules are organized by domain:
-`estimand/`, `power/`, `conformance/`, `dryrun/`, `programming/`, `substrate/`, and `io/`.
+`estimand/`, `power/`, `conformance/`, `dryrun/`, `programming/`, `substrate/`, `edc/`, and `io/`.
 The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 
-`tests/` holds the pytest suite, with fixtures in `tests/fixtures/`. RFCs and design
-notes live in `docs/rfcs/`. R-backed power tooling is isolated under `docker/r-engine/`.
+`tests/` holds the pytest suite, with fixtures in `tests/fixtures/`. Design docs live in
+`docs/design/`; EDC governance artifacts in `docs/edc-query-validation/`. R-backed power tooling
+is isolated under `docker/r-engine/`.
 
 ## Build, Test, and Development Commands
 
@@ -46,9 +47,9 @@ Git history uses concise Conventional Commit-style subjects, for example
 `feat(rfc-0004): CDISC conformance triage with no-fabrication drafting` and
 `docs: add RFC-0006 validation & evaluation framework`.
 
-Use imperative, scoped commits when possible: `feat(rfc-0003): ...`, `fix: ...`,
+Use imperative, scoped commits when possible: `feat(edc): ...`, `fix: ...`,
 `docs: ...`, or `test: ...`. Pull requests should summarize the change, link the relevant
-RFC or issue, list validation commands run, and note Docker/R implications when affected.
+design doc or issue, list validation commands run, and note Docker/R implications when affected.
 
 ## Security & Configuration Tips
 

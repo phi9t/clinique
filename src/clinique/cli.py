@@ -136,7 +136,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print("clinique — biostatistician agent suite.")
-    print("Design: docs/rfcs/  |  Workstreams: .workstreams/")
+    print("Design: docs/design/  |  Index: docs/README.md")
     return 0
 
 
