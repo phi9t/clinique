@@ -78,8 +78,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--out",
         default=None,
         help=(
-            "output directory for prescreen explorer JSON "
-            "(default: explorer/public/data/prescreen)"
+            "output directory for prescreen explorer JSON (default: explorer/public/data/prescreen)"
         ),
     )
     return parser

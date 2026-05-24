@@ -58,9 +58,7 @@ DOC_SOURCE_TYPES = frozenset({"condition", "medication", "observation", "procedu
 PATIENT_SOURCES = frozenset({SYNTHEA, PMC_PATIENTS, MIMIC_IV_DEMO})
 
 CRITERION_TYPES = frozenset({"inclusion", "exclusion"})
-PREDICTIONS = frozenset(
-    {"met", "not_met", "unknown", "not_applicable", "conflicting_evidence"}
-)
+PREDICTIONS = frozenset({"met", "not_met", "unknown", "not_applicable", "conflicting_evidence"})
 RECOMMENDATIONS = frozenset({"likely_ineligible", "needs_review", "potentially_eligible"})
 
 
@@ -69,6 +67,7 @@ class CriterionJudgment:
     criterion_id: str
     criterion_type: str
     prediction: str
+
 
 # ClinicalTrials.gov age strings look like "18 Years", "6 Months", "2 Weeks". Convert to years so
 # numeric criteria (age >= 18) can compare against a single unit downstream.
