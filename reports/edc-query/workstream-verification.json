@@ -1,0 +1,60 @@
+{
+  "blocked_requirements": [
+    "internal_data_validation__internal_edc_snapshots_approved_and_connected",
+    "internal_data_validation__internal_query_logs_approved_and_connected",
+    "internal_data_validation__internal_edit_check_history_approved_and_connected",
+    "internal_data_validation__internal_l1_offline_report_generated",
+    "internal_data_validation__internal_l2_retrospective_replay_report_generated",
+    "prospective_validation__silent_prospective_protocol_approved",
+    "prospective_validation__silent_prospective_run_completed",
+    "prospective_validation__controlled_rollout_gate_approved",
+    "prospective_validation__human_approval_path_validated"
+  ],
+  "gates": {
+    "controlled_rollout": {
+      "human_approval_path_validated": true,
+      "primary_endpoints_met": true,
+      "rollout_gate_passed": true,
+      "safety_endpoints_clear": true
+    },
+    "internal_preflight": {
+      "incomplete_sources": [],
+      "missing_required_sources": [],
+      "non_read_only_sources": [],
+      "ok": true,
+      "present_sources": [
+        "edc_snapshots",
+        "edit_check_history",
+        "query_logs"
+      ],
+      "unblinded_sources": []
+    },
+    "offline": {
+      "duplicate_query_burden_measured": true,
+      "evidence_supported": true,
+      "false_query_rate_controlled": true,
+      "leakage_checks_passed": true,
+      "no_write_back": true
+    },
+    "retrospective": {
+      "leakage_checks_passed": true,
+      "no_write_back": true,
+      "timestamped_replay": true
+    },
+    "silent_log": {
+      "false_positive_burden_controlled": true,
+      "no_operational_impact": true,
+      "stop_criteria_triggered": true
+    }
+  },
+  "goal_complete": false,
+  "local_reports_complete": true,
+  "reports": {
+    "audit_summary": "reports/edc-query/audit-summary.json",
+    "controlled_rollout_gate": "reports/edc-query/controlled-rollout-gate.json",
+    "internal_preflight": "reports/edc-query/internal-preflight-template.json",
+    "offline_benchmark": "reports/edc-query/offline-benchmark.json",
+    "retrospective_replay": "reports/edc-query/retrospective-replay.json",
+    "silent_log_evaluation": "reports/edc-query/silent-log-evaluation.json"
+  }
+}

@@ -290,3 +290,40 @@ def test_edc_query_evaluate_rollout_gate_returns_nonzero_when_gate_fails(tmp_pat
     )
 
     assert exit_code == 4
+
+
+def test_edc_query_verify_workstream_writes_consolidated_evidence(tmp_path):
+    reports_dir = tmp_path / "reports"
+
+    exit_code = main(
+        [
+            "edc-query",
+            "verify-workstream",
+            "--fixtures",
+            "tests/fixtures/edc_query",
+            "--manifest",
+            ".workstreams/edc-query-validation/internal-data-manifest.template.json",
+            "--silent-log",
+            "tests/fixtures/edc_query/silent_log.json",
+            "--rollout-gate",
+            "tests/fixtures/edc_query/controlled_rollout_gate.json",
+            "--reports-dir",
+            str(reports_dir),
+        ]
+    )
+
+    assert exit_code == 5
+    evidence = json.loads((reports_dir / "workstream-verification.json").read_text())
+    assert evidence["local_reports_complete"] is True
+    assert evidence["goal_complete"] is False
+    assert set(evidence["reports"]) == {
+        "audit_summary",
+        "controlled_rollout_gate",
+        "internal_preflight",
+        "offline_benchmark",
+        "retrospective_replay",
+        "silent_log_evaluation",
+    }
+    assert "internal_data_validation__internal_edc_snapshots_approved_and_connected" in (
+        evidence["blocked_requirements"]
+    )

@@ -28,9 +28,15 @@ Evidence:
   tests/fixtures/edc_query/controlled_rollout_gate.json --output
   reports/edc-query/controlled-rollout-gate.json` validates the controlled-rollout gate mechanics
   against structured synthetic evidence.
+- `uv run clinique edc-query verify-workstream --fixtures tests/fixtures/edc_query --manifest
+  .workstreams/edc-query-validation/internal-data-manifest.template.json --silent-log
+  tests/fixtures/edc_query/silent_log.json --rollout-gate
+  tests/fixtures/edc_query/controlled_rollout_gate.json --reports-dir reports/edc-query`
+  regenerates all local reports and writes `reports/edc-query/workstream-verification.json`.
+  It exits nonzero while real internal/prospective blockers remain.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
   exposure, detection, metrics, CLI execution, internal-data preflight, silent-log evaluation,
-  controlled-rollout gate evaluation, and report serialization.
+  controlled-rollout gate evaluation, bundled workstream verification, and report serialization.
 
 ## Not Yet Proven
 

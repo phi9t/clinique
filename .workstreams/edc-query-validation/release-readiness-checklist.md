@@ -16,6 +16,8 @@
 - [x] Silent-log evaluator exists and validates silent-mode logs without affecting operations.
 - [x] Controlled-rollout gate evaluator exists and validates thresholds, safety endpoints, and
       human approval path from structured evidence.
+- [x] Bundled workstream verifier regenerates all local reports and consolidates remaining
+      blockers in `reports/edc-query/workstream-verification.json`.
 
 ## Internal Data Validation
 
