@@ -22,6 +22,8 @@ ALLOWED_HUMAN_RESOLUTIONS = {
     "waived",
 }
 ALLOWED_QUERY_LOG_STATUSES = {"open", "closed"}
+ALLOWED_RULE_KINDS = {"required_field", "date_order", "future_date"}
+ALLOWED_DATE_ORDER_OPERATORS = {"<="}
 
 
 def parse_timestamp(value: str | None) -> datetime | None:
@@ -138,9 +140,20 @@ class EditCheckRule:
         retired_at = parse_timestamp(raw.get("retired_at"))
         if retired_at is not None and retired_at < effective_at:
             raise ValueError("rule retired_at cannot be before effective_at")
+        kind = require_one_of("rule kind", raw["kind"], ALLOWED_RULE_KINDS)
+        compare_to_related = raw.get("compare_to_related")
+        operator = raw.get("operator")
+        if kind == "date_order":
+            if not compare_to_related:
+                raise ValueError("date_order rules require compare_to_related")
+            operator = require_one_of(
+                "date_order operator",
+                operator,
+                ALLOWED_DATE_ORDER_OPERATORS,
+            )
         return cls(
             rule_id=raw["rule_id"],
-            kind=raw["kind"],
+            kind=kind,
             form=raw["form"],
             field=raw["field"],
             query_category=require_one_of(
@@ -151,8 +164,8 @@ class EditCheckRule:
             message=raw["message"],
             effective_at=effective_at,
             retired_at=retired_at,
-            compare_to_related=raw.get("compare_to_related"),
-            operator=raw.get("operator"),
+            compare_to_related=compare_to_related,
+            operator=operator,
         )
 
 

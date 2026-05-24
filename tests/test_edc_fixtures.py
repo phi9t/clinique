@@ -338,6 +338,62 @@ def test_fixture_bundle_rejects_duplicate_rule_ids(tmp_path):
         raise AssertionError("expected duplicate rule id rejection")
 
 
+def test_fixture_bundle_rejects_unknown_rule_kinds(tmp_path):
+    fixture_dir = tmp_path / "unknown_rule_kind"
+    _write_minimal_fixture_dir(
+        fixture_dir,
+        rules=[
+            {
+                "rule_id": "RULE-BAD",
+                "kind": "unknown_kind",
+                "form": "AE",
+                "field": "term",
+                "query_category": "missing",
+                "message": "AE term is required.",
+                "effective_at": "2026-03-01T00:00:00Z",
+            }
+        ],
+    )
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "rule kind must be one of" in str(exc)
+    else:
+        raise AssertionError("expected unknown rule kind rejection")
+
+
+def test_fixture_bundle_rejects_incomplete_date_order_rules(tmp_path):
+    for field_name, value, expected_error in [
+        ("compare_to_related", None, "date_order rules require compare_to_related"),
+        ("operator", ">", "date_order operator must be one of"),
+    ]:
+        fixture_dir = tmp_path / field_name
+        rule = {
+            "rule_id": "RULE-BAD",
+            "kind": "date_order",
+            "form": "ConMeds",
+            "field": "start_date",
+            "compare_to_related": "ae_onset_date",
+            "operator": "<=",
+            "query_category": "inconsistent",
+            "message": "ConMed start date must be on or before related AE onset date.",
+            "effective_at": "2026-03-01T00:00:00Z",
+        }
+        if value is None:
+            rule.pop(field_name)
+        else:
+            rule[field_name] = value
+        _write_minimal_fixture_dir(fixture_dir, rules=[rule])
+
+        try:
+            load_fixture_bundle(fixture_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected incomplete date-order rule rejection")
+
+
 def test_fixture_bundle_rejects_query_logs_closed_before_opened(tmp_path):
     fixture_dir = tmp_path / "bad_query_log_chronology"
     _write_minimal_fixture_dir(
