@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from math import ceil
 from dataclasses import dataclass
 from pathlib import Path
 from statistics import median
@@ -75,12 +76,13 @@ def evaluate_silent_log(
     false_positives = sum(1 for entry in entries if entry.ground_truth == "false_positive")
     safety_risks = sum(1 for entry in entries if entry.safety_risk)
     reviewers = {entry.reviewer_id for entry in entries}
+    evaluation_weeks = _evaluation_weeks(entries)
     hours_earlier = [
         max((entry.human_action_at - entry.logged_at).total_seconds() / 3600, 0.0)
         for entry in entries
         if entry.ground_truth == "true_positive"
     ]
-    burden = false_positives / max(len(reviewers), 1)
+    burden = false_positives / max(len(reviewers) * evaluation_weeks, 1)
     no_operational_impact = all(not entry.affected_operations for entry in entries)
     false_positive_burden_controlled = (
         burden <= false_positive_tolerance_per_reviewer_week
@@ -99,6 +101,7 @@ def evaluate_silent_log(
             "true_positives": true_positives,
             "false_positives": false_positives,
             "safety_risks": safety_risks,
+            "evaluation_weeks": evaluation_weeks,
             "median_hours_earlier": median(hours_earlier) if hours_earlier else 0.0,
             "false_positive_burden_per_reviewer_week": burden,
         },
@@ -108,3 +111,12 @@ def evaluate_silent_log(
             "stop_criteria_triggered": stop_criteria_triggered,
         },
     )
+
+
+def _evaluation_weeks(entries: tuple[SilentLogEntry, ...]) -> int:
+    if not entries:
+        return 1
+    first = min(entry.logged_at for entry in entries)
+    last = max(entry.logged_at for entry in entries)
+    elapsed_weeks = (last - first).total_seconds() / (7 * 24 * 60 * 60)
+    return max(ceil(elapsed_weeks), 1)

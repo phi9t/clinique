@@ -16,6 +16,7 @@
     "reviewer_count": 2
   },
   "metrics": {
+    "evaluation_weeks": 1,
     "false_positive_burden_per_reviewer_week": 0.5,
     "false_positives": 1,
     "median_hours_earlier": 24.0,
