@@ -15,10 +15,13 @@ The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 
 - `uv sync`: create/update the virtual environment from `uv.lock` and install dev tools.
 - `uv sync --group temporal`: optional Temporal.io SDK + Pydantic for durable prescreen workflows (included in CI).
+- `uv run pre-commit install`: install git hooks (ruff import/style/format + full pytest incl. hermetic temporal E2E).
+- `uv run pre-commit run --all-files`: run hooks manually without committing.
 - `uv run pytest`: run the full test suite (294 tests with temporal group; CI uses `--group temporal`).
 - `uv run pytest tests/test_power_engines.py`: run one focused test module.
-- `uv run ruff check src tests`: lint Python source and tests.
-- `uv run ruff format src tests`: format Python files using project Ruff settings.
+- `uv run ruff check .`: lint Python source and tests.
+- `uv run ruff format .`: format Python files using project Ruff settings.
+- `CLINIQUE_REQUIRE_TEMPORAL=1`: fail (don't skip) when Temporal CLI/server or workstream fixtures are missing; set in CI and pre-commit.
 - `docker build -t clinique-r-engine:0.1.0 docker/r-engine`: build the pinned R engine image.
 
 Docker-backed tests skip when the Docker daemon is unavailable; start Docker Desktop or
@@ -26,8 +29,13 @@ Docker-backed tests skip when the Docker daemon is unavailable; start Docker Des
 
 Temporal durable prescreen (optional; see `docs/design/temporal-prescreen.md` — includes ML researcher / MLsys walkthrough):
 
+Pre-commit hooks run the full pytest suite (embedded `WorkflowEnvironment` + session dev-server E2E).
+Install the [Temporal CLI](https://docs.temporal.io/cli) (`brew install temporal`) or keep a dev
+server listening on `:7233`.
+
 ```bash
-temporal server start-dev                              # background
+uv run pre-commit install
+temporal server start-dev                              # optional if CLI installed; harness starts it
 uv sync --group temporal
 uv run clinique prescreen worker                       # background
 uv run pytest tests/test_durable_prescreen.py -q       # embedded test server

@@ -44,6 +44,8 @@ jobs:
       # Embedded WorkflowEnvironment tests + session-scoped dev-server E2E
       # (rpact Docker cross-check tests skip when the daemon is unreachable).
       - name: Test (pytest)
+        env:
+          CLINIQUE_REQUIRE_TEMPORAL: "1"
         run: uv run pytest
 
       - name: Build explorer (GitHub Pages base)

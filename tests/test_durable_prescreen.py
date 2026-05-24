@@ -16,8 +16,6 @@ from temporalio.testing import ActivityEnvironment, WorkflowEnvironment
 from clinique.durable.activities import ALL_ACTIVITIES
 from clinique.durable.activities.prescreen import (
     assert_evidence_provenance_activity as gate_activity,
-)
-from clinique.durable.activities.prescreen import (
     atomize_trial,
     evaluate_criterion,
 )

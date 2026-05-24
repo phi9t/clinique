@@ -2,12 +2,12 @@
 
 from clinique.estimand import (
     check_consistency,
+    checker as checker_mod,
     consistent_bundle,
     mutate_population,
     mutate_timepoint,
     mutate_unbacked_shell,
 )
-from clinique.estimand import checker as checker_mod
 from clinique.estimand.graph import ArtifactGraph
 
 

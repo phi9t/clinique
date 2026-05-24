@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import shutil
 import uuid
 from pathlib import Path
 
@@ -19,8 +18,6 @@ from temporalio.testing import WorkflowEnvironment
 from clinique.durable.activities import ALL_ACTIVITIES
 from clinique.durable.activities.prescreen import (
     assert_evidence_provenance_activity as gate_activity,
-)
-from clinique.durable.activities.prescreen import (
     atomize_trial,
 )
 from clinique.durable.client import connect_client, execute_batch_eval, execute_screen
@@ -38,15 +35,10 @@ from clinique.durable.workflows.eval import BatchEvalWorkflow
 from clinique.durable.workflows.prescreen import ScreenPatientWorkflow
 from clinique.prescreen.orchestrator import PrescreenOrchestrator, packet_fingerprint
 from clinique.substrate.provenance import ProvenanceLedger
-from durable_e2e_harness import port_open, run_with_worker
+from durable_e2e_harness import run_with_worker, skip_or_fail
 
 TRIALS = Path("tests/fixtures/prescreen/trials.jsonl")
 CASES = Path(".workstream/prescreen-copilot/l0_cases.jsonl")
-
-
-def _require_temporal_cli() -> None:
-    if not shutil.which("temporal") and not port_open():
-        pytest.skip("Temporal CLI not available and no server on :7233")
 
 
 def _screen_input(trial, corpus) -> ScreenPatientInput:
@@ -142,7 +134,6 @@ async def test_batch_eval_collects_missing_patient_errors(tmp_path, synthea_pati
 async def test_real_dev_server_screen_workflow(
     temporal_dev_server_session, prescreen_worker_session, trial_and_corpus
 ):
-    _require_temporal_cli()
     trial, corpus = trial_and_corpus
     sync_packet = PrescreenOrchestrator().screen(trial, corpus)
     client = await connect_client(DEFAULT_HOST)
@@ -161,7 +152,6 @@ async def test_real_dev_server_screen_workflow(
 async def test_real_dev_server_screen_with_ledger(
     temporal_dev_server_session, prescreen_worker_session, tmp_path, trial_and_corpus
 ):
-    _require_temporal_cli()
     trial, corpus = trial_and_corpus
     ledger_path = tmp_path / "prescreen-ledger.jsonl"
     client = await connect_client(DEFAULT_HOST)
@@ -186,8 +176,7 @@ async def test_real_dev_server_batch_eval(
     temporal_dev_server_session, prescreen_worker_session, tmp_path, synthea_patients_jsonl
 ):
     if not CASES.is_file():
-        pytest.skip("workstream l0_cases.jsonl not present")
-    _require_temporal_cli()
+        skip_or_fail("workstream l0_cases.jsonl not present")
     client = await connect_client(DEFAULT_HOST)
     report = await execute_batch_eval(
         client,
@@ -210,7 +199,6 @@ async def test_real_dev_server_batch_eval(
 async def test_real_dev_server_gate_failure_non_retryable(
     temporal_dev_server_session, trial_and_corpus
 ):
-    _require_temporal_cli()
     trial, corpus = trial_and_corpus
     task_queue = f"prescreen-e2e-fail-{uuid.uuid4().hex[:8]}"
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import concurrent.futures
 import contextlib
 import os
+import shutil
 import signal
 import socket
 import subprocess
@@ -15,9 +16,23 @@ from collections.abc import Awaitable, Callable, Iterator
 from pathlib import Path
 from typing import Any
 
+import pytest
 from temporalio.worker import Worker
 
 from clinique.durable.config import DEFAULT_HOST
+
+_TEMPORAL_UNAVAILABLE = "Temporal CLI not available and no server on :7233"
+
+
+def skip_or_fail(reason: str) -> None:
+    """Skip in ad-hoc runs; fail when CLINIQUE_REQUIRE_TEMPORAL=1 (pre-commit / CI strict)."""
+    if os.environ.get("CLINIQUE_REQUIRE_TEMPORAL") == "1":
+        pytest.fail(reason)
+    pytest.skip(reason)
+
+
+def temporal_available() -> bool:
+    return bool(shutil.which("temporal")) or port_open()
 
 
 def _host_port(host: str = DEFAULT_HOST) -> tuple[str, int]:
@@ -51,6 +66,8 @@ def temporal_dev_server(*, log_dir: Path | None = None) -> Iterator[subprocess.P
     if port_open():
         yield None
         return
+    if not shutil.which("temporal"):
+        skip_or_fail(_TEMPORAL_UNAVAILABLE)
     log_dir = log_dir or Path("/tmp/clinique-temporal-e2e")
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / "temporal-dev.log"
