@@ -3,7 +3,8 @@
 ## Project Structure & Module Organization
 
 `src/clinique/` contains the Python package. Major modules are organized by domain:
-`estimand/`, `power/`, `conformance/`, `dryrun/`, `programming/`, `substrate/`, `edc/`, and `io/`.
+`estimand/`, `power/`, `conformance/`, `dryrun/`, `programming/`, `substrate/`, `edc/`,
+`prescreen/`, and `io/`.
 The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 
 `tests/` holds the pytest suite, with fixtures in `tests/fixtures/`. Design docs live in
