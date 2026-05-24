@@ -114,11 +114,13 @@ class EdcSnapshot:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> "EdcSnapshot":
+        snapshot_at = require_timestamp("snapshot_at", raw["snapshot_at"])
         records = tuple(EdcRecord.from_json(record) for record in raw.get("records", []))
         validate_unique_snapshot_record_keys(raw["snapshot_id"], records)
+        validate_snapshot_record_timestamps(raw["snapshot_id"], snapshot_at, records)
         return cls(
             snapshot_id=raw["snapshot_id"],
-            snapshot_at=require_timestamp("snapshot_at", raw["snapshot_at"]),
+            snapshot_at=snapshot_at,
             contains_phi=require_bool("contains_phi", raw.get("contains_phi", False)),
             contains_unblinded=require_bool(
                 "contains_unblinded",
@@ -348,6 +350,19 @@ def validate_unique_snapshot_record_keys(snapshot_id: str, records: tuple[EdcRec
         if key in seen:
             raise ValueError(f"duplicate snapshot record key in {snapshot_id}: {key}")
         seen.add(key)
+
+
+def validate_snapshot_record_timestamps(
+    snapshot_id: str,
+    snapshot_at: datetime,
+    records: tuple[EdcRecord, ...],
+) -> None:
+    for record in records:
+        if record.collected_at > snapshot_at:
+            raise ValueError(
+                "record collected_at cannot be after snapshot_at "
+                f"in {snapshot_id}: {record.record_id}"
+            )
 
 
 def validate_unique_snapshot_ids(snapshots: tuple[EdcSnapshot, ...]) -> None:

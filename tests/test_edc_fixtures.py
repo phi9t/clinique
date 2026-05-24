@@ -331,6 +331,45 @@ def test_fixture_bundle_rejects_missing_record_timestamps(tmp_path):
         raise AssertionError("expected missing record timestamp rejection")
 
 
+def test_fixture_bundle_rejects_records_collected_after_snapshot(tmp_path):
+    fixture_dir = tmp_path / "future_record_in_snapshot"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-01T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": [
+              {
+                "record_id": "REC-FUTURE",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "Headache",
+                "collected_at": "2026-03-02T00:00:00Z"
+              }
+            ]
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "query_logs.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "record collected_at cannot be after snapshot_at" in str(exc)
+    else:
+        raise AssertionError("expected future record timestamp rejection")
+
+
 def test_fixture_bundle_rejects_missing_rule_effective_timestamps(tmp_path):
     fixture_dir = tmp_path / "missing_rule_time"
     _write_minimal_fixture_dir(

@@ -11,6 +11,8 @@
 - [x] Fixture loaders require typed privacy, blinding, and adjudication-label booleans plus
       schema-defined query category, status, and resolution enums.
 - [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.
+- [x] Fixture and approved-export loaders reject records with `collected_at` after the containing
+      snapshot timestamp.
 - [x] Query-log and label loaders reject impossible open/close timestamp chronology.
 - [x] Query-log loaders reject status/timestamp mismatches for open and closed queries.
 - [x] Query-log loaders use a query-log-specific resolution enum and reject open/closed

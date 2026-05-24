@@ -51,14 +51,15 @@ Evidence:
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
   exposure, duplicate-query timestamp gating, study/site matching, and query-log provenance,
   typed privacy/blinding and label booleans, schema enum enforcement for query categories,
-  query-log status, and human resolutions, required replay timestamps, query/label open-close
-  chronology, query-log status/timestamp consistency, query-log status/resolution consistency,
-  label no-query semantic consistency, snapshot/study/site-scoped task and workflow metric
-  attribution, evidence-availability guards for true detections, duplicate snapshot ID,
-  unknown snapshot reference, label/query snapshot-record reference validation, source-record,
-  query-log ID, and adjudication-label rejection, duplicate database-lock issue ID rejection,
-  database-lock issue record-reference validation, rule-history ID, chronology, kind, and
-  parameter validation, detection, metrics, CLI execution,
+  query-log status, and human resolutions, required replay timestamps, record-vs-snapshot
+  chronology, query/label open-close chronology, query-log status/timestamp consistency,
+  query-log status/resolution consistency, label no-query semantic consistency,
+  snapshot/study/site-scoped task and workflow metric attribution, evidence-availability guards
+  for true detections, duplicate snapshot ID, unknown snapshot reference, label/query
+  snapshot-record reference validation, source-record, query-log ID, and adjudication-label
+  rejection, duplicate database-lock issue ID rejection, database-lock issue record-reference
+  validation, rule-history ID, chronology, kind, and parameter validation, detection, metrics,
+  CLI execution,
   annotation-manual alignment, internal-data preflight, silent-log evaluation,
   controlled-rollout gate evaluation, approved-export import, bundled workstream verification,
   and report serialization.

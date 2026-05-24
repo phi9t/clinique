@@ -98,6 +98,49 @@ def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path
         raise AssertionError("expected unblinded snapshot rejection")
 
 
+def test_load_internal_export_bundle_rejects_records_collected_after_snapshot(tmp_path):
+    manifest = _write_manifest(
+        tmp_path,
+        snapshot_payload=(
+            """
+            [
+              {
+                "snapshot_id": "snap",
+                "snapshot_at": "2026-03-01T00:00:00Z",
+                "contains_phi": false,
+                "contains_unblinded": false,
+                "records": [
+                  {
+                    "record_id": "REC-FUTURE",
+                    "study_id": "STUDY-EDC-001",
+                    "site_id": "SITE-01",
+                    "subject_id": "SUBJ-001",
+                    "form": "AE",
+                    "field": "term",
+                    "value": "Headache",
+                    "collected_at": "2026-03-02T00:00:00Z"
+                  }
+                ]
+              }
+            ]
+            """
+        ),
+    )
+    labels_path = tmp_path / "future_record_labels.json"
+    labels_path.write_text("[]")
+    (tmp_path / "query_logs" / "query_logs.json").write_text("[]")
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=labels_path,
+        )
+    except ValueError as exc:
+        assert "record collected_at cannot be after snapshot_at" in str(exc)
+    else:
+        raise AssertionError("expected future record timestamp rejection")
+
+
 def test_load_internal_export_bundle_rejects_duplicate_snapshot_ids(tmp_path):
     manifest = _write_manifest(
         tmp_path,
