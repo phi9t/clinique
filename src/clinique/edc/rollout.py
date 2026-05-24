@@ -52,14 +52,23 @@ class RolloutGate:
         _require_keys("threshold", raw["thresholds"], REQUIRED_THRESHOLD_KEYS)
         _require_keys("observed", raw["observed"], REQUIRED_OBSERVED_KEYS)
         _require_keys("safety", raw["safety"], REQUIRED_SAFETY_KEYS)
+        human_approval_path_validated = _require_bool(
+            "human_approval_path_validated",
+            raw["human_approval_path_validated"],
+        )
+        safety = dict(raw["safety"])
+        safety["excessive_reviewer_burden"] = _require_bool(
+            "excessive_reviewer_burden",
+            safety["excessive_reviewer_burden"],
+        )
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
             randomization_unit=raw["randomization_unit"],
-            human_approval_path_validated=bool(raw["human_approval_path_validated"]),
+            human_approval_path_validated=human_approval_path_validated,
             thresholds={key: float(value) for key, value in raw["thresholds"].items()},
             observed={key: float(value) for key, value in raw["observed"].items()},
-            safety=dict(raw["safety"]),
+            safety=safety,
         )
 
 
@@ -69,6 +78,12 @@ def _require_keys(label: str, value: Any, required: set[str]) -> None:
     missing = sorted(required - set(value))
     if missing:
         raise ValueError(f"missing {label} keys: {', '.join(missing)}")
+
+
+def _require_bool(label: str, value: Any) -> bool:
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be a boolean")
+    return value
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
