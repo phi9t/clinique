@@ -39,6 +39,7 @@ dev = [
 ]
 temporal = [
     "temporalio>=1.9",
+    "pydantic>=2",
     "pytest-asyncio>=0.24",
 ]
 

@@ -14,7 +14,7 @@ The CLI entry point is `src/clinique/cli.py`, exposed as `clinique`.
 ## Build, Test, and Development Commands
 
 - `uv sync`: create/update the virtual environment from `uv.lock` and install dev tools.
-- `uv sync --group temporal`: optional Temporal.io SDK for durable prescreen workflows.
+- `uv sync --group temporal`: optional Temporal.io SDK + Pydantic for durable prescreen workflows.
 - `uv run pytest`: run the full test suite.
 - `uv run pytest tests/test_power_engines.py`: run one focused test module.
 - `uv run ruff check src tests`: lint Python source and tests.

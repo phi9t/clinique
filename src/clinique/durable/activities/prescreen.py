@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-from clinique.durable.serde import (
-    criterion_from_dict,
-    judgment_from_dict,
-    packet_from_dict,
-    packet_to_dict,
-    trial_from_dict,
+from clinique.durable.models import (
+    BuildPacketInput,
+    CriterionJudgmentModel,
+    CriterionModel,
+    PatientCorpusModel,
+    PrescreeningPacketModel,
+    ResolvedCase,
+    ResolveScreenCaseInput,
+    TrialModel,
 )
 from clinique.prescreen.aggregator import aggregate
 from clinique.prescreen.atomizer import ReferenceAtomizer
@@ -21,60 +22,58 @@ from clinique.prescreen.judge import RuleJudge
 from clinique.prescreen.orchestrator import default_prescreen_tools, packet_fingerprint
 from clinique.prescreen.retrieval import retrieve
 from clinique.prescreen.schemas import PrescreeningPacket
-from clinique.prescreen.validation import corpus_from_dict
 from clinique.substrate.provenance import HumanReview, LedgerRecord, ProvenanceLedger
 
 
 @activity.defn
-def atomize_trial(trial_dict: dict[str, Any]) -> list[dict[str, Any]]:
-    trial = trial_from_dict(trial_dict)
-    return [c.to_dict() for c in ReferenceAtomizer().atomize(trial)]
+def atomize_trial(trial: TrialModel) -> list[CriterionModel]:
+    domain = trial.to_domain()
+    return [CriterionModel.from_domain(c) for c in ReferenceAtomizer().atomize(domain)]
 
 
 @activity.defn
 def evaluate_criterion(
-    criterion_dict: dict[str, Any],
-    corpus_dict: dict[str, Any],
-) -> dict[str, Any]:
-    criterion = criterion_from_dict(criterion_dict)
-    corpus = corpus_from_dict(corpus_dict)
-    evidence = retrieve(criterion, corpus)
-    return RuleJudge().judge(criterion, evidence, corpus).to_dict()
+    criterion: CriterionModel,
+    corpus: PatientCorpusModel,
+) -> CriterionJudgmentModel:
+    crit = criterion.to_domain()
+    corp = corpus.to_domain()
+    evidence = retrieve(crit, corp)
+    judgment = RuleJudge().judge(crit, evidence, corp)
+    return CriterionJudgmentModel.from_domain(judgment)
 
 
 @activity.defn
-def aggregate_judgments(judgment_dicts: list[dict[str, Any]]) -> str:
-    judgments = tuple(judgment_from_dict(j) for j in judgment_dicts)
-    return aggregate(judgments)
+def aggregate_judgments(judgments: list[CriterionJudgmentModel]) -> str:
+    domain = tuple(j.to_domain() for j in judgments)
+    return aggregate(domain)
 
 
 @activity.defn
-def build_packet(payload: dict[str, Any]) -> dict[str, Any]:
-    trial = trial_from_dict(payload["trial_dict"])
-    corpus = corpus_from_dict(payload["corpus_dict"])
+def build_packet(payload: BuildPacketInput) -> PrescreeningPacketModel:
+    trial = payload.trial.to_domain()
+    corpus = payload.corpus.to_domain()
     tools = default_prescreen_tools()
     packet = PrescreeningPacket(
         trial_id=trial.trial_id,
         patient_id=corpus.patient_id,
         snapshot_date=corpus.snapshot_date,
-        criteria=tuple(criterion_from_dict(c) for c in payload["criteria"]),
-        judgments=tuple(judgment_from_dict(j) for j in payload["judgment_dicts"]),
-        recommendation=payload["recommendation"],
+        criteria=tuple(c.to_domain() for c in payload.criteria),
+        judgments=tuple(j.to_domain() for j in payload.judgments),
+        recommendation=payload.recommendation,
         model={"atomizer": tools[0], "judge": tools[1]},
         tools=tuple(tools),
     )
-    return packet_to_dict(packet)
+    return PrescreeningPacketModel.from_domain(packet)
 
 
 @activity.defn
 def assert_evidence_provenance_activity(
-    packet_dict: dict[str, Any],
-    corpus_dict: dict[str, Any],
+    packet: PrescreeningPacketModel,
+    corpus: PatientCorpusModel,
 ) -> None:
-    packet = packet_from_dict(packet_dict)
-    corpus = corpus_from_dict(corpus_dict)
     try:
-        assert_evidence_provenance(packet, corpus)
+        assert_evidence_provenance(packet.to_domain(), corpus.to_domain())
     except EvidenceProvenanceError as exc:
         raise ApplicationError(
             str(exc),
@@ -84,16 +83,16 @@ def assert_evidence_provenance_activity(
 
 
 @activity.defn
-def append_ledger(packet_dict: dict[str, Any], ledger_path: str) -> str:
-    packet = packet_from_dict(packet_dict)
+def append_ledger(packet: PrescreeningPacketModel, ledger_path: str) -> str:
+    domain = packet.to_domain()
     ledger = ProvenanceLedger(ledger_path)
-    ref = packet_fingerprint(packet)
+    ref = packet_fingerprint(domain)
     ledger.append(
         LedgerRecord(
             capability="prescreen",
-            inputs=[packet.trial_id, packet.patient_id],
-            model=dict(packet.model),
-            tools=list(packet.tools),
+            inputs=[domain.trial_id, domain.patient_id],
+            model=dict(domain.model),
+            tools=list(domain.tools),
             output_ref=ref,
             human_review=HumanReview(required=True, status="pending"),
         )
@@ -102,19 +101,21 @@ def append_ledger(packet_dict: dict[str, Any], ledger_path: str) -> str:
 
 
 @activity.defn
-def resolve_screen_case(payload: dict[str, Any]) -> dict[str, Any]:
-    case = payload["case"]
-    trials = payload["trials"]
-    corpora_by_source = payload["corpora_by_source"]
-    trial = next((t for t in trials if t["trial_id"] == case["trial_id"]), None)
+def resolve_screen_case(payload: ResolveScreenCaseInput) -> ResolvedCase:
+    case = payload.case
+    trial = next((t for t in payload.trials if t.trial_id == case.trial_id), None)
     if trial is None:
-        raise ValueError(f"missing trial {case['trial_id']}")
-    source = case.get("patient_source", "synthea")
-    corpora = corpora_by_source.get(source, [])
-    corpus = next((c for c in corpora if c["patient_id"] == case["patient_id"]), None)
+        raise ValueError(f"missing trial {case.trial_id}")
+    corpora = payload.corpora_by_source.get(case.patient_source, ())
+    corpus = next((c for c in corpora if c.patient_id == case.patient_id), None)
     if corpus is None:
-        raise ValueError(f"missing patient {case['patient_id']} source={source}")
-    if case.get("snapshot_date") and corpus.get("snapshot_date") != case["snapshot_date"]:
-        corpus = dict(corpus)
-        corpus["snapshot_date"] = case["snapshot_date"]
-    return {"trial": trial, "corpus": corpus, "gold_judgments": case.get("gold_judgments", [])}
+        raise ValueError(f"missing patient {case.patient_id} source={case.patient_source}")
+    if case.snapshot_date and corpus.snapshot_date != case.snapshot_date:
+        corpus = PatientCorpusModel(
+            patient_id=corpus.patient_id,
+            snapshot_date=case.snapshot_date,
+            source=corpus.source,
+            demographics=corpus.demographics,
+            documents=corpus.documents,
+        )
+    return ResolvedCase(trial=trial, corpus=corpus, gold_judgments=case.gold_judgments)

@@ -24,42 +24,41 @@ from clinique.prescreen.pmc_patients import load_pmc_corpora, record_pmc
 from clinique.prescreen.validation import corpus_from_dict, report_for
 
 
-def _temporal_import_error(exc: ImportError) -> int:
-    print(f"prescreen temporal: {exc}", file=sys.stderr)
-    return 2
-
-
 def _run_temporal_screen(args: argparse.Namespace, trial, corpus) -> int:
     try:
         from temporalio.client import WorkflowFailureError
 
-        from clinique.durable._import_guard import require_temporalio
-        from clinique.durable.client import connect_client, execute_screen
-        from clinique.durable.serde import corpus_to_dict, trial_to_dict
+        from clinique.durable.cli_runtime import (
+            connect_client,
+            ensure_temporalio,
+            temporal_import_error,
+        )
+        from clinique.durable.client import execute_screen
+        from clinique.durable.models import PatientCorpusModel, TrialModel
     except ImportError as exc:
-        return _temporal_import_error(exc)
+        return temporal_import_error(exc)
 
-    require_temporalio()
+    ensure_temporalio()
 
-    async def _run() -> dict:
+    async def _run():
         client = await connect_client(args.temporal_host)
         return await execute_screen(
             client,
-            trial=trial_to_dict(trial),
-            corpus=corpus_to_dict(corpus),
+            trial=TrialModel.from_domain(trial),
+            corpus=PatientCorpusModel.from_domain(corpus),
             append_ledger=bool(args.ledger),
             ledger_path=args.ledger,
         )
 
     try:
-        packet_dict = asyncio.run(_run())
+        packet = asyncio.run(_run())
     except WorkflowFailureError as exc:
         print(f"prescreen screen temporal workflow failed: {exc.cause}", file=sys.stderr)
         return 3
     except OSError as exc:
         print(f"prescreen screen temporal connect failed: {exc}", file=sys.stderr)
         return 2
-    text = json.dumps(packet_dict, indent=2, sort_keys=True) + "\n"
+    text = json.dumps(packet.model_dump(), indent=2, sort_keys=True) + "\n"
     if args.out:
         Path(args.out).write_text(text, encoding="utf-8")
     else:
@@ -192,11 +191,11 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
         return 0
     if args.prescreen_command == "worker":
         try:
-            from clinique.durable._import_guard import require_temporalio
+            from clinique.durable.cli_runtime import ensure_temporalio, temporal_import_error
             from clinique.durable.worker import run_worker
         except ImportError as exc:
-            return _temporal_import_error(exc)
-        require_temporalio()
+            return temporal_import_error(exc)
+        ensure_temporalio()
         try:
             asyncio.run(run_worker(host=args.host))
         except OSError as exc:
@@ -207,12 +206,16 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
         try:
             from temporalio.client import WorkflowFailureError
 
-            from clinique.durable._import_guard import require_temporalio
-            from clinique.durable.client import connect_client, execute_batch_eval
-            from clinique.durable.workflows.eval import BatchEvalInput
+            from clinique.durable.cli_runtime import (
+                connect_client,
+                ensure_temporalio,
+                temporal_import_error,
+            )
+            from clinique.durable.client import execute_batch_eval
+            from clinique.durable.models import BatchEvalInput
         except ImportError as exc:
-            return _temporal_import_error(exc)
-        require_temporalio()
+            return temporal_import_error(exc)
+        ensure_temporalio()
 
         async def _run_eval() -> dict:
             client = await connect_client(args.host)

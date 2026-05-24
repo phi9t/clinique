@@ -31,3 +31,19 @@ def synthea_patients_jsonl(tmp_path):
         for corpus in corpora:
             handle.write(json.dumps(corpus.to_dict(), sort_keys=True) + "\n")
     return out
+
+
+@pytest.fixture(scope="session")
+def temporal_dev_server_session():
+    from durable_e2e_harness import temporal_dev_server
+
+    with temporal_dev_server() as proc:
+        yield proc
+
+
+@pytest.fixture(scope="session")
+def prescreen_worker_session(temporal_dev_server_session):
+    from durable_e2e_harness import prescreen_worker
+
+    with prescreen_worker() as proc:
+        yield proc

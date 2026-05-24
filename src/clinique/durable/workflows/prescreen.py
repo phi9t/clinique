@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+import asyncio
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
@@ -25,31 +24,19 @@ with workflow.unsafe.imports_passed_through():
         LEDGER_RETRY_MAX,
         LEDGER_TIMEOUT,
     )
+    from clinique.durable.models import (
+        BuildPacketInput,
+        CriterionJudgmentModel,
+        PrescreeningPacketModel,
+        ScreenPatientInput,
+    )
     from clinique.prescreen.orchestrator import tool_fingerprint
-
-
-@dataclass
-class ScreenPatientInput:
-    trial: dict[str, Any]
-    corpus: dict[str, Any]
-    append_ledger: bool = False
-    ledger_path: str | None = None
 
 
 @workflow.defn
 class ScreenPatientWorkflow:
     @workflow.run
-    async def run(self, payload: ScreenPatientInput | dict[str, Any]) -> dict[str, Any]:
-        if isinstance(payload, dict):
-            data = ScreenPatientInput(
-                trial=payload["trial"],
-                corpus=payload["corpus"],
-                append_ledger=bool(payload.get("append_ledger", False)),
-                ledger_path=payload.get("ledger_path"),
-            )
-        else:
-            data = payload
-
+    async def run(self, data: ScreenPatientInput) -> PrescreeningPacketModel:
         retry = RetryPolicy(maximum_attempts=ACTIVITY_RETRY_MAX)
         gate_retry = RetryPolicy(maximum_attempts=GATE_RETRY_MAX)
 
@@ -60,16 +47,19 @@ class ScreenPatientWorkflow:
             retry_policy=retry,
         )
 
-        judgments: list[dict[str, Any]] = []
-        for criterion in criteria:
-            judgments.append(
-                await workflow.execute_activity(
-                    evaluate_criterion,
-                    args=[criterion, data.corpus],
-                    start_to_close_timeout=ACTIVITY_TIMEOUT,
-                    retry_policy=retry,
-                )
+        judgments: list[CriterionJudgmentModel] = list(
+            await asyncio.gather(
+                *[
+                    workflow.execute_activity(
+                        evaluate_criterion,
+                        args=[criterion, data.corpus],
+                        start_to_close_timeout=ACTIVITY_TIMEOUT,
+                        retry_policy=retry,
+                    )
+                    for criterion in criteria
+                ]
             )
+        )
 
         recommendation = await workflow.execute_activity(
             aggregate_judgments,
@@ -80,13 +70,13 @@ class ScreenPatientWorkflow:
 
         packet = await workflow.execute_activity(
             build_packet,
-            {
-                "trial_dict": data.trial,
-                "corpus_dict": data.corpus,
-                "criteria": criteria,
-                "judgment_dicts": judgments,
-                "recommendation": recommendation,
-            },
+            BuildPacketInput(
+                trial=data.trial,
+                corpus=data.corpus,
+                criteria=tuple(criteria),
+                judgments=tuple(judgments),
+                recommendation=recommendation,
+            ),
             start_to_close_timeout=ACTIVITY_TIMEOUT,
             retry_policy=retry,
         )
@@ -114,4 +104,4 @@ def screen_workflow_id(trial_id: str, patient_id: str, snapshot_date: str | None
     return f"prescreen/{trial_id}/{patient_id}/{snap}/{tool_fingerprint()}"
 
 
-__all__ = ["ScreenPatientInput", "ScreenPatientWorkflow", "screen_workflow_id"]
+__all__ = ["ScreenPatientWorkflow", "screen_workflow_id"]

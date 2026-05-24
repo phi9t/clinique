@@ -1,0 +1,2489 @@
+╭─── Claude Code v2.1.142 ─────────────────────────────────────────────────────╮
+│                                         │ Tips for getting started           │
+│           Welcome back Philip!          │ ✔ Run /init to create a CLAUDE.md… │
+│                                         │ ────────────────────────────────── │
+│                 ▐▛███▜▌                 │ What's new                         │
+│                ▝▜█████▛▘                │ Internal infrastructure improveme… │
+│                  ▘▘ ▝▝                  │ `/usage` now shows a per-category… │
+│                                         │ `/diff` detail view can now be sc… │
+│   Opus 4.7 · Claude Pro · Philip Yang   │ /release-notes for more            │
+│           ~/CodeBase/clinique           │                                    │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+❯ /clear                                                                        
+  ⎿  (no content)
+
+❯ focus on fetching all the public data and perform parsing/validtion first; we 
+   want to ensure data are obtained correctly and that they map to a correct    
+  internal data model that conforms to how we understand them in our mental     
+  model                                                                         
+
+⏺ I'll start by exploring the codebase to understand the current state of public
+   data fetching, parsing, and validation in the prescreen module, along with
+  the intended data model.
+
+⏺ 3 Explore agents finished (ctrl+o to expand)
+   ├ Explore prescreen module code · 22 tool uses · 77.3k tokens
+   │ ⎿  Done
+   ├ Explore prescreen design docs · 14 tool uses · 77.6k tokens
+   │ ⎿  Done
+   └ Explore fixtures and test patterns · 31 tool uses · 80.1k tokens
+     ⎿  Done
+
+⏺ I now have a thorough picture. Let me share the key insight before clarifying
+  scope.
+
+  ★ Insight ─────────────────────────────────────
+  - The prescreen module already nails the record-and-replay discipline:
+  fetch_study_raw (network) is deliberately split from parse_study (pure), so
+  parsing is tested offline against frozen JSONL. That separation is the seam
+  any "fetch more / validate harder" work must respect.
+  - The current data model is solid but thin on validation: Trial.from_api only
+  hard-fails on a missing nctId; everything else is defensive .get(). There's no
+   enforcement that sex ∈ {ALL,MALE,FEMALE}, phase ∈ {PHASE1..4,NA,...}, or
+  std_ages ⊆ {CHILD,ADULT,OLDER_ADULT} — i.e. nothing yet asserts the data
+  conforms to the mental model.
+  - Fetching today is single-study, hand-enumerated (record_studies loops a list
+   of NCT IDs). There's no search/pagination path, so "fetch all public data"
+  doesn't exist yet as a capability.
+  ─────────────────────────────────────────────────
+
+  The design doc lists the public sources as ClinicalTrials.gov API v2 + Synthea
+   (both fully open, no credentialing), with PMC-Patients and MIMIC-IV demo as
+  open-but-deferred, and n2c2 as credentialed. Before I design the plan, I want
+  to scope "all the public data" and the validation deliverable correctly.
+
+⏺ User answered Claude's questions:
+  ⎿  · Which public data sources should this effort fetch + parse + validate 
+     now? → ClinicalTrials.gov, Synthea, PMC-Patients, MIMIC-IV demo
+     · How should ClinicalTrials.gov fetching work — how do we get 'all' the 
+     trials? → Add search + pagination
+     · What should the parsing/validation deliverable be? → Dedicated validation
+      module + report
+     · For Synthea, what scope of normalization? → Corpus-wide + committed 
+     fixture
+
+⏺ The user wants all four sources, search+pagination, a dedicated validation
+  module + report, and corpus-wide Synthea with a committed fixture. Let me read
+   the actual source files to ground the design precisely.
+
+  Read 4 files (ctrl+o to expand)
+
+⏺ I have everything I need. This is a well-defined, multi-source effort, and
+  I've read the core files directly. Let me share the key design insight, then
+  write the plan.
+
+  ★ Insight ─────────────────────────────────────
+  - The cleanest "conforms to our mental model" story here is convergence: four
+  heterogeneous public sources (one trial source, three patient sources) must
+  collapse onto exactly two typed records — Trial and
+  PatientCorpus/PatientDocument. The source field is the discriminator. That
+  makes validation a single contract, not four.
+  - The repo's strongest existing discipline — fetch (network, impure) split 
+  from parse (pure, offline-testable) — should govern every new source. Network
+  fetchers record raw snapshots; pure parsers are tested against tiny committed
+  fixtures. This also resolves the PHI tension: MIMIC-IV demo is real
+  de-identified data, so committed fixtures stay synthetic-shaped while the real
+   fetch is documented in PROVENANCE.md.
+  - A snapshot_date-vs-document.date leakage check is the highest-value
+  validation: it's a structural invariant the design already names (retrieval
+  may only see docs ≤ snapshot), and it's exactly the kind of "does the data
+  behave the way we think it does" guarantee the user is asking for.
+  ─────────────────────────────────────────────────
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ The plan is written. Here's the summary before I hand it over for approval.
+
+  What this plan does
+
+  Goal: make the prescreen data layer correct and complete first — fetch all
+  public data, parse it, and prove it conforms to our internal data model —
+  before any LLM/decision stages.
+
+  Core architectural move — convergence: four heterogeneous public sources
+  collapse onto exactly two typed records:
+  - Trial ← ClinicalTrials.gov (add search + pagination so we can pull a whole
+  disease area, not a hand-typed NCT list)
+  - PatientCorpus/PatientDocument ← Synthea (corpus-wide now), PMC-Patients
+  (real free text → note docs), MIMIC-IV demo (structured
+  labs/dx/meds/procedures)
+
+  The source field is the discriminator, so validation is one contract, not 
+  four.
+
+  The conformance gate (validation.py) is the heart of the "maps to a correct
+  model" ask:
+  - controlled vocabularies (sex / phase / status / std_ages / doc source_types)
+  - age-bound sanity (min ≤ max, non-negative, parse-failure detection)
+  - duplicate doc_id detection, date parseability
+  - the highest-value check: leakage — document.date > snapshot_date is an
+  error, enforcing the design's as-of discipline
+
+  Exposed as prescreen validate with a new meaningful exit code 7.
+
+  Discipline preserved throughout: network fetch is split from pure parse
+  (everything tested offline against tiny committed fixtures); runtime stays
+  stdlib-only (urllib/json/csv/gzip); MIMIC-IV demo is real de-identified data
+  so committed fixtures stay synthetic-shaped while the real fetch is documented
+   in PROVENANCE.md.
+
+  Explicitly out of scope: atomizer, retriever, judge, aggregator, evidence
+  gate, orchestrator — the plan stops at "data fetched, parsed, and proven to
+  conform."
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/focus-on-fetching-all-curious-engelbart.md ·
+      /plan to edit
+     Prescreen L0: fetch all public data, parse, and validate against the 
+     internal data model
+
+     Context
+
+     The prescreen/ module is an L0 public scaffold. Today it can fetch trials
+     only one NCT
+     ID at a time (hand-enumerated), normalize only one Synthea patient at a
+     time, has no
+     committed Synthea fixture, and has no validation layer — Trial.from_api
+     hard-fails
+     only on a missing nctId; everything else is defensive .get(). Nothing
+     asserts that the
+     data actually conforms to how we model it (controlled vocabularies,
+     age-bound sanity, the
+     snapshot/no-leakage discipline).
+
+     The user wants to do the data layer first and do it right: fetch all the 
+     public data,
+     parse it, and validate that it maps correctly onto a correct internal data 
+     model before
+     any of the LLM stages (atomizer/retriever/judge) are built. Per
+     clarification, this covers
+     all four public sources (ClinicalTrials.gov, Synthea, PMC-Patients,
+     MIMIC-IV demo),
+     adds search + pagination for ClinicalTrials.gov, delivers a dedicated 
+     validation
+     module + report (with a prescreen validate CLI), and does corpus-wide 
+     Synthea
+     normalization with a committed synthetic fixture.
+
+     Intended outcome: heterogeneous public sources converge onto exactly two
+     typed records —
+     Trial and PatientCorpus/PatientDocument — and a validation gate proves the
+     conformance, all tested offline with deterministic, PHI-free fixtures.
+
+     Design principles (inherited from the repo — do not break)
+
+     - Fetch (network, impure) is split from parse (pure, deterministic, 
+     offline-testable).
+     Every new source follows this: a network fetcher that records raw
+     snapshots, and a pure
+     parser tested against committed fixtures. (See ingestion.py docstring lines
+      1-12.)
+     - Runtime is stdlib-only (Python 3.12+). urllib for HTTP, json, csv, gzip
+     (MIMIC .csv.gz), re. Add no runtime deps to pyproject.toml.
+     - Fixtures are PHI-free / synthetic with a PROVENANCE.md. MIMIC-IV demo is
+     real
+     de-identified data → commit only synthetic-shaped fixtures; document the
+     real fetch.
+     - Determinism: same input bytes → byte-identical record (existing tests
+     assert this).
+
+     Internal data model: convergence target
+
+     All three patient sources normalize to the existing PatientCorpus /
+     PatientDocument
+     (src/clinique/prescreen/schemas.py:121-159); the trial source stays on
+     Trial
+     (schemas.py:49-118). The only schema change is new source constants.
+
+     src/clinique/prescreen/schemas.py
+     - Add constants alongside CLINICALTRIALS_GOV/SYNTHEA (line 17-18):
+     PMC_PATIENTS = "pmc_patients", MIMIC_IV_DEMO = "mimic_iv_demo".
+     - Add controlled-vocabulary frozensets used by validation (single source of
+      truth):
+     TRIAL_SEX = {"ALL","MALE","FEMALE"}, TRIAL_PHASES = 
+     {"NA","EARLY_PHASE1","PHASE1", "PHASE2","PHASE3","PHASE4"}, TRIAL_STATUS = 
+     {...full v2 overallStatus enum...},
+     STD_AGES = {"CHILD","ADULT","OLDER_ADULT"}, PATIENT_SEX = 
+     {"male","female"},
+     DOC_SOURCE_TYPES = 
+     {"condition","medication","observation","procedure","note"},
+     PATIENT_SOURCES = {SYNTHEA, PMC_PATIENTS, MIMIC_IV_DEMO}.
+     - Reuse the existing AgeBound.parse (lines 37-46) for PMC age parsing.
+
+     Work items
+
+     1. ClinicalTrials.gov — search + pagination (prescreen/ingestion.py)
+
+     Reuse DEFAULT_FIELDS, fetch_study_raw, parse_study, iter_raw_studies,
+     load_recorded_studies as-is. Add:
+     - search_studies_raw(*, cond=None, term=None, status=None, page_size=100, 
+     max_studies=None, fields=DEFAULT_FIELDS, timeout=30.0) -> Iterator[dict]:
+     GET API_BASE with
+     query.cond, query.term, filter.overallStatus, pageSize, fields,
+     countTotal=true;
+     follow nextPageToken until exhausted or max_studies reached. Yields
+     per-study dicts
+     ({"protocolSection": {...}}) — same shape parse_study already consumes.
+     - parse_search_page(raw: dict) -> list[dict]: pure extraction of
+     raw["studies"] (the
+     v2 search response wraps studies in a studies list + nextPageToken).
+     Offline-testable.
+     - record_search(out_path, **search_kwargs) -> list[str]: like
+     record_studies
+     (lines 61-78) but driven by search_studies_raw; writes one study per JSONL
+     line with
+     sort_keys=True so the corpus loads uniformly via load_recorded_studies.
+     - Fixture: tests/fixtures/prescreen/search_nsclc_page.json — one recorded
+     raw search
+     page (synthetic/trimmed: 2-3 studies + a nextPageToken) to test
+     parse_search_page
+     offline. Note real recording command in PROVENANCE.md.
+
+     2. Synthea — corpus-wide + committed fixture (prescreen/normalizer.py)
+
+     Keep read_synthea_csv_dir (lines 36-46) and normalize_synthea (lines
+     99-139). Add:
+     - normalize_synthea_corpus(tables, *, snapshot_date) -> 
+     list[PatientCorpus]: iterate every
+     row in tables["patients"], delegate to existing normalize_synthea per
+     patient, return
+     deterministically ordered list (sorted by patient_id).
+     - Committed fixture dir tests/fixtures/prescreen/synthea/ with tiny
+     synthetic
+     patients.csv, conditions.csv, observations.csv, medications.csv,
+     procedures.csv
+     (mirrors the inline tables in tests/test_prescreen_normalizer.py:14-54) +
+     PROVENANCE.md
+     stating it is fully synthetic Synthea-shaped data, no PHI.
+
+     3. PMC-Patients — new source (prescreen/pmc_patients.py)
+
+     PMC-Patients records carry patient_id, age ([[value, unit], ...]), gender
+     (M/F),
+     and a free-text patient summary. Pure-parse first:
+     - parse_pmc_record(raw: dict) -> PatientCorpus: demographics from age (via
+     AgeBound.parse on "<value> <unit>") and gender (M→male, F→female); the
+     summary becomes one PatientDocument(source_type="note", date=None, 
+     doc_id="<pid>:note:0000"); snapshot_date=None (case reports have no as-of);
+      source=PMC_PATIENTS.
+     - iter_pmc_records(path) / load_pmc_corpora(path): JSONL replay, mirroring
+     iter_raw_studies/load_recorded_studies.
+     - fetch_pmc_sample_raw(*, limit, timeout=30.0) + record_pmc(out_path, *, 
+     limit): network
+     fetch of a bounded sample from the public PMC-Patients dataset, recorded to
+      JSONL.
+     - Fixture: tests/fixtures/prescreen/pmc_patients.jsonl (2 synthetic
+     records) + PROVENANCE.
+
+     4. MIMIC-IV demo — new source (prescreen/mimic_demo.py)
+
+     Real de-identified data → committed fixture is synthetic-shaped only.
+     Pure-parse first:
+     - read_mimic_csv_dir(path) -> dict[str, list[dict]]: read MIMIC hosp/ CSVs,
+      transparently
+     handling .csv and .csv.gz (stdlib gzip). Tables: patients, admissions,
+     diagnoses_icd (+ d_icd_diagnoses), labevents (+ d_labitems), prescriptions,
+     procedures_icd (+ d_icd_procedures).
+     - normalize_mimic(tables, *, subject_id, snapshot_date) -> PatientCorpus
+     and
+     normalize_mimic_corpus(tables, *, snapshot_date) -> list[PatientCorpus]:
+     map
+     diagnoses→condition, labevents (valuenum/valueuom)→observation,
+     prescriptions→medication, procedures→procedure; demographics from gender +
+     anchor_age; deterministic doc_id/ordering like the Synthea normalizer;
+     source=MIMIC_IV_DEMO.
+     - record_mimic(...): documented download of the PhysioNet demo zip (no
+     credentialing for
+     the demo) — but does not commit the real rows; only the local recording.
+     - Fixture: tests/fixtures/prescreen/mimic_demo/ synthetic-shaped CSVs +
+     PROVENANCE
+     explicitly stating the committed data is synthetic and the real fetch is
+     local-only.
+
+     5. Validation module + report (prescreen/validation.py)  ← the conformance 
+     gate
+
+     A dedicated, pure module that asserts records conform to the model. Pattern
+      mirrors EDC's
+     report style (src/clinique/edc/validation.py: a dataclass report with
+     to_dict/write_json
+     and an ok property; meaningful CLI exit codes).
+     - @dataclass(frozen=True) ValidationIssue: record_id, severity
+     ("error"|"warning"),
+     code, message.
+     - @dataclass(frozen=True) ValidationReport: counts + issues: 
+     tuple[ValidationIssue, ...];
+     ok property = no error-severity issues; to_dict(), write_json(path).
+     - validate_trial(trial) -> list[ValidationIssue]:
+       - error: trial_id not matching ^NCT\d{8}$; sex ∉ TRIAL_SEX∪{None};
+     phase ∉ TRIAL_PHASES∪{None}; recruitment_status ∉ TRIAL_STATUS∪{None};
+     any std_ages ∉ STD_AGES; both age bounds present and min.years > max.years;
+     negative age years.
+       - warning: empty eligibility_text (can't atomize); empty conditions;
+     AgeBound.raw present but years is None (parse failure).
+     - validate_patient_corpus(corpus) -> list[ValidationIssue]:
+       - error: source ∉ PATIENT_SOURCES; demographics sex ∉ PATIENT_SEX∪{None};
+     negative age; duplicate doc_id within corpus; source_type ∉
+     DOC_SOURCE_TYPES;
+     unparseable snapshot_date/doc.date; leakage: doc.date > snapshot_date when
+     both set.
+       - warning: empty documents; observation doc missing
+     structured.value/unit.
+     - validate_corpus_file(...) / validate_trials_file(...): load via existing
+     loaders, run,
+     aggregate into a ValidationReport.
+
+     6. CLI wiring (src/clinique/cli.py)
+
+     Extend the prescreen subparser (lines 51-58) and main dispatch (lines
+     146-167). Reuse the
+     existing exit-code convention; add code 7 = validation found error-severity
+      issues.
+     - prescreen search --cond ... [--status ...] [--max N] --out <jsonl> →
+     record_search.
+     - prescreen normalize-synthea --csv-dir <dir> --snapshot <date> --out 
+     <jsonl>.
+     - prescreen ingest-pmc --limit N --out <jsonl> (network) — optional,
+     documented.
+     - prescreen validate --trials <jsonl> --patients <jsonl> [--source 
+     synthea|pmc|mimic] [--out <report.json>] → exit 0 ok, 2 input/parse error,
+     7 validation errors.
+     - Keep ingest and show unchanged; optionally extend show to summarize
+     patient corpora.
+
+     7. Tests (one file per concern, matching tests/test_prescreen_*.py style)
+
+     - test_prescreen_search.py: parse_search_page on the committed search-page
+     fixture →
+     expected study count + ids; resulting studies round-trip through
+     parse_study.
+     - extend test_prescreen_normalizer.py: normalize_synthea_corpus over the
+     committed
+     synthea/ dir returns all patients, deterministic, each filtered correctly.
+     - test_prescreen_pmc.py: parse_pmc_record demographics + note doc;
+     determinism; loader.
+     - test_prescreen_mimic.py: read_mimic_csv_dir handles .csv/.csv.gz;
+     normalize_mimic
+     maps each domain to the right source_type; determinism.
+     - test_prescreen_validation.py: a clean corpus/trial passes (ok True);
+     injected bad enum
+     → error; future-dated doc → leakage error; min_age > max_age → error;
+     missing
+     eligibility text → warning (still ok).
+
+     8. Docs
+
+     - Update each fixture's PROVENANCE.md (existing
+     tests/fixtures/prescreen/PROVENANCE.md
+       - new per-source ones).
+     - Update docs/design/trial-prescreening.md status section (ingestion now
+     does search; add
+     PMC + MIMIC normalizers + validation gate to the implemented list).
+     - Update CLAUDE.md / AGENTS.md prescreen paragraph to mention the new
+     sources, the
+     validate command, and exit code 7.
+
+     Critical files
+
+     ┌────────────────────────────────────────────────────────┬────────────────┐
+     │                          Path                          │     Change     │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │                                                        │ + source       │
+     │ src/clinique/prescreen/schemas.py                      │ constants + co │
+     │                                                        │ ntrolled-vocab │
+     │                                                        │  frozensets    │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │                                                        │ + search_studi │
+     │ src/clinique/prescreen/ingestion.py                    │ es_raw, parse_ │
+     │                                                        │ search_page,   │
+     │                                                        │ record_search  │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │ src/clinique/prescreen/normalizer.py                   │ + normalize_sy │
+     │                                                        │ nthea_corpus   │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │                                                        │ new — fetch/pa │
+     │ src/clinique/prescreen/pmc_patients.py                 │ rse/load       │
+     │                                                        │ PMC-Patients   │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │                                                        │ new —          │
+     │ src/clinique/prescreen/mimic_demo.py                   │ read/normalize │
+     │                                                        │  MIMIC-IV demo │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │                                                        │ new —          │
+     │ src/clinique/prescreen/validation.py                   │ conformance    │
+     │                                                        │ gate + report  │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │                                                        │ + search, norm │
+     │ src/clinique/cli.py                                    │ alize-synthea, │
+     │                                                        │  ingest-pmc,   │
+     │                                                        │ validate       │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │ tests/fixtures/prescreen/{synthea/,mimic_demo/,pmc_pat │ new synthetic  │
+     │ ients.jsonl,search_nsclc_page.json}                    │ fixtures +     │
+     │                                                        │ PROVENANCE     │
+     ├────────────────────────────────────────────────────────┼────────────────┤
+     │ tests/test_prescreen_{search,pmc,mimic,validation}.py  │ new            │
+     └────────────────────────────────────────────────────────┴────────────────┘
+
+     Verification (end-to-end, offline)
+
+     uv run pytest tests/test_prescreen_ingestion.py
+     tests/test_prescreen_normalizer.py \
+       tests/test_prescreen_search.py tests/test_prescreen_pmc.py \
+       tests/test_prescreen_mimic.py tests/test_prescreen_validation.py -q
+     uv run ruff check . && uv run ruff format --check .
+
+     # Offline summary still works
+     uv run clinique prescreen show --fixtures
+     tests/fixtures/prescreen/trials.jsonl
+
+     # Validation gate over committed fixtures (expect exit 0)
+     uv run clinique prescreen validate --trials
+     tests/fixtures/prescreen/trials.jsonl \
+       --patients tests/fixtures/prescreen/pmc_patients.jsonl --source pmc ;
+     echo "exit=$?"
+
+     Network paths (search, ingest-pmc, MIMIC download) are exercised manually
+     and recorded
+     into fixtures; they are not part of CI, mirroring the existing ingest
+     posture
+     (fetch_study_raw is not covered by tests by design).
+
+     Out of scope (deferred to later layers, per design doc)
+
+     Atomizer, retriever, judge, aggregator, evidence-provenance gate, vocab
+     lookups, orchestrator,
+     ledger append — all the LLM/decision stages. This plan stops at: data
+     fetched, parsed, and
+     proven to conform to the model.
+
+⏺ Plan approved. Let me set up task tracking, then implement in dependency
+  order. Let me load the task tools.
+⏺ Starting with the foundation — schemas. Let me mark task 1 in progress and
+  edit.
+
+⏺ Update(src/clinique/prescreen/schemas.py)
+  ⎿  Added 44 lines
+      16  
+      17  CLINICALTRIALS_GOV = "clinicaltrials_gov"
+      18  SYNTHEA = "synthea"
+      19 +PMC_PATIENTS = "pmc_patients"                                  
+      20 +MIMIC_IV_DEMO = "mimic_iv_demo"                                
+      21  
+      22 +# Controlled vocabularies — the single source of truth for "doe
+         +s this record conform to how we                                
+      23 +# model it". ``validation.py`` is the only consumer; keeping th
+         +e enums here (next to the records                              
+      24 +# they constrain) means the model definition and its allowed va
+         +lues never drift apart.                                        
+      25 +#                                                              
+      26 +# Trial-side enums are the ClinicalTrials.gov API v2 values for
+         + the fields the parser keeps. The                              
+      27 +# parser stores them verbatim (it does not coerce), so the voca
+         +bularies must match the upstream                               
+      28 +# spelling exactly — an unexpected value means the API changed 
+         +or the parser mis-mapped, and that                             
+      29 +# is precisely what we want validation to surface.             
+      30 +TRIAL_SEX = frozenset({"ALL", "MALE", "FEMALE"})               
+      31 +TRIAL_PHASES = frozenset(                                      
+      32 +    {"NA", "EARLY_PHASE1", "PHASE1", "PHASE2", "PHASE3", "PHASE
+         +4"}                                                            
+      33 +)                                                              
+      34 +TRIAL_STATUS = frozenset(                                      
+      35 +    {                                                          
+      36 +        "RECRUITING",                                          
+      37 +        "NOT_YET_RECRUITING",                                  
+      38 +        "ACTIVE_NOT_RECRUITING",                               
+      39 +        "ENROLLING_BY_INVITATION",                             
+      40 +        "COMPLETED",                                           
+      41 +        "SUSPENDED",                                           
+      42 +        "TERMINATED",                                          
+      43 +        "WITHDRAWN",                                           
+      44 +        "AVAILABLE",                                           
+      45 +        "NO_LONGER_AVAILABLE",                                 
+      46 +        "TEMPORARILY_NOT_AVAILABLE",                           
+      47 +        "APPROVED_FOR_MARKETING",                              
+      48 +        "WITHHELD",                                            
+      49 +        "UNKNOWN",                                             
+      50 +    }                                                          
+      51 +)                                                              
+      52 +STD_AGES = frozenset({"CHILD", "ADULT", "OLDER_ADULT"})        
+      53 +                                                               
+      54 +# Patient-side enums are *our* normalized vocabulary — every so
+         +urce normalizer must emit these,                               
+      55 +# regardless of the upstream spelling (Synthea "M"/"F", MIMIC "
+         +M"/"F", PMC "M"/"F" all become                                 
+      56 +# "male"/"female"). That convergence is the whole point: hetero
+         +geneous public sources land on one                             
+      57 +# internal model.                                              
+      58 +PATIENT_SEX = frozenset({"male", "female"})                    
+      59 +DOC_SOURCE_TYPES = frozenset(                                  
+      60 +    {"condition", "medication", "observation", "procedure", "no
+         +te"}                                                           
+      61 +)                                                              
+      62 +PATIENT_SOURCES = frozenset({SYNTHEA, PMC_PATIENTS, MIMIC_IV_DE
+         +MO})                                                           
+      63 +                                                               
+      64  # ClinicalTrials.gov age strings look like "18 Years", "6 Month
+          s", "2 Weeks". Convert to years so
+      65  # numeric criteria (age >= 18) can compare against a single uni
+          t downstream.
+      66  _AGE_RE = re.compile(r"(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>year
+          |month|week|day)s?", re.IGNORECASE)
+
+⏺ Update(src/clinique/prescreen/ingestion.py)
+  ⎿  Added 81 lines
+       78      return recorded
+       79  
+       80  
+       81 +def parse_search_page(raw: dict) -> list[dict]:               
+       82 +    """Pure extraction of the per-study payloads from a v2 sea
+          +rch-response page.                                            
+       83 +                                                              
+       84 +    The search endpoint wraps results as ``{"studies": [{"prot
+          +ocolSection": {...}}, ...],                                   
+       85 +    "nextPageToken": ...}``. Each element is exactly the shape
+          + ``parse_study`` consumes, so search                          
+       86 +    is just another way to populate the same ``Trial`` corpus.
+          + Offline-testable.                                            
+       87 +    """                                                       
+       88 +    studies = raw.get("studies")                              
+       89 +    if studies is None:                                       
+       90 +        raise ValueError("search payload is missing 'studies' 
+          +(not a v2 search response?)")                                 
+       91 +    return list(studies)                                      
+       92 +                                                              
+       93 +                                                              
+       94 +def search_studies_raw(                                       
+       95 +    *,                                                        
+       96 +    cond: str | None = None,                                  
+       97 +    term: str | None = None,                                  
+       98 +    status: str | Iterable[str] | None = None,                
+       99 +    page_size: int = 100,                                     
+      100 +    max_studies: int | None = None,                           
+      101 +    fields: Iterable[str] = DEFAULT_FIELDS,                   
+      102 +    timeout: float = 30.0,                                    
+      103 +) -> Iterator[dict]:                                          
+      104 +    """Yield per-study raw payloads matching a search query, f
+          +ollowing pagination (network).                                
+      105 +                                                              
+      106 +    Drives the v2 ``/studies`` search endpoint with ``query.co
+          +nd`` / ``query.term`` /                                       
+      107 +    ``filter.overallStatus`` and follows ``nextPageToken`` unt
+          +il the results are exhausted or                               
+      108 +    ``max_studies`` payloads have been yielded. Like ``fetch_s
+          +tudy_raw`` this is not exercised by                           
+      109 +    tests; ``parse_search_page`` is the pure, offline-tested h
+          +alf.                                                          
+      110 +    """                                                       
+      111 +    base_params: list[tuple[str, str]] = [                    
+      112 +        ("fields", ",".join(fields)),                         
+      113 +        ("pageSize", str(page_size)),                         
+      114 +        ("countTotal", "true"),                               
+      115 +    ]                                                         
+      116 +    if cond:                                                  
+      117 +        base_params.append(("query.cond", cond))              
+      118 +    if term:                                                  
+      119 +        base_params.append(("query.term", term))              
+      120 +    if status:                                                
+      121 +        statuses = [status] if isinstance(status, str) else li
+          +st(status)                                                    
+      122 +        base_params.append(("filter.overallStatus", ",".join(s
+          +tatuses)))                                                    
+      123 +                                                              
+      124 +    yielded = 0                                               
+      125 +    page_token: str | None = None                             
+      126 +    while True:                                               
+      127 +        params = list(base_params)                            
+      128 +        if page_token:                                        
+      129 +            params.append(("pageToken", page_token))          
+      130 +        url = f"{API_BASE}?{urllib.parse.urlencode(params)}"  
+      131 +        request = urllib.request.Request(url, headers={"Accept
+          +": "application/json"})                                       
+      132 +        with urllib.request.urlopen(request, timeout=timeout) 
+          +as response:  # noqa: S310 (https)                            
+      133 +            payload = json.loads(response.read().decode("utf-8
+          +"))                                                           
+      134 +        for study in parse_search_page(payload):              
+      135 +            yield study                                       
+      136 +            yielded += 1                                      
+      137 +            if max_studies is not None and yielded >= max_stud
+          +ies:                                                          
+      138 +                return                                        
+      139 +        page_token = payload.get("nextPageToken")             
+      140 +        if not page_token:                                    
+      141 +            return                                            
+      142 +                                                              
+      143 +                                                              
+      144 +def record_search(out_path: str | Path, **search_kwargs) -> li
+          +st[str]:                                                      
+      145 +    """Run a search and append each matched study as one JSONL
+          + line. Returns recorded NCT ids.                              
+      146 +                                                              
+      147 +    Writes the same one-study-per-line format as ``record_stud
+          +ies`` so the resulting corpus loads                           
+      148 +    uniformly through ``load_recorded_studies``. Re-recording 
+          +overwrites the file.                                          
+      149 +    """                                                       
+      150 +    out = Path(out_path)                                      
+      151 +    out.parent.mkdir(parents=True, exist_ok=True)             
+      152 +    recorded: list[str] = []                                  
+      153 +    with out.open("w", encoding="utf-8") as handle:           
+      154 +        for payload in search_studies_raw(**search_kwargs):   
+      155 +            if "protocolSection" not in payload:              
+      156 +                raise ValueError("search study payload has no 
+          +protocolSection")                                             
+      157 +            handle.write(json.dumps(payload, sort_keys=True) +
+          + "\n")                                                        
+      158 +            recorded.append(payload["protocolSection"]["identi
+          +ficationModule"]["nctId"])                                    
+      159 +    return recorded                                           
+      160 +                                                              
+      161 +                                                              
+      162  def iter_raw_studies(path: str | Path) -> Iterator[dict]:
+      163      """Yield raw payloads from a recorded JSONL corpus (offlin
+           e)."""
+      164      with Path(path).open(encoding="utf-8") as handle:
+
+⏺ Now the synthetic search-page fixture:
+
+⏺ Write(tests/fixtures/prescreen/search_nsclc_page.json)
+  ⎿  Wrote 63 lines to tests/fixtures/prescreen/search_nsclc_page.json
+       2   "studies": [
+       3     {
+       4       "protocolSection": {
+       5         "identificationModule": {
+       6           "nctId": "NCT00000001",
+       7           "briefTitle": "Synthetic Phase 2 Study in Non-Small Ce
+         ll Lung Cancer",
+       8           "orgStudyIdInfo": {"id": "SYN-001"}
+       9         },
+      10         "statusModule": {
+     … +61 lines (ctrl+o to expand)
+
+⏺ Now corpus-wide Synthea normalization:
+
+⏺ Update(src/clinique/prescreen/normalizer.py)
+  ⎿  Added 17 lines
+      137          demographics=demographics,
+      138          documents=tuple(documents),
+      139      )
+      140 +                                                              
+      141 +                                                              
+      142 +def normalize_synthea_corpus(                                 
+      143 +    tables: dict[str, list[dict[str, str]]], *, snapshot_date:
+          + str | None                                                   
+      144 +) -> list[PatientCorpus]:                                     
+      145 +    """Normalize every patient in the export into a list of ``
+          +PatientCorpus`` (deterministic).                              
+      146 +                                                              
+      147 +    Delegates to ``normalize_synthea`` per patient so single- 
+          +and corpus-wide paths share one                               
+      148 +    mapping. Patients are returned sorted by id, so the same e
+          +xport always yields the same order.                           
+      149 +    """                                                       
+      150 +    patient_ids = sorted(                                     
+      151 +        {r.get("Id", "") for r in tables.get("patients", []) i
+          +f r.get("Id")}                                                
+      152 +    )                                                         
+      153 +    return [                                                  
+      154 +        normalize_synthea(tables, patient_id=pid, snapshot_dat
+          +e=snapshot_date)                                              
+      155 +        for pid in patient_ids                                
+      156 +    ]                                                         
+
+⏺ Now the committed Synthea fixture (synthetic, no PHI):
+
+⏺ Write(tests/fixtures/prescreen/synthea/patients.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/synthea/patients.csv
+      1 Id,BIRTHDATE,DEATHDATE,GENDER,FIRST,LAST
+      2 P1,1963-07-01,,M,Synthetic,Patient-One
+      3 P2,1990-01-01,,F,Synthetic,Patient-Two
+
+⏺ Write(tests/fixtures/prescreen/synthea/conditions.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/synthea/conditions.csv
+      1 START,STOP,PATIENT,ENCOUNTER,CODE,DESCRIPTION
+      2 2025-09-10,,P1,E1,254637007,Non-small cell lung cancer
+      3 2024-01-01,,P2,E2,999,Other patient condition
+
+⏺ Write(tests/fixtures/prescreen/synthea/observations.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/synthea/observations.csv
+      1 DATE,PATIENT,ENCOUNTER,CODE,DESCRIPTION,VALUE,UNITS,TYPE
+      2 2026-02-20T09:00:00Z,P1,E1,751-8,Absolute Neutrophil Count,2.1,10
+        *3/uL,numeric
+      3 2026-02-20T09:00:00Z,P1,E1,718-7,Hemoglobin,11.2,g/dL,numeric
+⏺ Write(tests/fixtures/prescreen/synthea/medications.csv)
+  ⎿  Wrote 2 lines to tests/fixtures/prescreen/synthea/medications.csv
+      1 START,STOP,PATIENT,PAYER,ENCOUNTER,CODE,DESCRIPTION
+      2 2025-10-01,,P1,PAYER1,E1,860975,metformin
+
+⏺ Write(tests/fixtures/prescreen/synthea/procedures.csv)
+  ⎿  Wrote 2 lines to tests/fixtures/prescreen/synthea/procedures.csv
+      1 START,STOP,PATIENT,ENCOUNTER,CODE,DESCRIPTION
+      2 2025-09-15,,P1,E1,232717009,Bronchoscopy
+
+⏺ Write(tests/fixtures/prescreen/synthea/PROVENANCE.md)
+  ⎿  Wrote 23 lines to tests/fixtures/prescreen/synthea/PROVENANCE.md
+      2 # Synthea Fixture Provenance
+      3 ## `synthea/*.csv`
+      4 
+        fline, deterministic tests ofred** Synthea-shaped CSV rows for of
+      6 `normalize_synthea` / `normalize_synthea_corpus`. These are *not*
+         a real Synthea export — they
+         the normalizer consumes.eal subject data, only the column layout
+      8 
+      9 Files and the columns the normalizer reads (extra columns are ign
+        ored by `csv.DictReader`):
+     … +21 lines (ctrl+o to expand)
+
+⏺ Write(src/clinique/prescreen/pmc_patients.py)
+  ⎿  Wrote 144 lines to src/clinique/prescreen/pmc_patients.py
+       2 """PMC-Patients -> PatientCorpus ingestion + normalizer.
+         n open corpus of de-contextualizedmc-patients/pmc-patients) is a
+       4 patient summaries extracted from PubMed Central Open Access case
+       5 is the genuinely-public source of **real free-text** patient nar
+         ratives for the L0 path — where
+         ises the judge on messy clinicalmplated text, PMC-Patients exerc
+       8 prose.
+       9 Each record carries ``patient_id``, ``age`` (a list of ``[value,
+      10 ``[[55.0, "year"]]``), ``gender`` (``"M"``/``"F"``), and a free-
+         text ``patient`` summary. A case
+     … +165 lines (ctrl+o to expand)
+
+⏺ Write(tests/fixtures/prescreen/pmc_patients.jsonl)
+  ⎿  Wrote 2 lines to tests/fixtures/prescreen/pmc_patients.jsonl
+         "00000001", "title": "Synthetic case report of NSCLC", "patient"
+        : "A 62-year-old man presented with cough and weight loss. Imagin
+        g showed a right upper lobe mass. Biopsy confirmed non-small cell
+         lung carcinoma. ANC was 2.1 K/uL. He had no prior immunotherapy.
+        ", "age": [[62.0, "year"]], "gender": "M"}
+      2 {"patient_id": "SYN-PMC-2", "patient_uid": "SYN-PMC-2-1", "PMID":
+         "00000002", "title": "Synthetic case report of pneumonia", "pati
+        ent": "A 34-year-old woman presented with fever and dyspnea. Ches
+        t X-ray revealed lobar consolidation. She was treated with antibi
+        otics and recovered.", "age": [[34.0, "year"]], "gender": "F"}
+     … +1 line (ctrl+o to expand)
+
+⏺ Write(tests/fixtures/prescreen/pmc_patients.PROVENANCE.md)
+  ⎿  Wrote 15 lines to tests/fixtures/prescreen/pmc_patients.PROVENANCE.md
+      2 # PMC-Patients Fixture Provenance
+      3 ## `pmc_patients.jsonl`
+      4 
+         rows*synthetic, hand-authored** records shaped like PMC-Patients
+      6 (`patient_id`, `patient_uid`, `PMID`, `title`, `patient` summary 
+        text, `age` as
+        MC case reports — they contain no`M`/`F`). These are *not* real P
+      8 real patient text — they only reproduce the field layout `parse_p
+        mc_record` consumes, so the parser
+      9 can be tested offline.
+     … +13 lines (ctrl+o to expand)
+
+⏺ Write(src/clinique/prescreen/mimic_demo.py)
+  ⎿  Wrote 269 lines to src/clinique/prescreen/mimic_demo.py
+       2 """MIMIC-IV demo -> PatientCorpus normalizer.
+         tent/mimic-iv-demo/) is 100 real,emo" (https://physionet.org/con
+       4 de-identified patients under the Open Database License. Unlike t
+       5 **demo** requires no PhysioNet DUA, so it is a genuinely-public 
+         source of *real structured* clinical
+       7 facts for the L0 path.
+          fixture rule applies: the committeddentified) data, this repo's
+       9 fixture under ``tests/fixtures/prescreen/mimic_demo/`` is **synt
+      10 download (``record_mimic``) stays local — never committed. Parsi
+         ng is pure and deterministic and is
+     … +311 lines (ctrl+o to expand)
+
+⏺ Now the synthetic MIMIC-IV demo fixture (synthetic-shaped, no real rows):
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/patients.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/mimic_demo/patients.csv
+      1 subject_id,gender,anchor_age,anchor_year,anchor_year_group,dod
+      2 10001,M,62,2180,2017 - 2019,
+      3 10002,F,34,2185,2020 - 2022,
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/admissions.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/mimic_demo/admissions.csv
+      1 subject_id,hadm_id,admittime,dischtime,admission_type
+      2 10001,20001,2180-07-23 08:00:00,2180-07-30 12:00:00,EW EMER.
+      3 10002,20002,2185-03-01 10:00:00,2185-03-05 09:00:00,ELECTIVE
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/diagnoses_icd.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/mimic_demo/diagnoses_icd.csv
+      1 subject_id,hadm_id,seq_num,icd_code,icd_version
+      2 10001,20001,1,C3490,10
+      3 10002,20002,1,J189,10
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/d_icd_diagnoses.csv)
+  ⎿  Wrote 3 lines to
+     tests/fixtures/prescreen/mimic_demo/d_icd_diagnoses.csv
+      1 icd_code,icd_version,long_title
+      2 C3490,10,Malignant neoplasm of unspecified part of bronchus or lu
+        ng
+      3 J189,10,Pneumonia unspecified organism
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/labevents.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/mimic_demo/labevents.csv
+      1 labevent_id,subject_id,hadm_id,itemid,charttime,value,valuenum,va
+        lueuom
+      2 1,10001,20001,51256,2180-07-24 06:00:00,2.1,2.1,K/uL
+      3 2,10001,20001,51222,2180-07-24 06:00:00,11.2,11.2,g/dL
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/d_labitems.csv)
+  ⎿  Wrote 3 lines to tests/fixtures/prescreen/mimic_demo/d_labitems.csv
+      1 itemid,label,fluid,category
+      2 51256,Neutrophils,Blood,Hematology
+      3 51222,Hemoglobin,Blood,Hematology
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/prescriptions.csv)  ⎿  Wrote 2 lines to tests/fixtures/prescreen/mimic_demo/prescriptions.csv
+      1 subject_id,hadm_id,starttime,stoptime,drug,gsn
+      2 10001,20001,2180-07-24 12:00:00,2180-07-29 12:00:00,Cisplatin,012
+        345
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/procedures_icd.csv)
+  ⎿  Wrote 2 lines to
+     tests/fixtures/prescreen/mimic_demo/procedures_icd.csv
+      1 subject_id,hadm_id,seq_num,chartdate,icd_code,icd_version
+      2 10001,20001,1,2180-07-25,0BJ08ZZ,10
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/d_icd_procedures.csv)
+  ⎿  Wrote 2 lines to
+     tests/fixtures/prescreen/mimic_demo/d_icd_procedures.csv
+      1 icd_code,icd_version,long_title
+      2 0BJ08ZZ,10,Inspection of tracheobronchial tree via natural or art
+        ificial opening endoscopic
+
+⏺ Write(tests/fixtures/prescreen/mimic_demo/PROVENANCE.md)
+  ⎿  Wrote 30 lines to tests/fixtures/prescreen/mimic_demo/PROVENANCE.md
+       2 # MIMIC-IV Demo Fixture Provenance
+       3 ## `mimic_demo/*.csv`
+       5 Fully **synthetic, hand-authored** rows shaped like the MIMIC-IV
+          `hosp` module, for offline,
+         / `normalize_mimic_corpus`.d_mimic_csv_dir` / `normalize_mimic` 
+       7 
+         data. Per this repo'sreal MIMIC-IV demo is *real de-identified* 
+       9 > PHI-free/synthetic fixture rule, **no real MIMIC rows are comm
+      10 > reproduce the column layout the normalizer consumes (synthetic
+          subject_ids 10001/10002, synthetic
+     … +31 lines (ctrl+o to expand)
+
+⏺ Write(src/clinique/prescreen/validation.py)
+  ⎿  Wrote 235 lines to src/clinique/prescreen/validation.py
+       2 """Conformance validation for the prescreening data model.
+       3 This module is the gate that answers the question motivating the
+       4 records we built from public sources actually conform to how we 
+         model them?* It is pure and
+         h anything — so it can run in CIport, it does not mutate or fetc
+       6 over the committed fixtures and over any freshly-recorded corpus
+       7 .
+       8 Two severities:
+      10 * ``error``   — the record violates the model (unknown controlle
+         d-vocabulary value, impossible age
+     … +265 lines (ctrl+o to expand)
+
+⏺ Let me fix the awkward re import:
+
+⏺ Update(src/clinique/prescreen/validation.py)
+  ⎿  Added 2 lines, removed 1 line
+      20  from __future__ import annotations
+      21  
+      22  import json
+      23 -from dataclasses import dataclass, field                       
+      23 +import re                                                      
+      24 +from dataclasses import dataclass                              
+      25  from datetime import date
+      26  from pathlib import Path
+      27  from typing import Any
+
+⏺ Update(src/clinique/prescreen/validation.py)
+  ⎿  Added 1 line, removed 1 line
+      39      Trial,
+      40  )
+      41  
+      42 -_NCT_RE = __import__("re").compile(r"^NCT\d{8}$")              
+      42 +_NCT_RE = re.compile(r"^NCT\d{8}$")                            
+      43  
+      44  
+      45  def _parse_date(value: str | None) -> date | None:
+
+⏺ Update(src/clinique/cli.py)
+  ⎿  Added 8 lines, removed 1 line
+      11  from clinique.edc.rollout import evaluate_rollout_gate, load_ro
+          llout_gate
+      12  from clinique.edc.silent import evaluate_silent_log, load_silen
+          t_log
+      13  from clinique.edc.validation import run_validation, validate_in
+          ternal_exports, verify_workstream
+      14 -from clinique.prescreen.ingestion import load_recorded_studies,
+         - record_studies                                                
+      14 +from clinique.prescreen.ingestion import (                     
+      15 +    load_recorded_studies,                                     
+      16 +    record_search,                                             
+      17 +    record_studies,                                            
+      18 +)                                                              
+      19 +from clinique.prescreen.normalizer import normalize_synthea_cor
+         +pus, read_synthea_csv_dir                                      
+      20 +from clinique.prescreen.pmc_patients import load_pmc_corpora, r
+         +ecord_pmc                                                      
+      21 +from clinique.prescreen.validation import corpus_from_dict, rep
+         +ort_for                                                        
+      22  
+      23  
+      24  def _build_parser() -> argparse.ArgumentParser:
+
+⏺ Now add the subparsers:
+
+⏺ Update(src/clinique/cli.py)
+  ⎿  Added 22 lines
+      60      ingest = prescreen_subparsers.add_parser("ingest")
+      61      ingest.add_argument("--nct-ids", required=True, help="comma
+          -separated NCT ids")
+      62      ingest.add_argument("--out", required=True, help="output JS
+          ONL fixture path")
+      63 +    search = prescreen_subparsers.add_parser("search")         
+      64 +    search.add_argument("--cond", help="query.cond condition te
+         +rm")                                                           
+      65 +    search.add_argument("--term", help="query.term free-text te
+         +rm")                                                           
+      66 +    search.add_argument("--status", help="comma-separated overa
+         +llStatus filter")                                              
+      67 +    search.add_argument("--max", type=int, default=None, help="
+         +max studies to record")                                        
+      68 +    search.add_argument("--out", required=True, help="output JS
+         +ONL fixture path")                                             
+      69 +    norm_synthea = prescreen_subparsers.add_parser("normalize-s
+         +ynthea")                                                       
+      70 +    norm_synthea.add_argument("--csv-dir", required=True, help=
+         +"Synthea CSV export directory")                                
+      71 +    norm_synthea.add_argument("--snapshot", help="as-of date (Y
+         +YYY-MM-DD)")                                                   
+      72 +    norm_synthea.add_argument("--out", required=True, help="out
+         +put PatientCorpus JSONL path")                                 
+      73 +    ingest_pmc = prescreen_subparsers.add_parser("ingest-pmc") 
+      74 +    ingest_pmc.add_argument("--limit", type=int, default=100, h
+         +elp="number of records to fetch")                              
+      75 +    ingest_pmc.add_argument("--out", required=True, help="outpu
+         +t JSONL fixture path")                                         
+      76 +    validate_p = prescreen_subparsers.add_parser("validate")   
+      77 +    validate_p.add_argument("--trials", help="trials JSONL to v
+         +alidate")                                                      
+      78 +    validate_p.add_argument("--patients", help="patient JSONL t
+         +o validate")                                                   
+      79 +    validate_p.add_argument(                                   
+      80 +        "--source",                                            
+      81 +        choices=["synthea", "mimic", "pmc"],                   
+      82 +        help="how to load --patients (pmc=raw records; else nor
+         +malized corpus JSONL)",                                        
+      83 +    )                                                          
+      84 +    validate_p.add_argument("--out", help="optional path to wri
+         +te the JSON report")                                           
+      85      show = prescreen_subparsers.add_parser("show")
+      86      show.add_argument("--fixtures", default="tests/fixtures/pre
+          screen/trials.jsonl")
+      87      return parser
+
+⏺ Update(src/clinique/cli.py)
+  ⎿  Added 64 lines
+      181              return 2
+      182          print(f"recorded {len(recorded)} studies to {args.out}
+           : {', '.join(recorded)}")
+      183          return 0
+      184 +    if args.command == "prescreen" and args.prescreen_command 
+          +== "search":                                                  
+      185 +        status = (                                            
+      186 +            [s.strip() for s in args.status.split(",") if s.st
+          +rip()] if args.status else None                               
+      187 +        )                                                     
+      188 +        try:                                                  
+      189 +            recorded = record_search(                         
+      190 +                args.out, cond=args.cond, term=args.term, stat
+          +us=status, max_studies=args.max                               
+      191 +            )                                                 
+      192 +        except Exception as exc:  # network/HTTP/parse errors 
+          +surface as a clean nonzero exit                               
+      193 +            print(f"prescreen search failed: {exc}", file=sys.
+          +stderr)                                                       
+      194 +            return 2                                          
+      195 +        print(f"recorded {len(recorded)} studies to {args.out}
+          +")                                                            
+      196 +        return 0                                              
+      197 +    if args.command == "prescreen" and args.prescreen_command 
+          +== "normalize-synthea":                                       
+      198 +        try:                                                  
+      199 +            tables = read_synthea_csv_dir(args.csv_dir)       
+      200 +            corpora = normalize_synthea_corpus(tables, snapsho
+          +t_date=args.snapshot)                                         
+      201 +        except (OSError, ValueError) as exc:                  
+      202 +            print(f"prescreen normalize-synthea failed: {exc}"
+          +, file=sys.stderr)                                            
+      203 +            return 2                                          
+      204 +        out = Path(args.out)                                  
+      205 +        out.parent.mkdir(parents=True, exist_ok=True)         
+      206 +        with out.open("w", encoding="utf-8") as handle:       
+      207 +            for corpus in corpora:                            
+      208 +                handle.write(json.dumps(corpus.to_dict(), sort
+          +_keys=True) + "\n")                                           
+      209 +        print(f"normalized {len(corpora)} patients to {args.ou
+          +t}")                                                          
+      210 +        return 0                                              
+      211 +    if args.command == "prescreen" and args.prescreen_command 
+          +== "ingest-pmc":                                              
+      212 +        try:                                                  
+      213 +            count = record_pmc(args.out, limit=args.limit)    
+      214 +        except Exception as exc:  # network/HTTP/parse errors 
+          +surface as a clean nonzero exit                               
+      215 +            print(f"prescreen ingest-pmc failed: {exc}", file=
+          +sys.stderr)                                                   
+      216 +            return 2                                          
+      217 +        print(f"recorded {count} PMC-Patients records to {args
+          +.out}")                                                       
+      218 +        return 0                                              
+      219 +    if args.command == "prescreen" and args.prescreen_command 
+          +== "validate":                                                
+      220 +        try:                                                  
+      221 +            trials = load_recorded_studies(args.trials) if arg
+          +s.trials else []                                              
+      222 +            corpora = []                                      
+      223 +            if args.patients:                                 
+      224 +                if args.source == "pmc":                      
+      225 +                    corpora = load_pmc_corpora(args.patients) 
+      226 +                else:                                         
+      227 +                    with Path(args.patients).open(encoding="ut
+          +f-8") as handle:                                              
+      228 +                        corpora = [                           
+      229 +                            corpus_from_dict(json.loads(line))
+      230 +                            for line in handle                
+      231 +                            if line.strip()                   
+      232 +                        ]                                     
+      233 +        except (OSError, ValueError) as exc:                  
+      234 +            print(f"prescreen validate failed: {exc}", file=sy
+          +s.stderr)                                                     
+      235 +            return 2                                          
+      236 +        report = report_for(trials=trials, corpora=corpora)   
+      237 +        text = json.dumps(report.to_dict(), indent=2, sort_key
+          +s=True) + "\n"                                                
+      238 +        if args.out:                                          
+      239 +            Path(args.out).write_text(text)                   
+      240 +        else:                                                 
+      241 +            print(text, end="")                               
+      242 +        print(                                                
+      243 +            f"checked {report.records_checked} records: "     
+      244 +            f"{report.error_count} errors, {report.warning_cou
+          +nt} warnings",                                                
+      245 +            file=sys.stderr,                                  
+      246 +        )                                                     
+      247 +        return 0 if report.ok else 7                          
+      248      if args.command == "prescreen" and args.prescreen_command 
+           == "show":
+      249          try:
+      250              trials = load_recorded_studies(args.fixtures)
+
+⏺ Let me read the existing prescreen tests to match their style precisely.
+
+  Read 2 files (ctrl+o to expand)
+⏺ Now let me write the new test files and extend the normalizer test.
+
+⏺ Update(tests/test_prescreen_normalizer.py)
+  ⎿  Added 9 lines, removed 1 line
+       6  
+       7  from __future__ import annotations
+       8  
+       9 +from pathlib import Path                                       
+      10 +                                                               
+      11  import pytest
+      12  
+      11 -from clinique.prescreen.normalizer import normalize_synthea    
+      13 +from clinique.prescreen.normalizer import (                    
+      14 +    normalize_synthea,                                         
+      15 +    normalize_synthea_corpus,                                  
+      16 +    read_synthea_csv_dir,                                      
+      17 +)                                                              
+      18  from clinique.prescreen.schemas import SYNTHEA
+      19  
+      20 +SYNTHEA_FIXTURE = Path("tests/fixtures/prescreen/synthea")     
+      21 +                                                               
+      22  TABLES = {
+      23      "patients": [
+      24          {"Id": "P1", "BIRTHDATE": "1963-07-01", "GENDER": "M"},
+
+⏺ Update(tests/test_prescreen_normalizer.py)
+  ⎿  Added 20 lines
+       94  def test_unknown_patient_raises():
+       95      with pytest.raises(ValueError, match="not found"):
+       96          normalize_synthea(TABLES, patient_id="P404", snapshot_
+           date="2026-03-01")
+       97 +                                                              
+       98 +                                                              
+       99 +def test_corpus_wide_normalization_over_committed_fixture():  
+      100 +    tables = read_synthea_csv_dir(SYNTHEA_FIXTURE)            
+      101 +    corpora = normalize_synthea_corpus(tables, snapshot_date="
+          +2026-03-01")                                                  
+      102 +    # Every patient in the export, deterministically ordered b
+          +y id.                                                         
+      103 +    assert [c.patient_id for c in corpora] == ["P1", "P2"]    
+      104 +    # Each corpus only contains its own patient's documents.  
+      105 +    for corpus in corpora:                                    
+      106 +        assert all(doc.patient_id == corpus.patient_id for doc
+          + in corpus.documents)                                         
+      107 +    # P1 carries the oncology evidence; P2 does not.          
+      108 +    p1 = next(c for c in corpora if c.patient_id == "P1")     
+      109 +    assert any("Non-small cell lung cancer" in doc.text for do
+          +c in p1.documents)                                            
+      110 +                                                              
+      111 +                                                              
+      112 +def test_corpus_wide_normalization_is_deterministic():        
+      113 +    tables = read_synthea_csv_dir(SYNTHEA_FIXTURE)            
+      114 +    first = normalize_synthea_corpus(tables, snapshot_date="20
+          +26-03-01")                                                    
+      115 +    second = normalize_synthea_corpus(tables, snapshot_date="2
+          +026-03-01")                                                   
+      116 +    assert [c.to_dict() for c in first] == [c.to_dict() for c 
+          +in second]                                                    
+
+⏺ Now the search test:
+
+⏺ Write(tests/test_prescreen_search.py)
+  ⎿  Wrote 42 lines to tests/test_prescreen_search.py
+       2 """Offline tests for ClinicalTrials.gov search-page parsing.
+       3 The network search path (``search_studies_raw``) is not exercise
+         d; ``parse_search_page`` is the
+       4 pure half and runs against a recorded (synthetic) search-respons
+         e page frozen in version control.
+       6 """
+       7 from __future__ import annotations
+       8 
+       9 import json
+      10 from pathlib import Path
+     … +38 lines (ctrl+o to expand)
+
+⏺ Write(tests/test_prescreen_pmc.py)
+  ⎿  Wrote 51 lines to tests/test_prescreen_pmc.py
+      2 """Offline tests for the PMC-Patients normalizer.
+      3 Runs against a synthetic JSONL fixture shaped like PMC-Patients r
+        ecords (no real patient text).
+      4 The network sample-fetch path is not exercised; ``parse_pmc_recor
+        d`` is the pure half.
+      5 """
+      6 
+      7 from __future__ import annotations
+      8 
+      9 from pathlib import Path
+     … +48 lines (ctrl+o to expand)
+
+⏺ Write(tests/test_prescreen_mimic.py)
+  ⎿  Wrote 66 lines to tests/test_prescreen_mimic.py
+       2 """Offline tests for the MIMIC-IV demo normalizer.
+       3 Runs against synthetic MIMIC-shaped CSVs (no real MIMIC rows are
+          committed). The PhysioNet download
+       4 path is not exercised; ``read_mimic_csv_dir`` / ``normalize_mimi
+         c`` are the pure halves.
+       6 """
+       7 from __future__ import annotations
+       8 
+       9 import gzip
+      10 import shutil
+     … +68 lines (ctrl+o to expand)
+
+⏺ Now the validation test:
+
+⏺ Write(tests/test_prescreen_validation.py)
+  ⎿  Wrote 125 lines to tests/test_prescreen_validation.py
+      1 """Tests for the prescreening conformance gate.
+      2 
+      3 The committed fixtures are expected to be clean; the failure case
+        s are constructed directly so each
+      4 invariant is exercised in isolation.
+      5 """
+      6 
+      7 from __future__ import annotations
+      8 
+      9 from pathlib import Path
+     … +122 lines (ctrl+o to expand)
+
+⏺ Let me run the prescreen test suite and ruff before docs, so I can fix any
+  issues.
+
+⏺ Bash(uv run pytest tests/test_prescreen_ingestion.py
+      tests/test_prescreen_normalizer.py tests/test_prescreen_search.py
+      tests/test_prescreen_pmc.py tests/test_prescre…)
+  ⎿  ..............................
+        [100%]
+     30 passed in 0.08s
+
+⏺ All 30 pass. Now ruff:
+
+⏺ Bash(uv run ruff check src/clinique/prescreen src/clinique/cli.py
+      tests/test_prescreen_*.py 2>&1 | tail -40)
+  ⎿  E501 Line too long (103 > 100)
+       --> src/clinique/prescreen/mimic_demo.py:91:101
+        |
+     … +20 lines (ctrl+o to expand)
+
+⏺ Three line-length fixes:
+
+⏺ Update(src/clinique/prescreen/mimic_demo.py)
+  ⎿  Added 1 line, removed 1 line
+      88  
+      89  
+      90  def _admission_dates(tables: dict[str, list[dict[str, str]]]) -
+          > dict[str, str | None]:
+      91 -    """Map ``hadm_id`` -> admission date, used to date diagnose
+         -s (which carry no date of their own)."""                       
+      91 +    """Map ``hadm_id`` -> admission date; used to date diagnose
+         +s (which carry no date themselves)."""                         
+      92      return {
+      93          row.get("hadm_id", ""): _date_only(row.get("admittime")
+          )
+      94          for row in tables.get("admissions", [])
+
+⏺ Update(src/clinique/prescreen/pmc_patients.py)
+  ⎿  Added 1 line, removed 1 line
+      49      """Build a ``PatientCorpus`` from one PMC-Patients record. 
+          Pure and deterministic.
+      50  
+      51      The free-text summary becomes a single ``note`` document; d
+          emographics come from the structured
+      52 -    ``age``/``gender`` fields. ``snapshot_date`` is ``None`` be
+         -cause a case report has no as-of time.                         
+      52 +    ``age``/``gender`` fields. ``snapshot_date`` is ``None`` (a
+         + case report has no as-of time).                               
+      53      """
+      54      patient_id = str(raw.get("patient_id") or raw.get("patient_
+          uid") or "").strip()
+      55      if not patient_id:
+
+⏺ Update(src/clinique/prescreen/validation.py)
+  ⎿  Added 1 line, removed 1 line
+      149  
+      150  
+      151  def validate_patient_corpus(corpus: PatientCorpus) -> list[Val
+           idationIssue]:
+      152 -    """Check one ``PatientCorpus`` against patient-side vocabu
+          -laries and the no-leakage invariant."""                       
+      152 +    """Check one ``PatientCorpus`` against patient-side vocabu
+          +laries and the no-leakage rule."""                            
+      153      rid = corpus.patient_id or "<missing>"
+      154      issues: list[ValidationIssue] = []
+      155  
+
+⏺ Bash(uv run ruff check . 2>&1 | tail -20 && echo "---FORMAT---" && uv run ruff
+       format . 2>&1 | tail -20)
+  ⎿  47 | |         title="t",
+     48 | |         conditions=("Lung Cancer",),
+     49 | |         phase="PHASE3",
+     … +20 lines (ctrl+o to expand)
+
+⏺ Ruff wants the dict() call as a literal. Let me fix the test helper.
+
+⏺ Update(tests/test_prescreen_validation.py)  ⎿  Added 15 lines, removed 15 lines
+      41  
+      42  
+      43  def _trial(**overrides) -> Trial:
+      44 -    base = dict(                                               
+      45 -        trial_id="NCT12345678",                                
+      46 -        source="clinicaltrials_gov",                           
+      47 -        title="t",                                             
+      48 -        conditions=("Lung Cancer",),                           
+      49 -        phase="PHASE3",                                        
+      50 -        recruitment_status="RECRUITING",                       
+      51 -        eligibility_text="Inclusion Criteria: age 18+",        
+      52 -        sex="ALL",                                             
+      53 -        accepts_healthy_volunteers=False,                      
+      54 -        minimum_age=AgeBound("18 Years", 18.0),                
+      55 -        maximum_age=AgeBound(None, None),                      
+      56 -        std_ages=("ADULT",),                                   
+      57 -        sponsor="s",                                           
+      58 -    )                                                          
+      44 +    base = {                                                   
+      45 +        "trial_id": "NCT12345678",                             
+      46 +        "source": "clinicaltrials_gov",                        
+      47 +        "title": "t",                                          
+      48 +        "conditions": ("Lung Cancer",),                        
+      49 +        "phase": "PHASE3",                                     
+      50 +        "recruitment_status": "RECRUITING",                    
+      51 +        "eligibility_text": "Inclusion Criteria: age 18+",     
+      52 +        "sex": "ALL",                                          
+      53 +        "accepts_healthy_volunteers": False,                   
+      54 +        "minimum_age": AgeBound("18 Years", 18.0),             
+      55 +        "maximum_age": AgeBound(None, None),                   
+      56 +        "std_ages": ("ADULT",),                                
+      57 +        "sponsor": "s",                                        
+      58 +    }                                                          
+      59      base.update(overrides)
+      60      return Trial(**base)
+      61  
+
+⏺ Bash(uv run ruff check . 2>&1 | tail -10 && echo "===FORMAT CHECK===" && uv
+      run ruff format --check . 2>&1 | tail -10)
+  ⎿    --> src/clinique/prescreen/mimic_demo.py:91:101
+        |
+     90 | def _admission_dates(tables: dict[str, list[dict[str, str]]]) ->
+     … +12 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(src/clinique/prescreen/mimic_demo.py)
+  ⎿  Added 1 line, removed 1 line
+      88  
+      89  
+      90  def _admission_dates(tables: dict[str, list[dict[str, str]]]) -
+          > dict[str, str | None]:
+      91 -    """Map ``hadm_id`` -> admission date; used to date diagnose
+         -s (which carry no date themselves)."""                         
+      91 +    """Map ``hadm_id`` -> admission date; diagnoses carry no da
+         +te and are dated via this."""                                  
+      92      return {
+      93          row.get("hadm_id", ""): _date_only(row.get("admittime")
+          )
+      94          for row in tables.get("admissions", [])
+
+⏺ Bash(uv run ruff check . 2>&1 | tail -5 && echo "===FULL TEST SUITE===" && uv
+      run pytest -q 2>&1 | tail -20)
+  ⎿  All checks passed!
+     ===FULL TEST SUITE===
+     ......................................................................
+     … +8 lines (ctrl+o to expand)
+
+⏺ Ruff clean, all 217 tests pass. Now the CLI verification commands:
+
+⏺ Bash(echo "=== show ===" && uv run clinique prescreen show --fixtures
+      tests/fixtures/prescreen/trials.jsonl && echo "=== validate pmc (expect
+      ok, exit 0) ===" && uv…)
+  ⎿  === show ===
+     NCT02578680  [PHASE3] COMPLETED  min_age=18.0  Study of Pemetrexed+Pla
+     tinum Chemotherapy With or Without Pembrolizuma
+     … +11 lines (ctrl+o to expand)
+
+⏺ Let me verify the trial validation path and the normalize-synthea → validate
+  round-trip, plus confirm exit code 7 fires on a leakage violation:
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      echo "=== validate trials (expect ok) ===" && uv run clinique prescreen
+      validate --trials tests/fixtures/prescreen/trials.json…)
+  ⎿  === validate trials (expect ok) ===
+     {
+       "error_count": 0,
+     … +34 lines (ctrl+o to expand)
+
+⏺ All CLI paths work and exit code 7 fires correctly on leakage. Let me complete
+   verification and move to docs.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(tests/fixtures/prescreen/PROVENANCE.md)
+  ⎿  Added 20 lines, removed 5 lines
+      23  or data-use agreement. The live API mutates as trials update; t
+          his frozen copy is the test of
+      24  record. Re-run the `ingest` command to refresh.
+      25  
+      26 -## Synthea (patient side)                                      
+      26 +To pull a whole disease area instead of an enumerated id list, 
+         +use search + pagination:                                       
+      27  
+      28 -No Synthea export is committed. The normalizer's input contract
+         - is documented inline in                                       
+      29 -`tests/test_prescreen_normalizer.py` using Synthea-shaped row d
+         -icts (fully synthetic, no PHI).                                
+      30 -Generate a real export with the Synthea tool (Apache-2.0) and p
+         -oint `read_synthea_csv_dir` at the                             
+      31 -output `csv/` directory.                                       
+      28 +```bash                                                        
+      29 +uv run clinique prescreen search --cond "Non-Small Cell Lung Ca
+         +ncer" \                                                        
+      30 +  --status RECRUITING --max 200 --out tests/fixtures/prescreen/
+         +trials.jsonl                                                   
+      31 +```                                                            
+      32 +                                                               
+      33 +## `search_nsclc_page.json`                                    
+      34 +                                                               
+      35 +A single **synthetic** ClinicalTrials.gov v2 *search-response p
+         +age* (two trimmed studies plus a                               
+      36 +`nextPageToken`). It exists to test `parse_search_page` offline
+         + — the pure half of the network                                
+      37 +search path — without freezing a real, mutating search result. 
+      38 +                                                               
+      39 +## Other sources                                               
+      40 +                                                               
+      41 +Per-source synthetic fixtures and their record commands live ne
+         +xt to the data:                                                
+      42 +                                                               
+      43 +- Synthea — `synthea/` + `synthea/PROVENANCE.md`               
+      44 +- PMC-Patients — `pmc_patients.jsonl` + `pmc_patients.PROVENANC
+         +E.md`                                                          
+      45 +- MIMIC-IV demo — `mimic_demo/` + `mimic_demo/PROVENANCE.md` (r
+         +eal demo is de-identified data; only                           
+      46 +  synthetic-shaped rows are committed)                         
+
+⏺ Now the design doc status section:
+
+⏺ Bash(sed -n '1,30p' docs/design/trial-prescreening.md)
+  ⎿  # Trial prescreening agent — design
+
+     **Background:** [Eligibility criteria primer §7–8](../primer/clinical-
+     … +27 lines (ctrl+o to expand)
+
+⏺ Update(docs/design/trial-prescreening.md)
+  ⎿  Added 14 lines, removed 5 lines
+       4  [ANC example §14](../primer/clinical-trials-for-ml.md#14-one-co
+          ncrete-example),
+       5  [minimum schema §13](../primer/clinical-trials-for-ml.md#13-how
+          -to-think-about-the-data-model-for-your-proof-point).
+       6  
+       7 -**Status:** `L0-PUBLIC-SCAFFOLD` (2026-05-24). The genuinely-pu
+         -blic L0 path is implemented:                                   
+       8 -ClinicalTrials.gov trial ingestion + JSONL fixture recorder and
+         - a Synthea patient normalizer, both                            
+       9 -deterministic and offline-tested. Atomizer, retriever, criterio
+         -n judge, evidence-provenance gate,                             
+      10 -and orchestrator remain proposed. Reuses the platform substrate
+         - ([provenance ledger + provenance                              
+      11 -gate](biostat-agent-suite.md)); nothing ships until L0–L2 evide
+         -nce meets the gates below.                                     
+       7 +**Status:** `L0-PUBLIC-DATA` (2026-05-24). The genuinely-public
+         + **data layer** is implemented end to                          
+       8 +end: heterogeneous public sources are fetched, parsed, and prov
+         +en to converge on the internal model.                          
+       9 +ClinicalTrials.gov trial ingestion now includes **search + pagi
+         +nation** (pull a whole disease area,                           
+      10 +not a hand-typed id list) alongside the single-study recorder. 
+         +Three patient sources normalize onto                           
+      11 +the shared `PatientCorpus`/`PatientDocument` records: **Synthea
+         +** (corpus-wide, committed synthetic                           
+      12 +fixture), **PMC-Patients** (open real free-text case reports → 
+         +`note` documents), and the                                     
+      13 +**MIMIC-IV demo** (real de-identified structured data; only syn
+         +thetic-shaped fixtures committed). A                           
+      14 +dedicated **conformance gate** (`validation.py`, CLI `prescreen
+         + validate`, exit code 7) enforces the                          
+      15 +controlled vocabularies, age-bound sanity, duplicate-id, and th
+         +e snapshot **no-leakage** invariant.                           
+      16 +All paths are deterministic and offline-tested.                
+      17  
+      18 +Atomizer, retriever, criterion judge, evidence-provenance gate,
+         + and orchestrator remain proposed.                             
+      19 +Reuses the platform substrate ([provenance ledger + provenance 
+         +gate](biostat-agent-suite.md));                                
+      20 +nothing ships until L0–L2 evidence meets the gates below.      
+      21 +                                                               
+      22  Evidence-grounded **trial prescreening copilot**. A coordinator
+          , clinician, or trial-ops user
+      23  provides a trial eligibility section and a patient record; the 
+          agent returns atomic criteria,
+      24  retrieved patient evidence per criterion, a criterion-level dec
+          ision, and an overall prescreening
+
+⏺ Now update CLAUDE.md and AGENTS.md. Let me check the AGENTS.md prescreen
+  section:
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+⏺ AGENTS.md only lists prescreen/ generically — no detailed paragraph to update
+  there. The detail lives in CLAUDE.md. Let me update that paragraph:
+
+⏺ Update(CLAUDE.md)
+  ⎿  File must be read first
+
+  Read 1 file (ctrl+o to expand)
+⏺ Update(CLAUDE.md)
+  ⎿  Added 14 lines, removed 5 lines
+       92  is intentionally `false` until real internal EDC data and pros
+           pective runs exist; do not flip
+       93  gates to make it pass.
+       94  
+       95 -**`prescreen/`** (trial prescreening, L0 public scaffold) inge
+          -sts ClinicalTrials.gov eligibility                            
+       96 -into typed `Trial` records (record-and-replay JSONL fixtures) 
+          -and normalizes Synthea CSV exports                            
+       97 -into a `PatientCorpus`. CLI: `prescreen ingest` (network, reco
+          -rds fixture) and `prescreen show`                             
+       98 -(offline summary). Atomizer, retriever, judge, and evidence ga
+          -te are design-only for now — see                              
+       99 -`docs/design/trial-prescreening.md`.                          
+       95 +**`prescreen/`** (trial prescreening, L0 public data layer) fe
+          +tches, parses, and validates the                              
+       96 +public data, converging heterogeneous sources onto two typed r
+          +ecords: `Trial` (ClinicalTrials.gov)                          
+       97 +and `PatientCorpus`/`PatientDocument` (all patient sources). T
+          +rial ingestion supports both an                               
+       98 +enumerated-id recorder and **search + pagination** (`ingestion
+          +.py`). Three patient sources                                  
+       99 +normalize to the shared corpus: Synthea (`normalizer.py`, corp
+          +us-wide), PMC-Patients                                        
+      100 +(`pmc_patients.py`, real free text → `note` docs), and the MIM
+          +IC-IV demo (`mimic_demo.py`, real                             
+      101 +de-identified structured data — only synthetic-shaped fixtures
+          + are committed). Every source keeps                           
+      102 +the **fetch/parse split**: network fetchers record raw snapsho
+          +ts; pure parsers are offline-tested                           
+      103 +against committed fixtures. `validation.py` is the **conforman
+          +ce gate** — controlled vocabularies                           
+      104 +(in `schemas.py`), age-bound sanity, duplicate-id, and the sna
+          +pshot **no-leakage** invariant                                
+      105 +(`document.date` ≤ `snapshot_date`). CLI: `prescreen ingest` /
+          + `search` / `normalize-synthea` /                             
+      106 +`ingest-pmc` (record fixtures), `prescreen validate` (exit `7`
+          + on error-severity issues), and                               
+      107 +`prescreen show` (offline summary). Atomizer, retriever, judge
+          +, and evidence gate are design-only                           
+      108 +for now — see `docs/design/trial-prescreening.md`.            
+      109  
+      110  Other capabilities (`estimand/`, `programming/`, `dryrun/`, `c
+           onformance/`, `io/xpt.py`) follow the
+      111  same shape: deterministic logic over typed records, validated 
+           against synthetic fixtures and, where
+
+⏺ Let me also update the prescreen commands snippet near the top of CLAUDE.md:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 5 lines, removed 1 line
+      29  uv run ruff format .    # format
+      30  
+      31  # Prescreen L0 (offline tests + fixture summary)
+      32 -uv run pytest tests/test_prescreen_ingestion.py tests/test_pres
+         -creen_normalizer.py -q                                         
+      32 +uv run pytest tests/test_prescreen_ingestion.py tests/test_pres
+         +creen_normalizer.py \                                          
+      33 +  tests/test_prescreen_search.py tests/test_prescreen_pmc.py \ 
+      34 +  tests/test_prescreen_mimic.py tests/test_prescreen_validation
+         +.py -q                                                         
+      35  uv run clinique prescreen show --fixtures tests/fixtures/prescr
+          een/trials.jsonl
+      36 +uv run clinique prescreen validate --trials tests/fixtures/pres
+         +creen/trials.jsonl \                                           
+      37 +  --patients tests/fixtures/prescreen/pmc_patients.jsonl --sour
+         +ce pmc   # exit 7 on errors                                    
+      38  ```
+      39  
+      40  R-backed engine (rpact) runs in a pinned Docker image. Bring up
+           the daemon (`colima start` or
+
+⏺ All tasks complete. Let me give a final educational wrap-up and summary.
+
+  ★ Insight ─────────────────────────────────────
+  - The fetch/parse split paid off across all four sources. Each new source has
+  a network half (search_studies_raw, fetch_pmc_sample_raw, record_mimic) and a
+  pure half (parse_search_page, parse_pmc_record, normalize_mimic). Only the
+  pure halves are tested — so the entire 30-test prescreen suite runs offline in
+   0.08s with zero network flakiness, exactly mirroring the existing
+  fetch_study_raw-is-not-tested posture.
+  - Controlled vocabularies as data, not code. Putting TRIAL_PHASES,
+  PATIENT_SEX, etc. as frozensets in schemas.py (next to the records they
+  constrain) means the model definition and its allowed values can't drift
+  apart, and validation.py stays a thin consumer. An unexpected enum value now
+  means "the API changed or we mis-mapped" — which is precisely the signal a
+  conformance gate should raise.
+  - The leakage check is the sharpest conformance test. It encodes a temporal
+  invariant the type system can't: document.date ≤ snapshot_date. That's the
+  difference between "the data is well-typed" and "the data behaves the way our
+  mental model says it should."
+  ─────────────────────────────────────────────────
+
+  Done — public data layer: fetch, parse, validate
+
+  All 217 tests pass; ruff clean; CLI verified end-to-end (including exit code 7
+   firing on a leakage violation).
+
+  What now exists — heterogeneous public sources converge on two typed records:
+
+  Source: ClinicalTrials.gov
+  Module: ingestion.py
+  Maps to: Trial
+  Fetch / Parse: + search + pagination (search_studies_raw / parse_search_page /
+
+    record_search)
+  ────────────────────────────────────────
+  Source: Synthea
+  Module: normalizer.py
+  Maps to: PatientCorpus
+  Fetch / Parse: + corpus-wide (normalize_synthea_corpus) + committed fixture
+  ────────────────────────────────────────
+  Source: PMC-Patients
+  Module: pmc_patients.py (new)
+  Maps to: PatientCorpus
+  Fetch / Parse: real free text → note docs
+  ────────────────────────────────────────
+  Source: MIMIC-IV demo
+  Module: mimic_demo.py (new)
+  Maps to: PatientCorpus
+  Fetch / Parse: structured dx/labs/meds/procedures; .csv/.csv.gz;
+  synthetic-only
+    fixtures
+
+  The conformance gate (validation.py, new): controlled-vocab checks, age-bound
+  sanity (min ≤ max, non-negative, parse-failure warnings), duplicate doc_id,
+  date parseability, and the snapshot no-leakage invariant. ValidationReport.ok
+  ⇒ CLI exit 0/7.
+
+  CLI (cli.py): search, normalize-synthea, ingest-pmc, validate added;
+  ingest/show untouched.
+
+  Fixtures (all PHI-free/synthetic, each with PROVENANCE.md): synthea/,
+  mimic_demo/, pmc_patients.jsonl, search_nsclc_page.json.
+
+  Tests: test_prescreen_{search,pmc,mimic,validation}.py + corpus-wide cases
+  added to test_prescreen_normalizer.py.
+
+  Docs: updated CLAUDE.md, docs/design/trial-prescreening.md (status now
+  L0-PUBLIC-DATA), and the fixture PROVENANCE.md files.
+
+  Deliberately untouched (deferred per design doc): atomizer, retriever, judge,
+  aggregator, evidence-provenance gate, orchestrator — the LLM/decision stages.
+  This work stops exactly where you asked: data fetched, parsed, and proven to
+  conform to the model.
+
+  One note on a runtime constraint I respected: everything stays stdlib-only
+  (urllib, json, csv, gzip) — no new dependencies in pyproject.toml. The network
+   paths (search, ingest-pmc, MIMIC download) are not in CI by design; record
+  them manually into fixtures, same as the existing ingest.
+
+  Nothing here is committed — all changes are in your working tree. Want me to
+  stage and commit on a branch?
+
+✻ Churned for 12m 18s
+
+❯ /review                                                                       
+
+⏺ Bash(gh pr list 2>&1 | head -30; echo "---STATUS---"; git status --short |
+      head -40)
+  ⎿  ---STATUS---
+      M CLAUDE.md
+      M docs/design/trial-prescreening.md
+     … +18 lines (ctrl+o to expand)
+
+⏺ No open PRs — this is the uncommitted prescreen data-layer work from this
+  session. I'll review the local changes. Let me pull the full diff (tracked +
+  new files).
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      echo "===== DIFFSTAT (tracked + untracked) ====="…)
+  ⎿  ===== DIFFSTAT (tracked + untracked) =====
+      CLAUDE.md                                          |  25 +-
+      docs/design/trial-prescreening.md                  |  19 +-
+     … +101 lines (ctrl+o to expand)
+
+⏺ Let me restore the git state I touched for the diff (the intent-to-add
+  markers), then review.
+
+⏺ Bash(git reset -q && git status --short | grep -c '^??' | xargs echo
+      "untracked files restored:")
+  ⎿  untracked files restored: 12
+
+⏺ Code Review: Prescreen L0 Public Data Layer
+
+  Scope: 34 files, +1407/−18. No open PR — reviewing the uncommitted working
+  tree from this session. All 217 tests pass, ruff clean.
+
+  Overview
+
+  Adds the "fetch all public data, parse, validate" layer to prescreen/: CT.gov
+  search+pagination, three patient-source normalizers (Synthea corpus-wide,
+  PMC-Patients, MIMIC-IV demo) converging on PatientCorpus, and a validation.py
+  conformance gate wired to a prescreen validate CLI (exit 7). Synthetic
+  fixtures + PROVENANCE for each source.
+
+  Strengths
+
+  - Fetch/parse split is held consistently across all sources — only pure halves
+   are tested, so CI stays offline. This is the codebase's core discipline and
+  it's respected everywhere.
+  - Leakage check (document.date ≤ snapshot_date) is the standout: it encodes a
+  temporal invariant the type system can't, directly serving the "conforms to
+  our mental model" goal.
+  - Controlled vocab as data in schemas.py keeps the model and its allowed
+  values from drifting; validation.py stays a thin consumer.
+  - PHI discipline correct: MIMIC-IV demo (real de-identified) gets
+  synthetic-only fixtures with an explicit PROVENANCE warning; real fetch
+  documented but not committed.
+  - Determinism preserved (sorted ids, stable doc_ids), stdlib-only, exit-code
+  convention extended cleanly (7).
+
+  Issues & Risks
+
+  1. prescreen search with no filters silently fetches the entire registry 
+  (medium — real footgun).
+  In search_studies_raw, if cond/term/status are all None, the query has only
+  fields/pageSize/countTotal → it paginates all ~500k studies until
+  nextPageToken runs out (no --max default either). One accidental clinique 
+  prescreen search --out x.jsonl hammers the API. Suggest guarding in the CLI
+  handler or the function:
+  if not (cond or term or status) and max_studies is None:
+      raise ValueError("refusing an unbounded search: pass 
+  --cond/--term/--status or --max")
+
+  2. Pagination/nctId edge cases (low).
+  - record_search does
+  payload["protocolSection"]["identificationModule"]["nctId"] — KeyError if a
+  study lacks it. record_studies (existing) has the same shape, so it's
+  consistent, but the search corpus is larger and more likely to hit an oddball
+  record; a .get(...) chain with a clear error would be friendlier.
+  - search_studies_raw loops while nextPageToken is truthy; a page with zero
+  studies but a stale token would spin (won't happen with the real API, but the
+  loop has no page-count ceiling). Minor since it's the untested network path.
+
+  3. filter.overallStatus join separator unverified (low). You join statuses
+  with ,. The v2 API has used both comma and pipe-style list encodings across
+  revisions — worth a one-time live check before relying on multi-status
+  filters, since this path isn't tested.
+
+  4. Cross-source demographics shape is not uniform (low, but tension with the 
+  "one model" goal).
+  - Synthea emits {age, sex, birthdate}; PMC and MIMIC emit {age, sex} (no
+  birthdate).
+  - age semantics differ: Synthea computes age at snapshot_date; MIMIC uses
+  anchor_age (age at anchor_year, not at snapshot). Both are reasonable given
+  the sources, but a downstream consumer comparing demographics["age"] across
+  sources is comparing slightly different things. Since demographics is an
+  untyped dict, validation can't catch this. Worth a comment in mimic_demo
+  noting the anchor_age semantics, and consider whether birthdate should be
+  present (as None) everywhere for shape stability.
+
+  5. validate with neither --trials nor --patients returns ok=True, exit 0 
+  (low). A no-op invocation looks like a passing gate. Consider erroring (exit
+  2) when both are absent.
+
+  Nits:
+  - record_mimic has a function-local import json; move to module top for
+  consistency with the rest.
+  - search_studies_raw always requests pageSize=100 even when max_studies < 100
+  — one oversized fetch; cap page_size = min(page_size, max_studies) when set.
+  - validate_patient_corpus age check isinstance(age, (int, float)) also accepts
+   bool (bool ⊂ int); harmless here since age is never bool.
+
+  Test Coverage
+
+  Solid for the pure paths: search parsing + round-trip, PMC
+  demographics/note/determinism, MIMIC domain mapping + gzip + corpus ordering,
+  validation (clean fixtures pass, bad enum, min>max, leakage, on-snapshot
+  allowed, bad source/sex).
+
+  Gaps worth a test each: the age-bound parse-failure warning (age_unparsed),
+  duplicate doc_id error, and observation-missing-value warning are implemented
+  but unexercised. The leakage negative across a real corpus (MIMIC with
+  snapshot before some doc) would be a nice end-to-end assertion.
+
+  Verdict
+
+  Well-structured, conventions-respecting, and the conformance gate genuinely
+  delivers the requested guarantee. Issue #1 (unbounded search) is the only one 
+  I'd fix before committing — it's a real operational footgun. The rest are
+  low-severity polish. Want me to apply the search guard and add the three
+  missing validation tests?
+
+✻ Brewed for 1m 2s
+
+❯ fix and commit                                                                
+
+⏺ I'll fix the real footgun (unbounded search) plus the cheap nits I flagged,
+  add the three missing validation tests, then commit. Let me start with the
+  search guard.
+
+⏺ Update(src/clinique/prescreen/ingestion.py)
+  ⎿  Added 10 lines
+      107      ``filter.overallStatus`` and follows ``nextPageToken`` unt
+           il the results are exhausted or
+      108      ``max_studies`` payloads have been yielded. Like ``fetch_s
+           tudy_raw`` this is not exercised by
+      109      tests; ``parse_search_page`` is the pure, offline-tested h
+           alf.
+      110 +                                                              
+      111 +    Refuses an unbounded sweep: at least one of ``cond`` / ``t
+          +erm`` / ``status`` or an explicit                             
+      112 +    ``max_studies`` is required, so a bare call cannot acciden
+          +tally page the whole registry.                                
+      113      """
+      114 +    if not (cond or term or status) and max_studies is None:  
+      115 +        raise ValueError(                                     
+      116 +            "refusing an unbounded search of the full registry
+          +: pass a query "                                              
+      117 +            "(cond/term/status) or set max_studies"           
+      118 +        )                                                     
+      119 +    if max_studies is not None:                               
+      120 +        page_size = min(page_size, max_studies)               
+      121      base_params: list[tuple[str, str]] = [
+      122          ("fields", ",".join(fields)),
+      123          ("pageSize", str(page_size)),
+
+⏺ Now the record_mimic import and the anchor_age semantics comment in
+  mimic_demo.py:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(src/clinique/prescreen/mimic_demo.py)
+  ⎿  Added 1 line
+      21  
+      22  import csv
+      23  import gzip
+      24 +import json                                                    
+      25  from pathlib import Path
+      26  from typing import Any
+      27  
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(src/clinique/prescreen/mimic_demo.py)
+  ⎿  Added 4 lines
+      117      if patient_row is None:
+      118          raise ValueError(f"subject {subject_id!r} not found in
+            MIMIC patients table")
+      119  
+      120 +    # NB: ``anchor_age`` is the patient's age at ``anchor_year
+          +`` (a deidentification artifact), not                         
+      121 +    # age *at snapshot_date*. This differs from the Synthea no
+          +rmalizer, which computes age at the                           
+      122 +    # snapshot. MIMIC carries no real birthdate, so anchor_age
+          + is the best available approximation;                         
+      123 +    # downstream code comparing demographics["age"] across sou
+          +rces should be aware of the gap.                              
+      124      demographics = {
+      125          "age": int(patient_row["anchor_age"])
+      126          if (patient_row.get("anchor_age") or "").isdigit()
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(src/clinique/prescreen/mimic_demo.py)
+  ⎿  Removed 2 lines
+      258      PhysioNet (no DUA required), point ``src_dir`` at its ``ho
+           sp`` CSVs, and this writes one
+      259      ``PatientCorpus`` JSON per line to a local, git-ignored pa
+           th. Returns the count written.
+      260      """
+      261 -    import json                                               
+      262 -                                                              
+      261      tables = read_mimic_csv_dir(src_dir)
+      262      corpora = normalize_mimic_corpus(tables, snapshot_date=Non
+           e)
+      263      out = Path(out_dir)
+
+⏺ Now the CLI validate no-input guard. Let me read that handler:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(src/clinique/cli.py)
+  ⎿  Added 3 lines
+      215          print(f"recorded {count} PMC-Patients records to {args
+           .out}")
+      216          return 0
+      217      if args.command == "prescreen" and args.prescreen_command 
+           == "validate":
+      218 +        if not args.trials and not args.patients:             
+      219 +            print("prescreen validate: pass --trials and/or --
+          +patients", file=sys.stderr)                                   
+      220 +            return 2                                          
+      221          try:
+      222              trials = load_recorded_studies(args.trials) if arg
+           s.trials else []
+      223              corpora = []
+
+⏺ Now add the missing tests — validation edge cases and the search guard:
+
+⏺ Update(tests/test_prescreen_validation.py)
+  ⎿  Added 7 lines
+      83      assert not _codes(issues, "error")
+      84  
+      85  
+      86 +def test_unparsed_age_bound_is_a_warning():                    
+      87 +    # A raw string that AgeBound could not turn into years (yea
+         +rs is None despite a raw value).                               
+      88 +    issues = validate_trial(_trial(minimum_age=AgeBound("N/A", 
+         +None)))                                                        
+      89 +    assert "age_unparsed" in _codes(issues, "warning")         
+      90 +    assert not _codes(issues, "error")                         
+      91 +                                                               
+      92 +                                                               
+      93  def _corpus(snapshot, doc_date) -> PatientCorpus:
+      94      return PatientCorpus(
+      95          patient_id="P1",
+
+⏺ Update(tests/test_prescreen_validation.py)
+  ⎿  Added 41 lines
+      119      assert "leakage" not in _codes(issues, "error")
+      120  
+      121  
+      122 +def test_duplicate_doc_id_is_an_error():                      
+      123 +    dup = PatientDocument(                                    
+      124 +        doc_id="P1:condition:0000",                           
+      125 +        patient_id="P1",                                      
+      126 +        date=None,                                            
+      127 +        source_type="condition",                              
+      128 +        text="x",                                             
+      129 +        structured={},                                        
+      130 +    )                                                         
+      131 +    corpus = PatientCorpus(                                   
+      132 +        patient_id="P1",                                      
+      133 +        snapshot_date=None,                                   
+      134 +        source=SYNTHEA,                                       
+      135 +        demographics={},                                      
+      136 +        documents=(dup, dup),                                 
+      137 +    )                                                         
+      138 +    assert "doc_id_duplicate" in _codes(validate_patient_corpu
+          +s(corpus), "error")                                           
+      139 +                                                              
+      140 +                                                              
+      141 +def test_observation_without_value_is_a_warning():            
+      142 +    corpus = PatientCorpus(                                   
+      143 +        patient_id="P1",                                      
+      144 +        snapshot_date=None,                                   
+      145 +        source=SYNTHEA,                                       
+      146 +        demographics={},                                      
+      147 +        documents=(                                           
+      148 +            PatientDocument(                                  
+      149 +                doc_id="P1:observation:0000",                 
+      150 +                patient_id="P1",                              
+      151 +                date=None,                                    
+      152 +                source_type="observation",                    
+      153 +                text="ANC",                                   
+      154 +                structured={"code": "x", "description": "ANC"}
+          +,  # no "value"                                               
+      155 +            ),                                                
+      156 +        ),                                                    
+      157 +    )                                                         
+      158 +    issues = validate_patient_corpus(corpus)                  
+      159 +    assert "observation_no_value" in _codes(issues, "warning")
+      160 +    assert not _codes(issues, "error")                        
+      161 +                                                              
+      162 +                                                              
+      163  def test_bad_patient_source_and_sex_are_errors():
+      164      corpus = PatientCorpus(
+      165          patient_id="P1",
+
+⏺ Now a test for the unbounded-search guard:
+
+⏺ Update(tests/test_prescreen_search.py)
+  ⎿  Added 5 lines, removed 1 line
+      11  
+      12  import pytest
+      13  
+      14 -from clinique.prescreen.ingestion import parse_search_page, par
+         -se_study                                                       
+      14 +from clinique.prescreen.ingestion import (                     
+      15 +    parse_search_page,                                         
+      16 +    parse_study,                                               
+      17 +    search_studies_raw,                                        
+      18 +)                                                              
+      19  from clinique.prescreen.schemas import CLINICALTRIALS_GOV
+      20  
+      21  FIXTURE = Path("tests/fixtures/prescreen/search_nsclc_page.json
+          ")
+
+⏺ Update(tests/test_prescreen_search.py)
+  ⎿  Added 7 lines
+      44  def test_parse_search_page_rejects_non_search_payload():
+      45      with pytest.raises(ValueError, match="studies"):
+      46          parse_search_page({"protocolSection": {}})
+      47 +                                                               
+      48 +                                                               
+      49 +def test_unbounded_search_is_refused_before_any_network_call():
+      50 +    # No query and no max_studies -> must raise (the generator 
+         +validates eagerly), so this never                              
+      51 +    # touches the network even though search_studies_raw is oth
+         +erwise a network path.                                         
+      52 +    with pytest.raises(ValueError, match="unbounded"):         
+      53 +        next(search_studies_raw())                             
+
+⏺ Now verify everything passes and lint is clean:
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      uv run ruff check . 2>&1 | tail -5…)
+  ⎿  All checks passed!
+     ===== FORMAT CHECK =====
+     75 files already formatted
+     … +10 lines (ctrl+o to expand)
+
+⏺ All 221 tests pass (+4 new), ruff and format clean. Quick CLI smoke-check of
+  the two new guards:
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      echo "=== validate with no inputs (expect exit 2) ==="…)
+  ⎿  === validate with no inputs (expect exit 2) ===
+     prescreen validate: pass --trials and/or --patients
+     exit=2
+     … +2 lines (ctrl+o to expand)
+
+⏺ Both guards work. Now committing — we're on main (the default branch), so per
+  repo convention I'll branch first.
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      git checkout -b feat/prescreen-public-data-layer…)
+  ⎿  Switched to a new branch 'feat/prescreen-public-data-layer'
+     M  CLAUDE.md
+     M  docs/design/trial-prescreening.md
+     … +20 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      git commit -q -F - <<'EOF'…)
+  ⎿  5a15800 feat(prescreen): fetch, parse, and validate all public data so
+     urces (L0)
+
+⏺ Done. Fixes applied and committed.
+
+  What I fixed (from the review)
+
+  ┌──────────────────────┬──────────────────────────────────────────────────┐
+  │        Issue         │                       Fix                        │
+  ├──────────────────────┼──────────────────────────────────────────────────┤
+  │                      │ search_studies_raw now raises if no              │
+  │ Unbounded search     │ cond/term/status and no max_studies — can't      │
+  │ footgun (medium)     │ accidentally page the whole registry. Also caps  │
+  │                      │ page_size to max_studies.                        │
+  ├──────────────────────┼──────────────────────────────────────────────────┤
+  │ validate with no     │ CLI now errors with exit 2 when neither --trials │
+  │ inputs looked like a │  nor --patients is given.                        │
+  │  pass (low)          │                                                  │
+  ├──────────────────────┼──────────────────────────────────────────────────┤
+  │ MIMIC anchor_age     │ Added a comment documenting that it's            │
+  │ semantics (low)      │ age-at-anchor-year, not at snapshot — differs    │
+  │                      │ from Synthea's age-at-snapshot.                  │
+  ├──────────────────────┼──────────────────────────────────────────────────┤
+  │ record_mimic local   │ Moved import json to module top.                 │
+  │ import (nit)         │                                                  │
+  └──────────────────────┴──────────────────────────────────────────────────┘
+
+  Tests added (+4, now 221 passing)
+
+  - age_unparsed warning (raw bound that didn't parse to years)
+  - doc_id_duplicate error
+  - observation_no_value warning
+  - unbounded-search guard raises before any network call
+
+  Verification
+
+  - ruff check . → all checks passed; ruff format --check . → clean
+  - pytest → 221 passed
+  - CLI smoke: validate with no inputs → exit 2; pmc validate → exit 0
+
+  Commit
+
+  Branched off main (default) per convention, then committed:
+
+  5a15800  feat(prescreen): fetch, parse, and validate all public data sources
+  (L0)
+    branch: feat/prescreen-public-data-layer
+
+  Nothing pushed. I left the items I deemed not worth changing now (e.g.
+  unifying the demographics dict shape across sources, and verifying the live
+  filter.overallStatus join separator) — both touch the untested network path or
+   would change the free-form demographics contract. Want me to push and open a
+  PR, or address either of those before pushing?
+
+✻ Cooked for 1m 24s
+
+❯ push                                                                          
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      git remote -v 2>&1 | head -4)
+  ⎿  origin     git@github.com:phi9t/clinique.git (fetch)
+     origin     git@github.com:phi9t/clinique.git (push)
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      git push -u origin feat/prescreen-public-data-layer 2>&1 | tail -15)  ⎿  remote:
+     remote: Create a pull request for 'feat/prescreen-public-data-layer' o
+     n GitHub by visiting:
+     … +8 lines (ctrl+o to expand)
+
+⏺ Pushed. feat/prescreen-public-data-layer is now on origin, tracking set up.
+
+  GitHub's offering a PR link:
+  https://github.com/phi9t/clinique/pull/new/feat/prescreen-public-data-layer
+
+  Want me to open the PR with gh (I'll write the description from the commit),
+  or leave it as just the branch?
+
+✻ Churned for 13s
+
+❯ land                                                                          
+
+⏺ Opening a PR and merging it into main.
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      gh pr create --base main --head feat/prescreen-public-data-layer \…)
+  ⎿  https://github.com/phi9t/clinique/pull/1
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      gh pr merge 1 --merge --delete-branch 2>&1 | tail -10…)
+  ⎿   create mode 100644 tests/fixtures/prescreen/synthea/PROVENANCE.md
+      create mode 100644 tests/fixtures/prescreen/synthea/conditions.csv
+      create mode 100644 tests/fixtures/prescreen/synthea/medications.csv
+     … +14 lines (ctrl+o to expand)
+
+⏺ Landed. PR #1 merged into main and the branch deleted. Let me confirm local
+  main is synced and clean.
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      git status -sb | head -3…)
+  ⎿  ## main...origin/main
+     === local feature branch gone? ===
+
+⏺ Landed. ✅
+
+  - PR #1 merged into main: https://github.com/phi9t/clinique/pull/1
+  - Merge commit 195b59c on main, in sync with origin/main, working tree clean
+  - Feature branch deleted (local + remote)
+
+  The prescreen L0 public data layer is now on main — four public sources
+  (ClinicalTrials.gov search+pagination, Synthea, PMC-Patients, MIMIC-IV demo)
+  fetched, parsed, and gated by the conformance validator, all 221 tests passing
+   offline.
+
+✻ Baked for 28s
+
+❯ /plan vastly improve the dataset explore for the prescreen L0 public          
+datasets; also make it much easier for ML researcher and MLsys engineers to use 
+ the explorer tool to understand the data                                       
+  ⎿  Enabled plan mode
+
+⏺ Plan mode on. The "explorer tool" is the explorer/ Vite + React app. I already
+   know the prescreen L0 data layer intimately (just built it this session), so
+  the main thing to understand is the current explorer app. Let me explore it
+  directly.
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique/explorer
+      echo "===== TREE (src, excluding node_modules) ====="…)
+  ⎿  ===== TREE (src, excluding node_modules) =====
+     ./.gitignore
+     ./README.md
+     … +37 lines (ctrl+o to expand)
+
+⏺ This is a different task from the previous plan (which was the data layer —
+  now landed). I'll evaluate the explorer app, then overwrite the plan. The
+  explorer currently ships CDISC ADaM datasets (adsl, adae, …) — not the
+  prescreen L0 data at all. Let me read the core app files and data shapes.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ The explorer is a CDISC ADaM table viewer driven by a converter that emits
+  /data/*.json. The user wants it repurposed/extended to surface the prescreen 
+  L0 datasets for ML researchers and MLsys engineers. Let me find the converter
+  pipeline and the explorer README.
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      echo "===== explorer/README.md ====="…)
+  ⎿  ===== explorer/README.md =====
+     # React + TypeScript + Vite
+     … +43 lines (ctrl+o to expand)
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      echo "===== grep for explorer data producers ====="…)
+  ⎿  ===== grep for explorer data producers =====
+     README.md
+     tests/test_realdata_define.py
+     … +38 lines (ctrl+o to expand)
+
+⏺ The explorer data is committed static JSON under explorer/public/data/ —
+  there's no converter script in the repo; the JSON was generated externally
+  from the CDISC define.xml + datasets. The app is a generic 3-contract tabular
+  viewer (summary.json → cards, metadata.json → define-xml variables/codelists,
+  <name>.json → columns+rows) with Data / Variables / Code Lists tabs. Let me
+  confirm a couple of things before scoping.
+
+⏺ Bash(cd /Users/phi9t/CodeBase/clinique
+      echo "===== anything prescreen in explorer already? ====="…)
+  ⎿  ===== anything prescreen in explorer already? =====
+     ===== App.css size & index.html title =====
+            1 explorer/src/App.css
+     … +26 lines (ctrl+o to expand)
+
+⏺ The explorer is a single-page app (no router) with a mature 871-line
+  "observatory" design system already in place, currently 100% CDISC ADaM.
+  Nothing prescreen exists yet. I have what I need to scope, but three decisions
+   genuinely change the shape of the work.
+
+⏺ User answered Claude's questions:
+  ⎿  · How should the prescreen L0 explorer relate to the existing CDISC ADaM 
+     explorer? → Family switch (one app)
+     · Which ML-oriented views matter most for understanding the prescreen data?
+      (pick all that apply) → Schema & data model, Stats & distributions, Record
+      drill-down, Validation & provenance, add explanation of the meaning of 
+     each field (hover explain)
+     · How should distribution charts be rendered? → Add a chart library
+⏺ All three decisions are clear: family switch in one app, all four ML views 
+  plus per-field hover-explain tooltips, and add a chart library (recharts). I
+  have deep context on both the data layer (built this session) and the explorer
+   app (fully read). Let me write the plan.
+
+  ★ Insight ─────────────────────────────────────
+  - The cleanest way to serve both audiences from one codebase is a Python 
+  exporter that reuses the loaders I already built (load_recorded_studies,
+  load_pmc_corpora, normalize_*_corpus, report_for) and emits static JSON into
+  explorer/public/data/prescreen/. The explorer stays a static site; the data
+  has a single source of truth; MLsys engineers get one reproducible command.
+  - The "explain every field on hover" request becomes a conformance gate of its
+   own: a FIELD_DOCS registry in Python, tested against dataclasses.fields(...)
+  so no field can ship without a documented meaning. The frontend tooltip just
+  reads the emitted schema.json.
+  - Prescreen data is hierarchical/free-text, not the flat tables the current
+  viewer assumes — so the high-value views are a Trial's rendered eligibility
+  text + parsed bounds, and a PatientCorpus document timeline with a snapshot
+  marker that visually ties back to the leakage invariant.
+  ─────────────────────────────────────────────────
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ The plan is written. Summary before approval:
+
+  Plan: Prescreen L0 dataset explorer for ML researchers & MLsys engineers
+
+  Approach: a Python exporter reuses the loaders I built this session to emit a
+  committed static-JSON snapshot, which a new prescreen view in the existing
+  explorer renders — keeping it a static site with one reproducible regeneration
+   command.
+
+  Part A — Python exporter (explorer_export.py, new + prescreen export-explorer
+  CLI):
+  - Reuses load_recorded_studies, load_pmc_corpora, normalize_*_corpus,
+  report_for, .to_dict().
+  - Emits index/schema/stats/validation.json + 4 record files into
+  explorer/public/data/prescreen/.
+  - A FIELD_DOCS registry is the single source of truth for the hover-explain
+  text — and a test gate asserts it covers every dataclass field, so no field
+  ships without an explanation.
+
+  Part B — Frontend (family switch, one app):
+  - App.tsx becomes a thin shell with a CDISC ↔ Prescreen L0 segmented control;
+  current app body moves to CdiscExplorer.tsx (minimal churn).
+  - New PrescreenExplorer with four tabs: Schema & data model (landing +
+  pipeline strip), Datasets (Trial drill-down with rendered eligibility text;
+  PatientCorpus document timeline with a snapshot marker tied to the leakage
+  invariant), Stats & distributions (recharts), Validation & provenance.
+  - Reusable FieldTooltip (accessible, not hover-only) keyed off schema.json,
+  applied to every field label, header, and chart title.
+  - Adds recharts; reuses the existing 871-line design system.
+
+  Verification: regenerate snapshot + run the export test + ruff; then npm 
+  install/lint/build/dev and walk the four views. Export is deterministic
+  (sorted keys) so the committed snapshot diffs cleanly.
+
+  Out of scope: no new Python runtime deps, no backend, deferred pipeline stages
+   are described (not built).
+
+⏺ User approved Claude's plan
+  ⎿  Plan saved to: ~/.claude/plans/focus-on-fetching-all-curious-engelbart.md ·
+      /plan to edit
+     Prescreen L0 dataset explorer — make the public data legible to ML 
+     researchers & MLsys engineers
+
+     Context
+
+     The prescreen L0 public data layer now exists (CT.gov Trials;
+     Synthea/PMC/MIMIC PatientCorpus;
+     a conformance gate) — but it can only be inspected through the CLI
+     (prescreen show) or by reading
+     JSONL fixtures. There is no visual way to understand the shape,
+     distributions, quality, or
+     provenance of the data, which is exactly what an ML researcher
+     (features/labels/distributions/
+     examples) or an MLsys engineer (schema/contracts/data-quality
+     gates/reproducibility) needs before
+     building on it.
+
+     A polished explorer/ Vite+React app already exists, but it is 100% CDISC
+     ADaM — a flat
+     table/columns/rows viewer driven by static JSON under
+     explorer/public/data/. There is no
+     converter in the repo; the JSON is committed directly. Prescreen data is
+     hierarchical and
+     free-text, so it needs new views, not just new rows.
+
+     Goal (per clarifications): add a dataset-family switch (Regulatory CDISC ↔
+     Prescreen L0) to
+     the one app; build four ML-oriented views — Schema & data model, Stats & 
+     distributions,
+     Record drill-down, Validation & provenance — with per-field hover-explain 
+     tooltips
+     everywhere; render distributions with a chart library (recharts). Data is
+     produced by a new
+     Python exporter that reuses the existing loaders and emits a committed JSON
+      snapshot.
+
+     Architecture
+
+     clinique fixtures ──(reuse existing loaders)──► explorer_export.py ──►
+     explorer/public/data/prescreen/*.json ──► PrescreenExplorer (React)
+
+     Static-site contract preserved: the exporter writes committed JSON; the app
+      fetches it like it
+     already does for CDISC. One CLI command regenerates everything.
+
+     Part A — Python exporter (single source of truth, tested)
+
+     New src/clinique/prescreen/explorer_export.py. Pure stdlib (json, pathlib,
+     statistics, dataclasses) over the prescreen modules. Reuses:
+     - ingestion.load_recorded_studies (trials), pmc_patients.load_pmc_corpora,
+     normalizer.{read_synthea_csv_dir,normalize_synthea_corpus},
+     mimic_demo.{read_mimic_csv_dir,normalize_mimic_corpus},
+     validation.report_for,
+     and Trial/PatientCorpus.to_dict().
+
+     FIELD_DOCS: an authored registry — per record type (Trial, PatientCorpus,
+     PatientDocument,
+     AgeBound) mapping each field → {type, description, vocab?}. This is the
+     source of truth for the
+     hover-explain text and the Schema view. Controlled-vocab globs (e.g. what
+     PHASE3, leakage,
+     unknown mean) included for the key enums from schemas.py.
+
+     export_explorer(out_dir="explorer/public/data/prescreen") writes:
+     - index.json — dataset cards: [{key, family, label, source, record_type, 
+     count, provenance:{license, fixture_path, record_command, 
+     snapshot_semantics}}] (trials, patients_synthea, patients_pmc,
+     patients_mimic).
+     - schema.json — FIELD_DOCS serialized + the ingest→parse→validate→corpus
+     pipeline steps.
+     - stats.json — precomputed distributions (frontend just renders):
+       - trials: phase / recruitment_status / sex histograms, std_ages counts,
+     age-bound coverage (min/max present %), eligibility_text length buckets,
+     conditions-per-trial.
+       - patients (per source): docs-per-patient histogram, source_type
+     breakdown, sex / age distribution, per-field None/missingness rates.
+     - validation.json — report_for(...).to_dict() over all records (issues by
+     code/severity incl. leakage), so data-quality is first-class.
+     - trials.json, patients_synthea.json, patients_pmc.json,
+     patients_mimic.json — full records (to_dict()) for drill-down.
+
+     CLI: add prescreen export-explorer [--out <dir>] to src/clinique/cli.py
+     (alongside the
+     existing prescreen subcommands), wiring to export_explorer.
+
+     Test tests/test_prescreen_explorer_export.py (offline, deterministic, tmp
+     dir):
+     - export runs over committed fixtures and emits all files with expected
+     top-level keys.
+     - coverage gate: FIELD_DOCS covers every dataclasses.fields(...) of Trial,
+     PatientCorpus, PatientDocument, AgeBound (no field can ship without a hover
+      explanation).
+     - stats counts equal the loader counts; validation.json equals
+     report_for(...).to_dict().
+
+     Part B — Frontend (explorer/)
+
+     Family switch (one app, no router): refactor src/App.tsx into a thin shell
+     holding a
+     family state ('cdisc' | 'prescreen') + a header segmented control,
+     rendering either:
+     - src/cdisc/CdiscExplorer.tsx — the current App body moved verbatim
+     (minimal churn).
+     - src/prescreen/PrescreenExplorer.tsx — new. Reuses the existing design
+     system (stat-chips,
+     cards, tabs, tables, badges, observatory-bg) and a11y patterns
+     (roving-tabindex tabs, live
+     regions, skip link) from the current App.
+
+     PrescreenExplorer sub-tabs (reusing the existing tablist pattern):
+     1. Schema & data model (landing): record-type cards from schema.json
+     (field, type, meaning,
+     vocab) + a small ingest→parse→validate→corpus pipeline strip.
+     2. Datasets (sidebar = Trials / Synthea / PMC / MIMIC) → record list →
+     drill-down:
+       - TrialCard: id/phase/status/sponsor, parsed age bounds (raw + years),
+     condition & std_age
+     chips, healthy-volunteers; eligibility_text rendered with preserved
+     newlines and
+     Inclusion/Exclusion headers emphasized (the actual model input).
+       - PatientTimeline: demographics block; documents as a dated timeline
+     colored by
+     source_type, each showing text + structured facts; a snapshot_date marker,
+     with any
+     post-snapshot doc flagged (visual tie-in to the leakage invariant).
+     3. Stats & distributions: recharts charts driven by stats.json
+     (bar/pie/histogram + a
+     missingness panel).
+     4. Validation & provenance: validation.json issues grouped by code/severity
+      (leakage called
+     out); provenance cards from index.json (license, fixture path, record
+     command, snapshot
+     semantics) — the reproducibility surface.
+
+     Hover-explain: reusable src/prescreen/FieldTooltip.tsx keyed off
+     schema.json field docs,
+     applied to table headers, drill-down field labels, schema cards, and chart
+     titles. Accessible
+     (focusable, aria-describedby, dismissible) — not hover-only.
+
+     Deps & types: add recharts to explorer/package.json; src/prescreen/types.ts
+      mirroring the
+     exporter's JSON contracts; prescreen styles appended to src/index.css
+     reusing existing tokens.
+
+     Critical files
+
+     Path: src/clinique/prescreen/explorer_export.py
+     Change: new — FIELD_DOCS + export_explorer (reuses loaders + report_for)
+     ────────────────────────────────────────
+     Path: src/clinique/cli.py
+     Change: + prescreen export-explorer subcommand
+     ────────────────────────────────────────
+     Path: tests/test_prescreen_explorer_export.py
+     Change: new — files/keys, field-doc coverage gate, counts/validation parity
+     ────────────────────────────────────────
+     Path: explorer/public/data/prescreen/*.json
+     Change: new committed snapshot (index/schema/stats/validation + 4 record
+     files)
+     ────────────────────────────────────────
+     Path: explorer/src/App.tsx
+     Change: refactor to shell + family switch
+     ────────────────────────────────────────
+     Path: explorer/src/cdisc/CdiscExplorer.tsx
+     Change: new — current App body moved
+     ────────────────────────────────────────
+     Path: explorer/src/prescreen/{PrescreenExplorer,SchemaView,DatasetView,Tria
+     lCard,PatientTimeline,StatsView,ValidationView,ProvenancePanel,FieldTooltip
+     ,types}.tsx
+     Change: new
+     ────────────────────────────────────────
+     Path: explorer/src/index.css
+     Change: + prescreen styles (reuse existing tokens)
+     ────────────────────────────────────────
+     Path: explorer/package.json
+     Change: + recharts
+
+     Verification
+
+     # Python: regenerate snapshot + tests
+     uv run clinique prescreen export-explorer --out
+     explorer/public/data/prescreen
+     uv run pytest tests/test_prescreen_explorer_export.py -q
+     uv run ruff check . && uv run ruff format --check .
+
+     # Frontend: install, lint, build, run
+     cd explorer && npm install && npm run lint && npm run build && npm run dev
+     # In the app: toggle CDISC ↔ Prescreen; browse Schema, Datasets (open a 
+     Trial → eligibility text;
+     # open a patient → document timeline + snapshot marker), Stats (charts 
+     render), Validation
+     # (issues + leakage); hover/focus a field label → tooltip explains it.
+
+     Determinism: re-running export-explorer over the committed fixtures yields
+     byte-identical JSON
+     (sorted keys), so the snapshot diff is reviewable.
+
+     Out of scope
+
+     No new Python runtime deps (exporter is stdlib + prescreen modules). No
+     backend/server — the app
+     stays a static site. The deferred pipeline stages (atomizer/judge/etc.) are
+      described in the
+     Schema view but not implemented here.
+
+⏺ Plan approved. Let me set up fresh tasks and start with the Python exporter
+  (the data source of truth).
+
+⏺ Now the exporter — the single source of truth for the data and field meanings.
+
+⏺ Write(src/clinique/prescreen/explorer_export.py)
+  ⎿  Wrote 348 lines to src/clinique/prescreen/explorer_export.py
+        orer web app. prescreen L0 datasets into static JSON for the expl
+      2 
+        plorer. It reuses the *same*he Python data layer and the React ex
+      4 loaders the tests and CLI use (`load_recorded_studies`, `load_pmc
+      5 `normalize_*_corpus`, `report_for`) so the explorer can never dri
+        ft from the real records — there is
+        explorer`) regenerates everything.nd (`clinique prescreen export-
+      7 
+        th sorted keys so the committedr/public/data/prescreen/``, all wi
+      9 snapshot diffs cleanly):
+     … +451 lines (ctrl+o to expand)
+  ⎿  You've hit your limit · resets 5:30pm (America/Los_Angeles)
+     /upgrade to increase your usage limit.
+
+✻ Churned for 5m 24s

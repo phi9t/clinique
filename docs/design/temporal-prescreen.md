@@ -25,14 +25,18 @@ flowchart LR
 
 | Workflow | Purpose |
 |---|---|
-| `ScreenPatientWorkflow` | One trial + patient screen: atomize → per-criterion evaluate → aggregate → evidence gate → optional ledger |
-| `BatchEvalWorkflow` | Eval cases via child `ScreenPatientWorkflow` runs + metrics report |
+| `ScreenPatientWorkflow` | One trial + patient screen: atomize → **parallel** per-criterion evaluate → aggregate → evidence gate → optional ledger |
+| `BatchEvalWorkflow` | Eval cases via concurrent child `ScreenPatientWorkflow` runs (up to `BATCH_EVAL_CONCURRENCY`) + metrics report |
 
-Activities are thin wrappers over existing prescreen code (`ReferenceAtomizer`, `retrieve`, `RuleJudge`, `aggregate`, `assert_evidence_provenance`).
+Activities are thin wrappers over existing prescreen code (`ReferenceAtomizer`, `retrieve`, `RuleJudge`, `aggregate`, `assert_evidence_provenance`). Wire payloads use **Pydantic v2** models in `durable/models.py` with `pydantic_data_converter`; domain logic still uses stdlib dataclasses from `prescreen/schemas.py`.
+
+## Single-activity orchestrator (non-goal)
+
+`PrescreenOrchestrator.screen()` is intentionally **not** exposed as a Temporal activity. Per-criterion activities preserve independent retry and Temporal history visibility. The sync orchestrator remains the offline oracle for tests.
 
 ## Dependencies
 
-`temporalio` is an **optional** dependency group — the core package stays stdlib-only:
+`temporalio` and `pydantic` are **optional** dependency group members — the core package stays stdlib-only:
 
 ```bash
 uv sync --group temporal
@@ -98,10 +102,10 @@ Workflow unit tests use Temporal's embedded `WorkflowEnvironment.start_local()` 
 
 ```bash
 uv sync --group temporal
-uv run pytest tests/test_durable_prescreen.py -q
+uv run pytest tests/test_durable_prescreen.py tests/test_durable_models.py -q
 ```
 
-End-to-end tests start a real `temporal server start-dev` plus `clinique.durable.worker`, execute workflows on `localhost:7233`, and cover failure injection (transient activity retry, evidence-gate non-retryable failure, batch eval error collection):
+End-to-end tests use **session-scoped** `temporal server start-dev` and worker fixtures (one startup per test file). They execute workflows on `localhost:7233` and cover failure injection (transient activity retry, evidence-gate non-retryable failure, batch eval error collection):
 
 ```bash
 uv run pytest tests/test_durable_prescreen_e2e.py -v

@@ -11,11 +11,12 @@ from temporalio.worker import Worker
 
 from clinique.durable.activities import ALL_ACTIVITIES
 from clinique.durable.config import DEFAULT_HOST, PRESCREEN_TASK_QUEUE
+from clinique.durable.converter import DATA_CONVERTER
 from clinique.durable.workflows import ALL_WORKFLOWS
 
 
 async def run_worker(*, host: str = DEFAULT_HOST, task_queue: str = PRESCREEN_TASK_QUEUE) -> None:
-    client = await Client.connect(host)
+    client = await Client.connect(host, data_converter=DATA_CONVERTER)
     with concurrent.futures.ThreadPoolExecutor(max_workers=100) as activity_executor:
         worker = Worker(
             client,
