@@ -17,3 +17,7 @@ dist/
 *.ledger.jsonl
 .runs/
 .antigravitycli/
+
+# local scratch and browser test session output
+scratch/
+.playwright-cli/
