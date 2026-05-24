@@ -63,8 +63,8 @@ Evidence:
   detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight, silent-log evidence enforcement and
   evaluation,
-  controlled-rollout gate evaluation, approved-export import, bundled workstream verification,
-  and report serialization.
+  controlled-rollout gate rate validation and evaluation, approved-export import, bundled
+  workstream verification, and report serialization.
 
 ## Not Yet Proven
 

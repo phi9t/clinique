@@ -38,6 +38,14 @@ SAFETY_COUNT_KEYS = {
     "privacy_incident",
     "blinding_breach",
 }
+RATE_KEYS = {
+    "max_false_query_rate",
+    "max_duplicate_query_rate",
+    "min_acceptance_rate",
+    "false_query_rate",
+    "duplicate_query_rate",
+    "acceptance_rate",
+}
 
 
 @dataclass(frozen=True)
@@ -69,13 +77,17 @@ class RolloutGate:
         )
         for key in SAFETY_COUNT_KEYS:
             safety[key] = _require_nonnegative_int(key, safety[key])
+        thresholds = _require_numeric_values(raw["thresholds"])
+        observed = _require_numeric_values(raw["observed"])
+        _validate_rate_values(thresholds)
+        _validate_rate_values(observed)
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
             randomization_unit=raw["randomization_unit"],
             human_approval_path_validated=human_approval_path_validated,
-            thresholds=_require_numeric_values(raw["thresholds"]),
-            observed=_require_numeric_values(raw["observed"]),
+            thresholds=thresholds,
+            observed=observed,
             safety=safety,
         )
 
@@ -107,6 +119,12 @@ def _require_nonnegative_int(label: str, value: Any) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise ValueError(f"{label} must be a nonnegative integer")
     return value
+
+
+def _validate_rate_values(values: dict[str, float]) -> None:
+    for key, value in values.items():
+        if key in RATE_KEYS and not 0 <= value <= 1:
+            raise ValueError(f"{key} must be between 0 and 1")
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
