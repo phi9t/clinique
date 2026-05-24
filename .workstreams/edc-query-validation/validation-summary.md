@@ -11,8 +11,12 @@ Evidence:
   queries, 1 duplicate, evidence support 1.0, category accuracy 1.0, and no-write-back gate true.
 - `reports/edc-query/retrospective-replay.json` reports timestamped replay over two synthetic
   snapshots with leakage checks true.
+- `reports/edc-query/audit-summary.json` records local synthetic validation as complete and
+  explicitly lists the internal/prospective requirements still blocking full goal completion.
+- `uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir
+  reports/edc-query` regenerates the reports and audit summary from source fixtures.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
-  exposure, detection, metrics, and report serialization.
+  exposure, detection, metrics, CLI execution, and report serialization.
 
 ## Not Yet Proven
 
@@ -24,4 +28,3 @@ obtain internal read-only data access or stop before claiming production validat
 
 Continue to internal data inventory and replay. Do not move to silent prospective or controlled
 rollout until internal L1/L2 evidence meets predefined gates.
-

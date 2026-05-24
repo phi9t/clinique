@@ -38,6 +38,7 @@ participant, data-integrity, blinding, privacy, or compliance risk?
 - [ ] Silent-mode protocol is approved before any production-like run.
 - [X] Ship gates explicitly include false-query burden, duplicate-query burden, privacy,
       blinding, and auditability.
+- [X] Local synthetic validation is executable via =uv run clinique edc-query validate=.
 
 * BLOCKED Milestone 0: Data inventory and access boundary
 :PROPERTIES:
@@ -175,7 +176,9 @@ leave a clear interface for later model-assisted drafting.
 - [X] Release gate thresholds are recorded in the report gates.
 
 ** Evidence
-See =reports/edc-query/offline-benchmark.json=.
+See =reports/edc-query/offline-benchmark.json= and
+=reports/edc-query/audit-summary.json=. Regenerate with
+=uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir reports/edc-query=.
 
 * DONE Milestone 5: L2 timestamped retrospective replay
 :PROPERTIES:
@@ -201,7 +204,9 @@ open dates and database-lock issue dates. Quantify workflow usefulness and leaka
 - [X] Findings identify synthetic forms/sites/rules for later internal-data replay.
 
 ** Evidence
-See =reports/edc-query/retrospective-replay.json=.
+See =reports/edc-query/retrospective-replay.json= and
+=reports/edc-query/audit-summary.json=. Regenerate with
+=uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir reports/edc-query=.
 
 * DONE Milestone 6: L3 silent prospective protocol
 :PROPERTIES:

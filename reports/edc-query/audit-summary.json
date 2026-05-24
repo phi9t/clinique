@@ -1,0 +1,52 @@
+{
+  "blocked_requirements": [
+    "internal_data_inventory",
+    "internal_edc_snapshots",
+    "internal_query_logs",
+    "internal_l1_offline_report",
+    "internal_l2_retrospective_replay",
+    "silent_prospective_approval",
+    "silent_prospective_run",
+    "controlled_rollout_approval"
+  ],
+  "gates": {
+    "offline": {
+      "duplicate_query_burden_measured": true,
+      "evidence_supported": true,
+      "false_query_rate_controlled": true,
+      "leakage_checks_passed": true,
+      "no_write_back": true
+    },
+    "retrospective": {
+      "leakage_checks_passed": true,
+      "no_write_back": true,
+      "timestamped_replay": true
+    }
+  },
+  "goal_complete": false,
+  "local_synthetic_validation_complete": true,
+  "metrics": {
+    "offline": {
+      "candidates_total": 4,
+      "duplicate_queries": 1,
+      "duplicate_query_rate": 0.25,
+      "evidence_support_accuracy": 1.0,
+      "false_queries": 0,
+      "false_query_rate": 0.0,
+      "median_days_earlier": 0.0,
+      "query_category_accuracy": 1.0,
+      "true_discrepancies_detected": 4
+    },
+    "retrospective": {
+      "database_lock_issue_early_detection_count": 1,
+      "false_alerts_per_true_discrepancy": 0.0,
+      "false_queries": 0,
+      "true_discrepancies_detected": 7
+    }
+  },
+  "reason_goal_not_complete": "Local synthetic validation is complete, but internal EDC data and prospective approval/run evidence are not available.",
+  "reports": {
+    "offline_benchmark": "reports/edc-query/offline-benchmark.json",
+    "retrospective_replay": "reports/edc-query/retrospective-replay.json"
+  }
+}

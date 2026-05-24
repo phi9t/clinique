@@ -1,14 +1,38 @@
-"""Minimal CLI entry point."""
+"""CLI entry point."""
 
 from __future__ import annotations
 
+import argparse
 import sys
+
+from clinique.edc.validation import run_validation
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="clinique")
+    subparsers = parser.add_subparsers(dest="command")
+
+    edc = subparsers.add_parser("edc-query")
+    edc_subparsers = edc.add_subparsers(dest="edc_command")
+    validate = edc_subparsers.add_parser("validate")
+    validate.add_argument("--fixtures", default="tests/fixtures/edc_query")
+    validate.add_argument("--reports-dir", default="reports/edc-query")
+    return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    _ = argv if argv is not None else sys.argv[1:]
+    args = _build_parser().parse_args(argv if argv is not None else sys.argv[1:])
+    if args.command == "edc-query" and args.edc_command == "validate":
+        try:
+            run_validation(fixtures=args.fixtures, reports_dir=args.reports_dir)
+        except ValueError as exc:
+            print(f"edc-query validation failed: {exc}", file=sys.stderr)
+            return 2
+        print(f"EDC query validation reports written to {args.reports_dir}")
+        return 0
+
     print("clinique — biostatistician agent suite.")
-    print("Design: docs/rfcs/  |  Workstream: .workstreams/biostat-agent-suite/")
+    print("Design: docs/rfcs/  |  Workstreams: .workstreams/")
     return 0
 
 

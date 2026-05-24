@@ -8,6 +8,9 @@
 - [x] Draft-only/no-write boundary is tested.
 - [x] Offline report exists.
 - [x] Retrospective replay report exists.
+- [x] CLI validation command regenerates reports and audit summary.
+- [x] Audit summary explicitly marks the overall goal incomplete until internal/prospective
+      evidence exists.
 
 ## Internal Data Validation
 
@@ -29,4 +32,3 @@
 Do not ship until internal and prospective validation show earlier or lower-effort true
 discrepancy detection, controlled false and duplicate query burden, evidence-backed query text,
 complete auditability, and no write-back without named human approval.
-
