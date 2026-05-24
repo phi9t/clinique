@@ -218,7 +218,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -274,7 +274,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -330,7 +330,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -386,7 +386,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -526,7 +526,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -582,7 +582,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -666,7 +666,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -722,7 +722,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -974,7 +974,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1086,7 +1086,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1114,7 +1114,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1142,7 +1142,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1170,7 +1170,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1198,7 +1198,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1310,7 +1310,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1394,7 +1394,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1478,7 +1478,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1534,7 +1534,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1562,7 +1562,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1618,7 +1618,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1646,7 +1646,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1674,7 +1674,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1702,7 +1702,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1730,7 +1730,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1758,7 +1758,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1814,7 +1814,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1870,7 +1870,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -1926,7 +1926,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2094,7 +2094,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2150,7 +2150,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2178,7 +2178,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2206,7 +2206,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2234,7 +2234,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2262,7 +2262,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2402,7 +2402,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2430,7 +2430,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2458,7 +2458,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2486,7 +2486,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2514,7 +2514,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2598,7 +2598,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2626,7 +2626,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2710,7 +2710,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2822,7 +2822,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2850,7 +2850,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2878,7 +2878,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2906,7 +2906,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2934,7 +2934,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -2990,7 +2990,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3046,7 +3046,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3074,7 +3074,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3102,7 +3102,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3158,7 +3158,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3186,7 +3186,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3242,7 +3242,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3298,7 +3298,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3354,7 +3354,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3382,7 +3382,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3578,7 +3578,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3662,7 +3662,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3690,7 +3690,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3718,7 +3718,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3746,7 +3746,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -3802,7 +3802,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4110,7 +4110,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4166,7 +4166,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4306,7 +4306,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4334,7 +4334,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4362,7 +4362,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4390,7 +4390,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4474,7 +4474,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4642,7 +4642,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4670,7 +4670,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4726,7 +4726,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4782,7 +4782,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4810,7 +4810,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -4978,7 +4978,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5062,7 +5062,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5174,7 +5174,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5286,7 +5286,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5342,7 +5342,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5426,7 +5426,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5482,7 +5482,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5622,7 +5622,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5762,7 +5762,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5790,7 +5790,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5846,7 +5846,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5874,7 +5874,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5902,7 +5902,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5958,7 +5958,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -5986,7 +5986,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6014,7 +6014,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6070,7 +6070,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6098,7 +6098,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6154,7 +6154,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6182,7 +6182,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6378,7 +6378,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6798,7 +6798,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6882,7 +6882,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6938,7 +6938,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -6966,7 +6966,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -7022,7 +7022,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
@@ -7050,7 +7050,7 @@
       "EVNTDESC": "Study Completion Date",
       "SRCDOM": "ADSL",
       "SRCVAR": "RFENDT",
-      "SRCSEQ": NaN,
+      "SRCSEQ": null,
       "SAFFL": "Y"
     },
     {
