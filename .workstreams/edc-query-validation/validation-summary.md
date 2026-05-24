@@ -24,8 +24,9 @@ Evidence:
   source types outside the approved EDC snapshots, query logs, and edit-check history inventory,
   requires `source_type` and owner/export path metadata to be nonblank strings, and requires
   schema sketches to list nonblank source-specific fields needed by the approved-export importer,
-  with missing and duplicate fields reported per source type. It also rejects manifest-relative
-  export paths that escape the manifest directory before reading any export payload.
+  with missing and duplicate fields reported per normalized source type and treated as direct
+  readiness gate failures. It also rejects manifest-relative export paths that escape the manifest
+  directory before reading any export payload.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
@@ -79,8 +80,8 @@ Evidence:
   detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight object-shape, timezone-aware metadata,
   source identity, source-type, and source-specific schema-sketch enforcement, silent-log
-  query-category, schema-field duplicate rejection, preflight path traversal rejection,
-  manifest-relative export paths, manifest-relative path traversal rejection, malformed
+  query-category, schema-field missing/duplicate gate rejection, preflight path traversal
+  rejection, manifest-relative export paths, manifest-relative path traversal rejection, malformed
   approved-export payload, preflight-normalized source identity during payload path resolution,
   item-indexed payload-object rejection, source-context structural validation errors,
   payload-file-context unblinded snapshot rejection, evidence, and recommendation-ID enforcement,

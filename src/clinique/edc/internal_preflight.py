@@ -152,6 +152,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         and not unblinded
         and not non_read_only
         and not incomplete
+        and not missing_schema_fields
         and not duplicate_schema_fields
         and not escaped_export_paths
         and not invalid_metadata

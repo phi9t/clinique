@@ -293,6 +293,34 @@ def test_preflight_internal_manifest_rejects_source_specific_schema_gaps(tmp_pat
     }
 
 
+def test_preflight_internal_manifest_fails_missing_schema_fields_with_normalized_source_type(
+    tmp_path,
+):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "source_type": " edc_snapshots ",
+        "schema_sketch": ["snapshot_id", "snapshot_at", "study_id"],
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.missing_schema_fields["edc_snapshots"] == (
+        "collected_at",
+        "contains_phi",
+        "contains_unblinded",
+        "field",
+        "form",
+        "record_id",
+        "site_id",
+        "subject_id",
+        "value",
+    )
+
+
 def test_preflight_internal_manifest_rejects_duplicate_schema_fields(tmp_path):
     manifest = _valid_manifest()
     manifest["sources"][0] = {
