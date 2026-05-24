@@ -14,6 +14,7 @@
 - [x] Query-log and label loaders reject impossible open/close timestamp chronology.
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,
       form, and field.
+- [x] True-detection metrics require label evidence to be available at the replay timestamp.
 - [x] Annotation manual defines the same study/site-scoped unit used by loaders and metrics.
 - [x] Offline report exists.
 - [x] Retrospective replay report exists.

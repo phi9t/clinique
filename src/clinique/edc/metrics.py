@@ -24,7 +24,7 @@ def evaluate_candidates(
 
     for candidate in candidates:
         label = labels_by_key.get(_key(candidate))
-        if label and label.gold_query_needed:
+        if label and label.gold_query_needed and label.evidence_available_at_agent_time:
             true_detected += 1
             if label.query_category == candidate.query_category:
                 category_matches += 1
