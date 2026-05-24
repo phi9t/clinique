@@ -1,0 +1,41 @@
+[
+  {
+    "rule_id": "RULE-MISSING-AE",
+    "kind": "required_field",
+    "form": "AE",
+    "field": "term",
+    "query_category": "missing",
+    "message": "AE term is required.",
+    "effective_at": "2026-02-01T00:00:00Z"
+  },
+  {
+    "rule_id": "RULE-CONMED-AE-DATE",
+    "kind": "date_order",
+    "form": "ConMeds",
+    "field": "start_date",
+    "compare_to_related": "ae_onset_date",
+    "operator": "<=",
+    "query_category": "inconsistent",
+    "message": "ConMed start date must be on or before related AE onset date.",
+    "effective_at": "2026-02-01T00:00:00Z"
+  },
+  {
+    "rule_id": "RULE-FUTURE-VISIT",
+    "kind": "future_date",
+    "form": "Vitals",
+    "field": "visit_date",
+    "query_category": "impossible",
+    "message": "Visit date cannot be after the snapshot date.",
+    "effective_at": "2026-03-05T00:00:00Z"
+  },
+  {
+    "rule_id": "RULE-RETIRED-LAB",
+    "kind": "required_field",
+    "form": "Labs",
+    "field": "retired_marker",
+    "query_category": "missing",
+    "message": "Retired rule should not run after retirement.",
+    "effective_at": "2026-01-01T00:00:00Z",
+    "retired_at": "2026-02-15T00:00:00Z"
+  }
+]

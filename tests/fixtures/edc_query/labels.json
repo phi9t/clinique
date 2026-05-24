@@ -1,0 +1,72 @@
+[
+  {
+    "snapshot_id": "snap-2026-03-08",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-01",
+    "subject_id": "SUBJ-001",
+    "form": "AE",
+    "field": "term",
+    "gold_query_needed": true,
+    "query_category": "missing",
+    "human_resolution": "corrected",
+    "opened_at": "2026-03-04T09:00:00Z",
+    "closed_at": "2026-03-05T12:00:00Z",
+    "evidence_available_at_agent_time": true
+  },
+  {
+    "snapshot_id": "snap-2026-03-08",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-01",
+    "subject_id": "SUBJ-001",
+    "form": "ConMeds",
+    "field": "start_date",
+    "gold_query_needed": true,
+    "query_category": "inconsistent",
+    "human_resolution": "corrected",
+    "opened_at": "2026-03-05T10:00:00Z",
+    "closed_at": "2026-03-07T16:00:00Z",
+    "evidence_available_at_agent_time": true
+  },
+  {
+    "snapshot_id": "snap-2026-03-08",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-01",
+    "subject_id": "SUBJ-002",
+    "form": "Vitals",
+    "field": "visit_date",
+    "gold_query_needed": true,
+    "query_category": "impossible",
+    "human_resolution": "corrected",
+    "opened_at": "2026-03-09T11:00:00Z",
+    "closed_at": "2026-03-10T15:00:00Z",
+    "evidence_available_at_agent_time": true
+  },
+  {
+    "snapshot_id": "snap-2026-03-08",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-02",
+    "subject_id": "SUBJ-003",
+    "form": "Labs",
+    "field": "hemoglobin",
+    "gold_query_needed": true,
+    "query_category": "duplicate",
+    "human_resolution": "duplicate",
+    "opened_at": "2026-03-02T09:00:00Z",
+    "closed_at": "2026-03-06T15:00:00Z",
+    "evidence_available_at_agent_time": true
+  },
+  {
+    "snapshot_id": "snap-2026-03-08",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-02",
+    "subject_id": "SUBJ-004",
+    "form": "AE",
+    "field": "term",
+    "gold_query_needed": false,
+    "query_category": "no_query",
+    "human_resolution": "no_query_needed",
+    "opened_at": null,
+    "closed_at": null,
+    "evidence_available_at_agent_time": true
+  }
+]

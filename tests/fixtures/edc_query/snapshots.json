@@ -1,0 +1,114 @@
+[
+  {
+    "snapshot_id": "snap-2026-03-01",
+    "snapshot_at": "2026-03-01T00:00:00Z",
+    "contains_phi": false,
+    "contains_unblinded": false,
+    "records": [
+      {
+        "record_id": "rec-ae-001",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "value": "",
+        "collected_at": "2026-02-28T10:00:00Z"
+      },
+      {
+        "record_id": "rec-cm-001",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "ConMeds",
+        "field": "start_date",
+        "value": "2026-03-05",
+        "collected_at": "2026-02-28T11:00:00Z",
+        "related": {
+          "ae_onset_date": "2026-03-04"
+        }
+      },
+      {
+        "record_id": "rec-lab-003",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-02",
+        "subject_id": "SUBJ-003",
+        "form": "Labs",
+        "field": "hemoglobin",
+        "value": "7.8",
+        "collected_at": "2026-02-27T09:00:00Z"
+      },
+      {
+        "record_id": "rec-ae-004",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-02",
+        "subject_id": "SUBJ-004",
+        "form": "AE",
+        "field": "term",
+        "value": "Headache",
+        "collected_at": "2026-02-27T09:30:00Z"
+      }
+    ]
+  },
+  {
+    "snapshot_id": "snap-2026-03-08",
+    "snapshot_at": "2026-03-08T00:00:00Z",
+    "contains_phi": false,
+    "contains_unblinded": false,
+    "records": [
+      {
+        "record_id": "rec-ae-001",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "value": "",
+        "collected_at": "2026-02-28T10:00:00Z"
+      },
+      {
+        "record_id": "rec-cm-001",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "ConMeds",
+        "field": "start_date",
+        "value": "2026-03-05",
+        "collected_at": "2026-02-28T11:00:00Z",
+        "related": {
+          "ae_onset_date": "2026-03-04"
+        }
+      },
+      {
+        "record_id": "rec-vs-002",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-002",
+        "form": "Vitals",
+        "field": "visit_date",
+        "value": "2026-03-20",
+        "collected_at": "2026-03-07T12:00:00Z"
+      },
+      {
+        "record_id": "rec-lab-003",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-02",
+        "subject_id": "SUBJ-003",
+        "form": "Labs",
+        "field": "hemoglobin",
+        "value": "7.8",
+        "collected_at": "2026-02-27T09:00:00Z"
+      },
+      {
+        "record_id": "rec-ae-004",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-02",
+        "subject_id": "SUBJ-004",
+        "form": "AE",
+        "field": "term",
+        "value": "Headache",
+        "collected_at": "2026-02-27T09:30:00Z"
+      }
+    ]
+  }
+]

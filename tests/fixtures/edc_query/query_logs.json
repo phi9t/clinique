@@ -1,0 +1,17 @@
+[
+  {
+    "query_id": "Q-001",
+    "snapshot_id": "snap-2026-03-01",
+    "study_id": "STUDY-EDC-001",
+    "site_id": "SITE-02",
+    "subject_id": "SUBJ-003",
+    "form": "Labs",
+    "field": "hemoglobin",
+    "query_text": "Please confirm hemoglobin value below expected clinical range.",
+    "query_category": "duplicate",
+    "opened_at": "2026-03-02T09:00:00Z",
+    "closed_at": "2026-03-06T15:00:00Z",
+    "status": "closed",
+    "resolution": "confirmed"
+  }
+]
