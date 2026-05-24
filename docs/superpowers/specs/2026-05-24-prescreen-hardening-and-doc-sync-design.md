@@ -1,7 +1,7 @@
 # Design Spec: Prescreen Hardening, Doc Sync, and Aggregator
 
 **Date:** 2026-05-24  
-**Status:** Approved (design review 2026-05-24)
+**Status:** Implemented (2026-05-24)
 
 ## 1. Goal
 

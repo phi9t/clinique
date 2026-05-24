@@ -266,7 +266,7 @@ tests/
   test_prescreen_ingestion.py ✅  test_prescreen_normalizer.py ✅
   test_prescreen_validation.py ✅  test_prescreen_search.py ✅
   test_prescreen_pmc.py ✅  test_prescreen_mimic.py ✅
-  test_prescreen_aggregation.py ✅  test_prescreen_cli.py ◻
+  test_prescreen_aggregation.py ✅  test_prescreen_cli.py ✅
   test_prescreen_atomizer.py ◻ ... _temporal ◻ _unit_conversion ◻ _evidence_gate ◻
 tests/fixtures/prescreen/        ✅ trials.jsonl (real, recorded) + PROVENANCE.md + synthea/
 reports/prescreen/               ◻ eval metrics + error cases
