@@ -46,6 +46,10 @@ RATE_KEYS = {
     "duplicate_query_rate",
     "acceptance_rate",
 }
+COUNT_KEYS = {
+    "max_open_queries_at_lock",
+    "open_queries_at_lock",
+}
 
 
 @dataclass(frozen=True)
@@ -81,6 +85,8 @@ class RolloutGate:
         observed = _require_numeric_values(raw["observed"])
         _validate_rate_values(thresholds)
         _validate_rate_values(observed)
+        _validate_count_values(thresholds)
+        _validate_count_values(observed)
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
@@ -125,6 +131,12 @@ def _validate_rate_values(values: dict[str, float]) -> None:
     for key, value in values.items():
         if key in RATE_KEYS and not 0 <= value <= 1:
             raise ValueError(f"{key} must be between 0 and 1")
+
+
+def _validate_count_values(values: dict[str, float]) -> None:
+    for key, value in values.items():
+        if key in COUNT_KEYS and value < 0:
+            raise ValueError(f"{key} must be nonnegative")
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
