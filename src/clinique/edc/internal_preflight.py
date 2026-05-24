@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -87,4 +88,25 @@ def _source_complete(source: dict[str, Any]) -> bool:
     }
     if any(not source.get(key) for key in required_keys):
         return False
-    return isinstance(source.get("schema_sketch"), list) and bool(source["schema_sketch"])
+    return (
+        isinstance(source.get("schema_sketch"), list)
+        and bool(source["schema_sketch"])
+        and _date_coverage_complete(source.get("date_coverage"))
+    )
+
+
+def _date_coverage_complete(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    start = _parse_date(value.get("start"))
+    end = _parse_date(value.get("end"))
+    return start is not None and end is not None and start <= end
+
+
+def _parse_date(value: Any) -> date | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None

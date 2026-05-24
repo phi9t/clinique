@@ -85,3 +85,18 @@ def test_preflight_internal_manifest_rejects_duplicate_source_types(tmp_path):
 
     assert result.ok is False
     assert result.duplicate_sources == ("edc_snapshots",)
+
+
+def test_preflight_internal_manifest_rejects_invalid_date_coverage(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "date_coverage": {"start": "2026-04-01", "end": "2026-03-31"},
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.incomplete_sources == ("edc_snapshots",)
