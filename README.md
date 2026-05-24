@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="Clinique" width="320">
+  <img src="docs/assets/logo-mark.svg" alt="" width="96" height="96">
 </p>
+
+# Clinique
 
 Agentic tooling for regulated clinical-trial workflows — assistive agents with deterministic
 gates, not autonomous trial execution. Design docs live in [`docs/`](docs/README.md).
