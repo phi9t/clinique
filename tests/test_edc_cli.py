@@ -448,6 +448,37 @@ def test_edc_query_verify_workstream_can_include_internal_export_reports(tmp_pat
     )
 
 
+def test_edc_query_verify_workstream_fails_unready_internal_manifest(tmp_path):
+    reports_dir = tmp_path / "reports"
+    manifest = _internal_manifest()
+    manifest["sources"] = manifest["sources"][:1]
+    manifest_path = tmp_path / "unready-manifest.json"
+    manifest_path.write_text(json.dumps(manifest))
+
+    exit_code = main(
+        [
+            "edc-query",
+            "verify-workstream",
+            "--fixtures",
+            "tests/fixtures/edc_query",
+            "--manifest",
+            str(manifest_path),
+            "--silent-log",
+            "tests/fixtures/edc_query/silent_log.json",
+            "--rollout-gate",
+            "tests/fixtures/edc_query/controlled_rollout_gate.json",
+            "--reports-dir",
+            str(reports_dir),
+        ]
+    )
+
+    assert exit_code == 2
+    preflight = json.loads((reports_dir / "internal-preflight-template.json").read_text())
+    assert preflight["ok"] is False
+    assert preflight["missing_required_sources"] == ["query_logs", "edit_check_history"]
+    assert not (reports_dir / "workstream-verification.json").exists()
+
+
 def test_edc_query_validate_internal_exports_writes_l1_l2_reports(tmp_path):
     manifest = _write_internal_export_manifest(tmp_path / "exports")
     reports_dir = tmp_path / "reports"

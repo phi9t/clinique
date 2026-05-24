@@ -75,7 +75,8 @@
       units, nonnegative safety-count endpoints, and human approval path from structured
       evidence.
 - [x] Bundled workstream verifier regenerates local synthetic reports, optional approved-export
-      fixture reports, and consolidates remaining blockers in
+      fixture reports, requires the internal-data manifest preflight gate to be ready before
+      writing consolidated evidence, and consolidates remaining blockers in
       `reports/edc-query/workstream-verification.json`.
 - [x] Approved-export import path is executable against synthetic fixture exports and generates
       internal-style L1/L2 reports without claiming real operational validation; relative

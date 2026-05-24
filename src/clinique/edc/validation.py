@@ -90,6 +90,8 @@ def verify_workstream(
     preflight = preflight_internal_manifest(manifest)
     preflight_path = output_dir / "internal-preflight-template.json"
     preflight_path.write_text(json.dumps(preflight.as_dict(), indent=2, sort_keys=True) + "\n")
+    if not preflight.ok:
+        raise ValueError("internal-data manifest failed preflight readiness gate")
 
     silent = evaluate_silent_log(
         load_silent_log(silent_log),
