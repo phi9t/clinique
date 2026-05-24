@@ -983,3 +983,96 @@ def test_fixture_bundle_rejects_unknown_snapshot_record_references(tmp_path):
             assert expected_error in str(exc)
         else:
             raise AssertionError("expected unknown snapshot record reference rejection")
+
+
+def test_fixture_bundle_rejects_events_before_referenced_record_collection(tmp_path):
+    fixture_dir = tmp_path / "events_before_record_collection"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-03T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": [
+              {
+                "record_id": "REC-001",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "",
+                "collected_at": "2026-03-02T00:00:00Z"
+              }
+            ]
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    cases = [
+        (
+            "label_before_record",
+            {
+                "labels": [
+                    {
+                        "snapshot_id": "snap",
+                        "study_id": "STUDY-EDC-001",
+                        "site_id": "SITE-01",
+                        "subject_id": "SUBJ-001",
+                        "form": "AE",
+                        "field": "term",
+                        "gold_query_needed": True,
+                        "query_category": "missing",
+                        "human_resolution": "corrected",
+                        "opened_at": "2026-03-01T00:00:00Z",
+                        "closed_at": None,
+                        "evidence_available_at_agent_time": True,
+                    }
+                ],
+                "query_logs": [],
+            },
+            "label opened_at cannot be before record collected_at",
+        ),
+        (
+            "query_before_record",
+            {
+                "labels": [],
+                "query_logs": [
+                    {
+                        "query_id": "Q-BAD",
+                        "snapshot_id": "snap",
+                        "study_id": "STUDY-EDC-001",
+                        "site_id": "SITE-01",
+                        "subject_id": "SUBJ-001",
+                        "form": "AE",
+                        "field": "term",
+                        "query_text": "Please confirm AE term.",
+                        "query_category": "missing",
+                        "opened_at": "2026-03-01T00:00:00Z",
+                        "closed_at": None,
+                        "status": "open",
+                        "resolution": "pending",
+                    }
+                ],
+            },
+            "query log opened_at cannot be before record collected_at",
+        ),
+    ]
+    for dirname, payload, expected_error in cases:
+        case_dir = fixture_dir / dirname
+        case_dir.mkdir()
+        (case_dir / "snapshots.json").write_text((fixture_dir / "snapshots.json").read_text())
+        (case_dir / "rules.json").write_text("[]")
+        (case_dir / "labels.json").write_text(json.dumps(payload["labels"]))
+        (case_dir / "query_logs.json").write_text(json.dumps(payload["query_logs"]))
+
+        try:
+            load_fixture_bundle(case_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected event-before-record chronology rejection")

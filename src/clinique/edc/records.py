@@ -468,18 +468,37 @@ def validate_snapshot_references(
         }
         for snapshot in snapshots
     }
+    collected_at_by_snapshot_key = {
+        snapshot.snapshot_id: {
+            (
+                record.study_id,
+                record.site_id,
+                record.subject_id,
+                record.form,
+                record.field,
+            ): record.collected_at
+            for record in snapshot.records
+        }
+        for snapshot in snapshots
+    }
     for label in labels:
         if label.snapshot_id not in snapshot_ids:
             raise ValueError(f"unknown label snapshot_id: {label.snapshot_id}")
         key = (label.study_id, label.site_id, label.subject_id, label.form, label.field)
         if key not in record_keys_by_snapshot[label.snapshot_id]:
             raise ValueError(f"unknown label record key: {key}")
+        collected_at = collected_at_by_snapshot_key[label.snapshot_id][key]
+        if label.opened_at is not None and label.opened_at < collected_at:
+            raise ValueError("label opened_at cannot be before record collected_at")
     for query in query_logs:
         if query.snapshot_id not in snapshot_ids:
             raise ValueError(f"unknown query log snapshot_id: {query.snapshot_id}")
         key = (query.study_id, query.site_id, query.subject_id, query.form, query.field)
         if key not in record_keys_by_snapshot[query.snapshot_id]:
             raise ValueError(f"unknown query log record key: {key}")
+        collected_at = collected_at_by_snapshot_key[query.snapshot_id][key]
+        if query.opened_at < collected_at:
+            raise ValueError("query log opened_at cannot be before record collected_at")
 
 
 def validate_lock_issue_record_references(

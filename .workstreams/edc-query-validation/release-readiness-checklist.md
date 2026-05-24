@@ -30,6 +30,8 @@
       snapshot IDs.
 - [x] Fixture and approved-export loaders reject labels and query logs whose study/site/subject/
       form/field key is absent from the referenced snapshot.
+- [x] Fixture and approved-export loaders reject label and query-log opened timestamps that
+      predate the referenced source record collection timestamp.
 - [x] Snapshot loaders reject duplicate source-record keys before detection can overwrite them.
 - [x] Fixture and approved-export loaders reject duplicate query-log IDs before provenance can
       become ambiguous.

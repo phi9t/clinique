@@ -56,10 +56,10 @@ Evidence:
   query-log status/resolution consistency, label no-query semantic consistency,
   snapshot/study/site-scoped task and workflow metric attribution, evidence-availability guards
   for true detections, duplicate snapshot ID, unknown snapshot reference, label/query
-  snapshot-record reference validation, source-record, query-log ID, and adjudication-label
-  rejection, duplicate database-lock issue ID rejection, database-lock issue record-reference
-  validation, rule-history ID, chronology, kind, and parameter validation, detection, metrics,
-  CLI execution,
+  snapshot-record reference validation, label/query event-vs-record chronology, source-record,
+  query-log ID, and adjudication-label rejection, duplicate database-lock issue ID rejection,
+  database-lock issue record-reference validation, rule-history ID, chronology, kind, and
+  parameter validation, detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight, silent-log evaluation,
   controlled-rollout gate evaluation, approved-export import, bundled workstream verification,
   and report serialization.
