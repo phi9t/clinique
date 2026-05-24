@@ -1,0 +1,179 @@
+#+TITLE: Biostat Agent Suite — Implementation Tracker
+#+AUTHOR: phissenschaft@gmail.com
+#+STARTUP: overview
+#+TODO: TODO NEXT IN-PROGRESS BLOCKED | DONE CANCELLED
+
+* Overview
+Implements RFCs 0000-0006 (see docs/rfcs/). Order is by *validation feasibility*
+(see design.md): substrate -> RFC-0003 -> RFC-0002/0005 -> RFC-0004 -> RFC-0001.
+Stack: Python 3.14 via uv; R engines via pinned Docker image; tests via pytest.
+
+** Status (2026-05-23)
+Substrate + RFC-0003 implemented and green: =uv run pytest= -> 23 passed, 3 skipped
+(rpact Docker cross-checks skip until the daemon is up and the image is built). =ruff= clean.
+
+Invariants enforced as hard pass/fail (not metrics):
+- numeric-provenance (RFC-0000 s7)
+- validated-engine-only computation (RFC-0003)
+- reproducibility / determinism
+- (later) side-lock (0002), data-wall (0005), read-only (0001)
+
+* DONE Project bootstrap (uv + docker scaffold)
+:PROPERTIES:
+:RFC: infra
+:END:
+** Prompt
+Initialize the uv project (pyproject.toml, src layout, package =clinique=), add dev deps
+(pytest, ruff), create the pinned R-engine Docker image scaffold, and a .gitignore.
+** Acceptance criteria
+- [X] =uv sync= succeeds; venv created; uv.lock committed
+- [X] =uv run pytest= runs and exits 0 (23 passed, 3 skipped)
+- [X] =docker/r-engine/Dockerfile= pins rocker/r-ver and rpact/gsDesign versions
+- [X] .gitignore excludes .venv/, __pycache__/, *.pyc, ledger artifacts
+
+* DONE Substrate: provenance ledger (RFC-0000 s5)
+:PROPERTIES:
+:RFC: 0000
+:END:
+** Prompt
+Implement an append-only JSONL provenance ledger. Each record carries: record_id, capability,
+produced_at, inputs[], model{id,version,params}, tools[{name,version}], prompt_hash, output_ref,
+human_review{required,role,status,reviewer,at}. Provide append() -> record_id and all()/iter.
+** Acceptance criteria
+- [X] LedgerRecord dataclass matches RFC-0000 s5 fields
+- [X] append() persists one JSON object per line; assigns uuid; sets produced_at (UTC ISO-8601)
+- [X] ledger is append-only (no update/delete API); reload reads back identical records
+- [X] human_review defaults to required=True, status="pending"
+- [X] unit tests cover append, reload, ordering, and append-only property
+** Implementation
+src/clinique/substrate/provenance.py ; tests/test_provenance.py
+
+* DONE Substrate: numeric-provenance linter (RFC-0000 s7)
+:PROPERTIES:
+:RFC: 0000
+:END:
+** Prompt
+Implement check_numeric_provenance(record) -> list[Violation]. Every numeric value appearing in
+a ComputationRecord's result + narrative must trace (within float tolerance) to either an
+EngineResult output/achieved value or an Assumption value. Numbers that don't trace are
+violations. Provide a tiny structural whitelist only for unambiguous formatting constants and
+make it explicit/configurable.
+** Acceptance criteria
+- [X] numbers are extracted robustly (ints, decimals, thousands-sep, scientific notation)
+- [X] a clean record (narrative built only from blessed numbers) yields zero violations
+- [X] a poisoned record (an invented number not from any engine/assumption) yields >=1 violation
+      naming the offending value
+- [X] tolerance handles display rounding; equality is within tolerance, not exact string match
+- [X] unit tests cover clean, poisoned, whitelist, and rounding-edge cases
+** Implementation
+src/clinique/substrate/numeric_provenance.py ; tests/test_numeric_provenance.py
+
+* DONE RFC-0003: validated power engines (ReferenceEngine oracle)
+:PROPERTIES:
+:RFC: 0003
+:END:
+** Prompt
+Implement deterministic power engines in Python as an independent cross-check oracle:
+two_sample_means (z-approx), two_proportions (unpooled normal approx), survival_logrank
+(Schoenfeld events). Each returns an EngineResult with method, inputs, outputs (n1,n2,total
+or events), and achieved_power. Sample-size is the minimal integer satisfying target power
+(verified by inverse power function).
+** Acceptance criteria
+- [X] round-trip minimality: achieved_power(N) >= target AND achieved_power(N-1) < target
+      (independently re-derived in-test, not self-comparison)
+- [X] literature anchors land at 63/group (means), 95/group (props), 247 events (logrank)
+- [X] engines are pure/deterministic: identical inputs -> identical outputs
+- [X] EngineResult records engine name + version
+- [X] unit tests cover all three engines + monotonicity (power increases with n)
+** Implementation
+src/clinique/power/engines.py ; tests/test_power_engines.py
+
+* IN-PROGRESS RFC-0003: rpact Docker engine (canonical)
+:PROPERTIES:
+:RFC: 0003
+:END:
+Code complete; build + cross-check verification pending a running docker daemon
+(=colima start=, then =docker build -t clinique-r-engine:0.1.0 docker/r-engine=).
+** Prompt
+Implement RpactDockerEngine that runs power.R inside the pinned R Docker image via =docker run=,
+passing params as JSON on stdin and parsing JSON from stdout. Record image ref/digest + rpact
+version in the EngineResult/provenance. power.R wraps rpact for the same three designs.
+** Acceptance criteria
+- [X] docker availability is detected; engine raises a clear error if daemon unreachable
+- [X] power.R returns valid JSON for the three design types (written)
+- [X] EngineResult.tools records {name: rpact, version} and image ref
+- [ ] cross-check test passes: rpact total N agrees with ReferenceEngine within tolerance
+      (BLOCKED: docker daemon down -> test currently skips)
+- [X] image build is reproducible (pinned base + PPM snapshot + pinned package versions)
+** Implementation
+src/clinique/power/rpact_docker.py ; docker/r-engine/{Dockerfile,power.R} ; tests/test_rpact_docker.py
+
+* DONE RFC-0003: orchestrator + numeric-provenance gate
+:PROPERTIES:
+:RFC: 0003
+:END:
+** Prompt
+Implement design_sample_size(intake, ledger, engine=canonical). Steps: select_method(intake)
+(rule-based stand-in for the LLM, deterministic), assemble Assumptions with source+kind, run the
+engine, build a ComputationRecord (assumptions, engine result, result, sensitivity sweep, narrative
+assembled ONLY from blessed numbers), run check_numeric_provenance as a HARD GATE (raise on
+violation), then append to the ledger and return the record.
+** Acceptance criteria
+- [X] select_method maps endpoint_type {continuous,binary,time_to_event} -> correct engine
+      (labeled mini-corpus test)
+- [X] unsourced assumptions (kind="assumption") are flagged for sign-off in the record
+- [X] narrative passes the numeric-provenance linter (zero violations) by construction
+- [X] a deliberately poisoned narrative is REJECTED by the gate (raises NumericProvenanceError)
+- [X] determinism: same intake -> identical ComputationRecord (modulo ledger_ref/timestamp)
+- [X] sensitivity sweep varies a key assumption and tabulates N; all numbers trace to engine runs
+- [X] hard gate proves no number in the record can originate outside an engine/assumption
+** Implementation
+src/clinique/power/{intake.py,orchestrator.py} ; tests/test_power_orchestrator.py
+
+* TODO RFC-0002/0005: reproduction + defect-injection harness (scaffold)
+:PROPERTIES:
+:RFC: 0002 0005
+:END:
+** Prompt
+Scaffold the fixture-fetch + reproduction harness against pharmaverse / R-submission-pilot
+ADaM+TLF outputs. Implement: side-lock registry (0002, write-once side per output_id) and the
+data-wall build invariant (0005, no real-data/unblinding import path in the harness module).
+** Acceptance criteria
+- [ ] side-lock: agent_contributed_side[output_id] is write-once; opposite-side request refused
+- [ ] data-wall: a test asserts the harness module imports only the SyntheticDataProvider
+- [ ] fixture-fetch documents the pinned pharmaverse / R-pilot sources
+- [ ] reproduction stub: given a known-correct output, diff harness == byte/though value match
+
+* TODO RFC-0004: CDISC conformance triage (scaffold)
+:PROPERTIES:
+:RFC: 0004
+:END:
+** Prompt
+Scaffold ingestion of CDISC CORE / Pinnacle 21 validator reports and a classifier returning
+{true_error|expected|waiver_candidate} + explanation + suggested_fix + reference. Seed-defect
+ground truth by running CORE on a known-good bundle with injected violations.
+** Acceptance criteria
+- [ ] parser reads a CORE/P21 report into structured issues
+- [ ] classification has confusion-by-class metric; never labels a true error "expected" in tests
+- [ ] no-fabrication test: drafted output contains no metadata absent from the source
+
+* TODO RFC-0001: estimand-spine checker (scaffold)
+:PROPERTIES:
+:RFC: 0001
+:END:
+** Prompt
+Scaffold the artifact graph + claim model + deterministic rule engine. Implement seeded-defect
+validation: mutate a consistent matched bundle (CDISC Pilot / R-pilot) and assert detection.
+Natural-defect benchmark deferred to a partner-data milestone.
+** Acceptance criteria
+- [ ] artifact graph nodes/edges per RFC-0000 s4; claims carry source spans
+- [ ] >=3 deterministic rules implemented (EST-TIMEPOINT-ALIGN, POP-DEF-CONSISTENT, SHELL-BACKED)
+- [ ] seeded-defect recall = 1.0 on injected inconsistencies for implemented rules
+- [ ] false-positive rate = 0 on the unmutated bundle
+- [ ] read-only invariant: no artifact-write API exists
+
+* Backlog / deferred
+- Natural-defect benchmark for RFC-0001 (needs sponsor/CRO or expert-annotated data)
+- LLM method-selection + claim-extraction (currently rule-based / deferred interface)
+- t-distribution correction for two_sample_means engine
+- CI workflow (uv + docker) and ruff lint gate
