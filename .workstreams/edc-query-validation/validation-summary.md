@@ -80,7 +80,7 @@ Evidence:
   source identity, source-type, and source-specific schema-sketch enforcement, silent-log
   query-category, schema-field duplicate rejection, preflight path traversal rejection,
   manifest-relative export paths, manifest-relative path traversal rejection, malformed
-  approved-export payload and payload-object rejection, evidence, and
+  approved-export payload and item-indexed payload-object rejection, evidence, and
   recommendation-ID enforcement, silent evidence-citation validation, safety-label consistency,
   finite tolerance validation, signed timing metrics, and evaluation, controlled-rollout gate
   rate/integer-count/integer-delta validation, finite-number validation, threshold-direction

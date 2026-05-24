@@ -130,11 +130,13 @@ def _source_paths(manifest_path: str | Path) -> dict[str, Path]:
 
 def _parse_payload_items(path: Path, parser):
     items = []
-    for raw in _read_json(path):
+    for index, raw in enumerate(_read_json(path)):
         try:
             items.append(parser(raw))
         except (KeyError, TypeError, ValueError) as exc:
-            raise ValueError(f"invalid internal export payload: {path}: {exc}") from exc
+            raise ValueError(
+                f"invalid internal export payload: {path}: item {index}: {exc}"
+            ) from exc
     return tuple(items)
 
 
