@@ -139,6 +139,11 @@ def verify_workstream(
     evidence = {
         "local_reports_complete": local_reports_complete,
         "local_internal_export_reports_complete": local_internal_export_reports_complete,
+        "internal_export_evidence_kind": (
+            internal_export_result["evidence_kind"]
+            if internal_export_result is not None
+            else "missing"
+        ),
         "local_gates_passed": local_gates_passed,
         "local_gate_failures": local_gate_failures,
         "goal_complete": bool(audit["goal_complete"]) and local_gates_passed,
@@ -181,6 +186,8 @@ def _local_gate_failures(
     if internal_export_result is None:
         failures.append("internal_export.reports_missing")
         return failures
+    if internal_export_result["evidence_kind"] != "approved_internal_export":
+        failures.append("internal_export.synthetic_fixture_evidence")
     failures.extend(
         _false_gate_names(
             "internal_export_offline",
@@ -233,6 +240,7 @@ def validate_internal_exports(
     offline.write_json(offline_path)
     retrospective.write_json(retrospective_path)
     return {
+        "evidence_kind": _internal_export_evidence_kind(manifest),
         "offline": asdict(offline),
         "retrospective": asdict(retrospective),
         "reports": {
@@ -240,3 +248,21 @@ def validate_internal_exports(
             "internal_retrospective_replay": str(retrospective_path),
         },
     }
+
+
+def _internal_export_evidence_kind(manifest: str | Path) -> str:
+    manifest_path = Path(manifest)
+    try:
+        with manifest_path.open() as handle:
+            payload = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return "unknown"
+    sources = payload.get("sources", []) if isinstance(payload, dict) else []
+    owners = {
+        source.get("owner")
+        for source in sources
+        if isinstance(source, dict)
+    }
+    if owners and owners == {"synthetic-fixture"}:
+        return "synthetic_fixture"
+    return "approved_internal_export"

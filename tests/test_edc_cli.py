@@ -440,6 +440,8 @@ def test_edc_query_verify_workstream_can_include_internal_export_reports(tmp_pat
     assert exit_code == 5
     evidence = json.loads((reports_dir / "workstream-verification.json").read_text())
     assert evidence["local_internal_export_reports_complete"] is True
+    assert evidence["internal_export_evidence_kind"] == "synthetic_fixture"
+    assert "internal_export.synthetic_fixture_evidence" in evidence["local_gate_failures"]
     assert evidence["reports"]["internal_offline_benchmark"] == str(
         reports_dir / "internal-offline-benchmark.json"
     )

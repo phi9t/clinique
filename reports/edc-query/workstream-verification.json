@@ -67,8 +67,10 @@
     }
   },
   "goal_complete": false,
+  "internal_export_evidence_kind": "synthetic_fixture",
   "local_gate_failures": [
-    "silent_log.stop_criteria_triggered"
+    "silent_log.stop_criteria_triggered",
+    "internal_export.synthetic_fixture_evidence"
   ],
   "local_gates_passed": false,
   "local_internal_export_reports_complete": true,

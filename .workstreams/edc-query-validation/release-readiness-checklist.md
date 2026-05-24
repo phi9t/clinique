@@ -79,8 +79,9 @@
 - [x] Bundled workstream verifier regenerates local synthetic reports, optional approved-export
       fixture reports, requires the internal-data manifest preflight gate to be ready before
       writing consolidated evidence, records local gate failures, prevents completion when any
-      local gate fails or internal-export L1/L2 reports are missing, and consolidates remaining
-      blockers in `reports/edc-query/workstream-verification.json`.
+      local gate fails, internal-export L1/L2 reports are missing, or internal-export evidence is
+      synthetic fixture data, and consolidates remaining blockers in
+      `reports/edc-query/workstream-verification.json`.
 - [x] Approved-export import path is executable against synthetic fixture exports and generates
       internal-style L1/L2 reports without claiming real operational validation; relative
       export paths are resolved from the manifest directory for portable approved-export bundles,
