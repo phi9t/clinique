@@ -410,6 +410,14 @@ def validate_unique_label_keys(labels: tuple[QueryLabel, ...]) -> None:
         seen.add(key)
 
 
+def validate_unique_lock_issue_ids(lock_issues: tuple[DatabaseLockIssue, ...]) -> None:
+    seen: set[str] = set()
+    for issue in lock_issues:
+        if issue.issue_id in seen:
+            raise ValueError(f"duplicate lock issue id: {issue.issue_id}")
+        seen.add(issue.issue_id)
+
+
 @dataclass(frozen=True)
 class SourceRef:
     source_type: str

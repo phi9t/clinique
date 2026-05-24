@@ -13,6 +13,7 @@ def _write_minimal_fixture_dir(
     rules: list[dict[str, object]] | None = None,
     query_logs: list[dict[str, object]] | None = None,
     labels: list[dict[str, object]] | None = None,
+    lock_issues: list[dict[str, object]] | None = None,
 ) -> None:
     fixture_dir.mkdir()
     (fixture_dir / "snapshots.json").write_text(
@@ -22,6 +23,8 @@ def _write_minimal_fixture_dir(
     (fixture_dir / "rules.json").write_text(json.dumps(rules or []))
     (fixture_dir / "query_logs.json").write_text(json.dumps(query_logs or []))
     (fixture_dir / "labels.json").write_text(json.dumps(labels or []))
+    if lock_issues is not None:
+        (fixture_dir / "lock_issues.json").write_text(json.dumps(lock_issues))
 
 
 def test_load_fixture_bundle_has_timestamped_snapshots_and_labels():
@@ -757,3 +760,26 @@ def test_fixture_bundle_rejects_duplicate_query_log_ids(tmp_path):
         assert "duplicate query log id" in str(exc)
     else:
         raise AssertionError("expected duplicate query-log id rejection")
+
+
+def test_fixture_bundle_rejects_duplicate_lock_issue_ids(tmp_path):
+    fixture_dir = tmp_path / "duplicate_lock_issue_ids"
+    issue = {
+        "issue_id": "LOCK-DUP",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "severity": "major",
+        "discovered_at": "2026-03-05T09:00:00Z",
+        "description": "Database lock issue.",
+    }
+    _write_minimal_fixture_dir(fixture_dir, lock_issues=[issue, dict(issue)])
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "duplicate lock issue id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate lock issue id rejection")

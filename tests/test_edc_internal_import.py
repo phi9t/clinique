@@ -116,3 +116,31 @@ def test_load_internal_export_bundle_builds_fixture_bundle_from_approved_exports
         "RULE-CONMED-AE-DATE",
     }
     assert [issue.issue_id for issue in bundle.lock_issues] == ["LOCK-001"]
+
+
+def test_load_internal_export_bundle_rejects_duplicate_lock_issue_ids(tmp_path):
+    manifest = _write_manifest(tmp_path)
+    issue = {
+        "issue_id": "LOCK-DUP",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "severity": "major",
+        "discovered_at": "2026-03-05T09:00:00Z",
+        "description": "Database lock issue.",
+    }
+    lock_issues_path = tmp_path / "lock_issues.json"
+    lock_issues_path.write_text(json.dumps([issue, dict(issue)]))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=lock_issues_path,
+        )
+    except ValueError as exc:
+        assert "duplicate lock issue id" in str(exc)
+    else:
+        raise AssertionError("expected duplicate lock issue id rejection")
