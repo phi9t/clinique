@@ -28,7 +28,9 @@ def _source_ok(source: SourceRef, replayed_at: datetime) -> bool:
     return source.observed_at <= replayed_at
 
 
-def build_offline_report(bundle: FixtureBundle, *, replayed_at: datetime) -> ValidationReport:
+def build_offline_report(
+    bundle: FixtureBundle, *, replayed_at: datetime, generated_at: datetime | None = None
+) -> ValidationReport:
     evidence = evidence_at(bundle, replayed_at)
     candidates = detect_candidate_queries(evidence, existing_queries=bundle.query_logs)
     metrics = evaluate_candidates(candidates, bundle.labels, replayed_at=evidence.replayed_at)
@@ -41,7 +43,7 @@ def build_offline_report(bundle: FixtureBundle, *, replayed_at: datetime) -> Val
     )
     return ValidationReport(
         report_type="edc_query_offline_benchmark",
-        generated_at=_now(),
+        generated_at=generated_at or _now(),
         inputs={
             "snapshot_id": evidence.snapshot.snapshot_id,
             "replayed_at": evidence.replayed_at.isoformat().replace("+00:00", "Z"),
@@ -59,7 +61,9 @@ def build_offline_report(bundle: FixtureBundle, *, replayed_at: datetime) -> Val
     )
 
 
-def build_retrospective_report(bundle: FixtureBundle) -> ValidationReport:
+def build_retrospective_report(
+    bundle: FixtureBundle, *, generated_at: datetime | None = None
+) -> ValidationReport:
     runs: list[dict[str, object]] = []
     leakage_checks_passed = True
     total_true = 0
@@ -92,7 +96,7 @@ def build_retrospective_report(bundle: FixtureBundle) -> ValidationReport:
 
     return ValidationReport(
         report_type="edc_query_retrospective_replay",
-        generated_at=_now(),
+        generated_at=generated_at or _now(),
         inputs={
             "snapshot_ids": [snapshot.snapshot_id for snapshot in bundle.snapshots],
             "runs": runs,

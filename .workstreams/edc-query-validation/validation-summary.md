@@ -12,7 +12,8 @@ Evidence:
 - `reports/edc-query/retrospective-replay.json` reports timestamped replay over two synthetic
   snapshots with leakage checks true.
 - `reports/edc-query/audit-summary.json` records local synthetic validation as complete and
-  explicitly lists the internal/prospective requirements still blocking full goal completion.
+  derives the remaining blocked requirements from
+  `.workstreams/edc-query-validation/release-readiness-checklist.md`.
 - `uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir
   reports/edc-query` regenerates the reports and audit summary from source fixtures.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API

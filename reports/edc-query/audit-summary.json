@@ -1,14 +1,36 @@
 {
   "blocked_requirements": [
-    "internal_data_inventory",
-    "internal_edc_snapshots",
-    "internal_query_logs",
-    "internal_l1_offline_report",
-    "internal_l2_retrospective_replay",
-    "silent_prospective_approval",
-    "silent_prospective_run",
-    "controlled_rollout_approval"
+    "internal_data_validation__internal_edc_snapshots_approved_and_connected",
+    "internal_data_validation__internal_query_logs_approved_and_connected",
+    "internal_data_validation__internal_edit_check_history_approved_and_connected",
+    "internal_data_validation__internal_l1_offline_report_generated",
+    "internal_data_validation__internal_l2_retrospective_replay_report_generated",
+    "prospective_validation__silent_prospective_protocol_approved",
+    "prospective_validation__silent_prospective_run_completed",
+    "prospective_validation__controlled_rollout_gate_approved",
+    "prospective_validation__human_approval_path_validated"
   ],
+  "checklist": {
+    "blocked_requirements": [
+      "internal_data_validation__internal_edc_snapshots_approved_and_connected",
+      "internal_data_validation__internal_query_logs_approved_and_connected",
+      "internal_data_validation__internal_edit_check_history_approved_and_connected",
+      "internal_data_validation__internal_l1_offline_report_generated",
+      "internal_data_validation__internal_l2_retrospective_replay_report_generated",
+      "prospective_validation__silent_prospective_protocol_approved",
+      "prospective_validation__silent_prospective_run_completed",
+      "prospective_validation__controlled_rollout_gate_approved",
+      "prospective_validation__human_approval_path_validated"
+    ],
+    "complete_sections": [
+      "Synthetic Validation"
+    ],
+    "goal_complete": false,
+    "incomplete_sections": [
+      "Internal Data Validation",
+      "Prospective Validation"
+    ]
+  },
   "gates": {
     "offline": {
       "duplicate_query_burden_measured": true,

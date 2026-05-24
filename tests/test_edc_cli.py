@@ -23,7 +23,34 @@ def test_edc_query_validate_writes_reports_and_audit_summary(tmp_path):
     audit = json.loads((reports_dir / "audit-summary.json").read_text())
     assert audit["local_synthetic_validation_complete"] is True
     assert audit["goal_complete"] is False
-    assert "internal_data_inventory" in audit["blocked_requirements"]
+    assert "internal_data_validation__internal_edc_snapshots_approved_and_connected" in (
+        audit["blocked_requirements"]
+    )
+
+
+def test_edc_query_validate_outputs_are_repeatable(tmp_path):
+    reports_dir = tmp_path / "reports"
+    args = [
+        "edc-query",
+        "validate",
+        "--fixtures",
+        "tests/fixtures/edc_query",
+        "--reports-dir",
+        str(reports_dir),
+    ]
+
+    assert main(args) == 0
+    first = {
+        path.name: path.read_text()
+        for path in sorted(reports_dir.glob("*.json"))
+    }
+    assert main(args) == 0
+    second = {
+        path.name: path.read_text()
+        for path in sorted(reports_dir.glob("*.json"))
+    }
+
+    assert second == first
 
 
 def test_edc_query_validate_rejects_phi_marked_fixtures(tmp_path):
