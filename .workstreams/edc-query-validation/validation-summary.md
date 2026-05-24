@@ -21,7 +21,8 @@ Evidence:
   reports/edc-query/internal-preflight-template.json` validates the internal-data manifest
   contract without reading PHI-bearing exports, checks top-level manifest version/timestamp
   metadata, rejects source types outside the approved EDC snapshots, query logs, and edit-check
-  history inventory, and requires schema sketches to list nonblank field names.
+  history inventory, requires owner/export path metadata to be nonblank strings, and requires
+  schema sketches to list nonblank field names.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
@@ -68,13 +69,13 @@ Evidence:
   database-lock issue ID and severity rejection, database-lock issue record-reference and
   event-chronology validation, rule-history ID, chronology, kind, and parameter validation,
   detection, metrics, CLI execution,
-  annotation-manual alignment, internal-data preflight metadata, source-type, and schema-sketch
-  enforcement, silent-log query-category, evidence, and recommendation-ID enforcement, silent
-  evidence-citation validation, safety-label consistency, finite tolerance validation, signed
-  timing metrics, and evaluation, controlled-rollout gate rate/integer-count/integer-delta
-  validation, finite-number validation, threshold-direction validation, randomization-unit
-  validation, and evaluation, approved-export import, bundled workstream verification, and report
-  serialization.
+  annotation-manual alignment, internal-data preflight metadata, source identity, source-type,
+  and schema-sketch enforcement, silent-log query-category, evidence, and recommendation-ID
+  enforcement, silent evidence-citation validation, safety-label consistency, finite tolerance
+  validation, signed timing metrics, and evaluation, controlled-rollout gate
+  rate/integer-count/integer-delta validation, finite-number validation, threshold-direction
+  validation, randomization-unit validation, and evaluation, approved-export import, bundled
+  workstream verification, and report serialization.
 
 ## Not Yet Proven
 

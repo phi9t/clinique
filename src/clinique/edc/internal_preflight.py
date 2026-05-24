@@ -107,17 +107,11 @@ def _invalid_manifest_metadata(manifest: dict[str, Any]) -> tuple[str, ...]:
 
 
 def _source_complete(source: dict[str, Any]) -> bool:
-    required_keys = {
-        "source_type",
-        "owner",
-        "export_path",
-        "schema_sketch",
-        "date_coverage",
-        "sensitivity",
-        "blinding_status",
-        "read_only",
-    }
-    if any(not source.get(key) for key in required_keys):
+    if not all(
+        _nonblank_string(source.get(key)) for key in ("source_type", "owner", "export_path")
+    ):
+        return False
+    if not all(source.get(key) for key in ("schema_sketch", "date_coverage", "read_only")):
         return False
     return (
         _schema_sketch_complete(source.get("schema_sketch"))
@@ -125,6 +119,10 @@ def _source_complete(source: dict[str, Any]) -> bool:
         and source.get("blinding_status") in ALLOWED_BLINDING_STATUS
         and _date_coverage_complete(source.get("date_coverage"))
     )
+
+
+def _nonblank_string(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
 
 
 def _schema_sketch_complete(value: Any) -> bool:

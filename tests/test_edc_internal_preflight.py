@@ -159,6 +159,25 @@ def test_preflight_internal_manifest_rejects_malformed_schema_sketch_entries(tmp
     assert result.incomplete_sources == ("edc_snapshots", "query_logs")
 
 
+def test_preflight_internal_manifest_rejects_malformed_source_identity_metadata(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "owner": 123,
+    }
+    manifest["sources"][1] = {
+        **manifest["sources"][1],
+        "export_path": " ",
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.incomplete_sources == ("edc_snapshots", "query_logs")
+
+
 def test_preflight_internal_manifest_rejects_invalid_controlled_metadata_values(tmp_path):
     manifest = _valid_manifest()
     manifest["sources"][0] = {
