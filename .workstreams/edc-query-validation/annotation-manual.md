@@ -2,7 +2,9 @@
 
 ## Unit Of Annotation
 
-Annotate one candidate discrepancy at the `(snapshot_id, subject_id, form, field)` level.
+Annotate one candidate discrepancy at the `(snapshot_id, study_id, site_id, subject_id, form, field)`
+level. Do not merge labels across studies or sites even when the subject, form, and field names
+match.
 
 ## Label Values
 
@@ -30,4 +32,3 @@ when label counts support it.
 
 Outcome labels from later resolution may be used for evaluation only. They must not be exposed
 to the agent during timestamped replay.
-

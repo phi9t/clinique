@@ -53,7 +53,7 @@ Each candidate discrepancy receives both task and workflow labels:
   "field": "start_date",
   "candidate_query": "...",
   "gold_query_needed": true,
-  "query_category": "missing | inconsistent | impossible | source_mismatch | duplicate",
+  "query_category": "missing | inconsistent | impossible | source_mismatch | duplicate | no_query",
   "human_resolution": "corrected | confirmed | no_query_needed | duplicate | waived",
   "opened_at": "2026-03-03T12:00:00Z",
   "closed_at": "2026-03-05T18:00:00Z",
@@ -112,4 +112,3 @@ draft-only with named human approval before any EDC action.
 This workstream does not implement recruitment, safety reporting, patient contact, automated
 query issuance, automated source-data changes, database lock decisions, or access to unblinded
 treatment assignment.
-

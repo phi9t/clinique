@@ -36,3 +36,9 @@ def test_audit_release_checklist_marks_goal_complete_when_all_items_checked(tmp_
 
     assert audit.blocked_requirements == ()
     assert audit.goal_complete is True
+
+
+def test_annotation_manual_uses_study_and_site_scoped_annotation_unit():
+    manual = Path(".workstreams/edc-query-validation/annotation-manual.md").read_text()
+
+    assert "(snapshot_id, study_id, site_id, subject_id, form, field)" in manual
