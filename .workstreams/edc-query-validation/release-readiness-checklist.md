@@ -77,7 +77,8 @@
       fixture reports, and consolidates remaining blockers in
       `reports/edc-query/workstream-verification.json`.
 - [x] Approved-export import path is executable against synthetic fixture exports and generates
-      internal-style L1/L2 reports without claiming real operational validation.
+      internal-style L1/L2 reports without claiming real operational validation; relative
+      export paths are resolved from the manifest directory for portable approved-export bundles.
 
 ## Internal Data Validation
 

@@ -5,7 +5,7 @@
     {
       "source_type": "edc_snapshots",
       "owner": "synthetic-fixture",
-      "export_path": "tests/fixtures/edc_query",
+      "export_path": ".",
       "schema_sketch": [
         "snapshot_id",
         "snapshot_at",
@@ -31,7 +31,7 @@
     {
       "source_type": "query_logs",
       "owner": "synthetic-fixture",
-      "export_path": "tests/fixtures/edc_query",
+      "export_path": ".",
       "schema_sketch": [
         "query_id",
         "snapshot_id",
@@ -58,7 +58,7 @@
     {
       "source_type": "edit_check_history",
       "owner": "synthetic-fixture",
-      "export_path": "tests/fixtures/edc_query",
+      "export_path": ".",
       "schema_sketch": [
         "rule_id",
         "kind",

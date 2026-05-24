@@ -12,6 +12,7 @@ def _write_manifest(
     *,
     read_only: bool = True,
     unblinded: bool = False,
+    relative_export_paths: bool = False,
     snapshot_payload: str | None = None,
 ) -> Path:
     for dirname in ["edc_snapshots", "query_logs", "edit_check_history"]:
@@ -92,6 +93,9 @@ def _write_manifest(
             },
         ],
     }
+    if relative_export_paths:
+        for source in manifest["sources"]:
+            source["export_path"] = source["source_type"]
     path = root / "manifest.json"
     path.write_text(json.dumps(manifest))
     return path
@@ -231,6 +235,23 @@ def test_load_internal_export_bundle_builds_fixture_bundle_from_approved_exports
         "RULE-CONMED-AE-DATE",
     }
     assert [issue.issue_id for issue in bundle.lock_issues] == ["LOCK-001"]
+
+
+def test_load_internal_export_bundle_resolves_relative_paths_from_manifest_directory(tmp_path):
+    export_root = tmp_path / "approved-export"
+    manifest = _write_manifest(export_root, relative_export_paths=True)
+
+    bundle = load_internal_export_bundle(
+        manifest,
+        labels_path=FIXTURES / "labels.json",
+        lock_issues_path=FIXTURES / "lock_issues.json",
+    )
+
+    assert [snapshot.snapshot_id for snapshot in bundle.snapshots] == [
+        "snap-2026-03-01",
+        "snap-2026-03-08",
+    ]
+    assert [query.query_id for query in bundle.query_logs] == ["Q-001"]
 
 
 def test_load_internal_export_bundle_rejects_duplicate_lock_issue_ids(tmp_path):

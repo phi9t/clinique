@@ -77,12 +77,15 @@ def load_internal_export_bundle(
 
 
 def _source_paths(manifest_path: str | Path) -> dict[str, Path]:
-    with Path(manifest_path).open() as handle:
+    manifest_file = Path(manifest_path)
+    with manifest_file.open() as handle:
         manifest = json.load(handle)
-    return {
-        source["source_type"]: Path(source["export_path"])
-        for source in manifest["sources"]
-    }
+    root = manifest_file.parent
+    paths: dict[str, Path] = {}
+    for source in manifest["sources"]:
+        export_path = Path(source["export_path"])
+        paths[source["source_type"]] = export_path if export_path.is_absolute() else root / export_path
+    return paths
 
 
 def _read_json(path: Path) -> list[dict]:
