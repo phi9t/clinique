@@ -55,6 +55,18 @@ def test_preflight_internal_manifest_accepts_minimum_complete_manifest(tmp_path)
     assert result.invalid_metadata == ()
 
 
+def test_preflight_internal_manifest_rejects_non_object_manifest(tmp_path):
+    path = tmp_path / "manifest.json"
+    path.write_text("[]")
+
+    try:
+        preflight_internal_manifest(path)
+    except ValueError as exc:
+        assert "manifest must be a JSON object" in str(exc)
+    else:
+        raise AssertionError("expected non-object manifest rejection")
+
+
 def test_preflight_internal_manifest_rejects_invalid_manifest_metadata(tmp_path):
     manifest = _valid_manifest()
     manifest["manifest_version"] = "0"

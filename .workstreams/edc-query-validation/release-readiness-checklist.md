@@ -54,8 +54,8 @@
 - [x] Audit summary explicitly marks the overall goal incomplete until internal/prospective
       evidence exists.
 - [x] Internal-data manifest preflight command exists and validates readiness metadata without
-      reading PHI-bearing exports, including top-level manifest version/timestamp checks and
-      rejection of unknown source types outside `edc_snapshots`, `query_logs`, and
+      reading PHI-bearing exports, including top-level JSON object, manifest version/timestamp
+      checks, and rejection of unknown source types outside `edc_snapshots`, `query_logs`, and
       `edit_check_history`; owner/export path metadata and schema sketches must contain
       nonblank strings.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week

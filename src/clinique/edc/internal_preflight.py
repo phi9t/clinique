@@ -43,6 +43,8 @@ class InternalPreflightResult:
 def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     with Path(path).open() as handle:
         manifest = json.load(handle)
+    if not isinstance(manifest, dict):
+        raise ValueError("manifest must be a JSON object")
     sources = manifest.get("sources", [])
     if not isinstance(sources, list):
         raise ValueError("manifest sources must be a list")
