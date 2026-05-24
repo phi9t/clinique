@@ -15,8 +15,8 @@
       reading PHI-bearing exports.
 - [x] Silent-log evaluator exists, writes reviewer-week burden gate reports, and exits nonzero
       for stop criteria or uncontrolled false-positive burden.
-- [x] Controlled-rollout gate evaluator exists and validates thresholds, safety endpoints, and
-      human approval path from structured evidence.
+- [x] Controlled-rollout gate evaluator exists, rejects incomplete gate packages, and validates
+      thresholds, safety endpoints, and human approval path from structured evidence.
 - [x] Bundled workstream verifier regenerates local synthetic reports, optional approved-export
       fixture reports, and consolidates remaining blockers in
       `reports/edc-query/workstream-verification.json`.

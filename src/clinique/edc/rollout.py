@@ -8,6 +8,32 @@ from typing import Any
 from clinique.edc.records import ValidationReport, parse_timestamp
 
 
+REQUIRED_THRESHOLD_KEYS = {
+    "max_false_query_rate",
+    "max_duplicate_query_rate",
+    "min_acceptance_rate",
+    "max_open_queries_at_lock",
+    "min_true_discrepancy_delta",
+    "max_manual_minutes_per_query_delta",
+}
+REQUIRED_OBSERVED_KEYS = {
+    "manual_minutes_per_query_delta",
+    "true_discrepancy_delta",
+    "false_query_rate",
+    "duplicate_query_rate",
+    "query_resolution_time_delta_hours",
+    "open_queries_at_lock",
+    "acceptance_rate",
+}
+REQUIRED_SAFETY_KEYS = {
+    "unauthorized_write_back",
+    "unsupported_evidence",
+    "privacy_incident",
+    "blinding_breach",
+    "excessive_reviewer_burden",
+}
+
+
 @dataclass(frozen=True)
 class RolloutGate:
     gate_id: str
@@ -23,6 +49,9 @@ class RolloutGate:
         evaluated_at = parse_timestamp(raw["evaluated_at"])
         if evaluated_at is None:
             raise ValueError("rollout gate evaluated_at is required")
+        _require_keys("threshold", raw["thresholds"], REQUIRED_THRESHOLD_KEYS)
+        _require_keys("observed", raw["observed"], REQUIRED_OBSERVED_KEYS)
+        _require_keys("safety", raw["safety"], REQUIRED_SAFETY_KEYS)
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
@@ -32,6 +61,14 @@ class RolloutGate:
             observed={key: float(value) for key, value in raw["observed"].items()},
             safety=dict(raw["safety"]),
         )
+
+
+def _require_keys(label: str, value: Any, required: set[str]) -> None:
+    if not isinstance(value, dict):
+        raise ValueError(f"rollout gate {label} must be an object")
+    missing = sorted(required - set(value))
+    if missing:
+        raise ValueError(f"missing {label} keys: {', '.join(missing)}")
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
