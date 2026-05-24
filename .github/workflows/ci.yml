@@ -30,7 +30,10 @@ jobs:
       # --frozen fails if uv.lock is out of date with pyproject.toml,
       # enforcing the committed-lockfile reproducibility invariant.
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --group temporal
+
+      - name: Install Temporal CLI
+        uses: temporalio/setup-temporal@v0
 
       - name: Lint (ruff)
         run: uv run ruff check .
@@ -38,8 +41,8 @@ jobs:
       - name: Format check (ruff)
         run: uv run ruff format --check .
 
-      # rpact Docker cross-check tests skip automatically when the daemon
-      # is unreachable, so no Docker is needed on the runner.
+      # Embedded WorkflowEnvironment tests + session-scoped dev-server E2E
+      # (rpact Docker cross-check tests skip when the daemon is unreachable).
       - name: Test (pytest)
         run: uv run pytest
 

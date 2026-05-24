@@ -22,7 +22,8 @@ map and commands.
 
 ```bash
 uv sync                 # create venv, install dev deps from uv.lock
-uv run pytest           # full test suite
+uv sync --group temporal # full suite incl. durable prescreen (same as CI)
+uv run pytest           # full test suite (294 tests with temporal group)
 uv run pytest tests/test_power_orchestrator.py            # one file
 uv run pytest tests/test_power_orchestrator.py::test_name # one test
 uv run ruff check .     # lint (line-length 100)
