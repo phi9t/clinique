@@ -13,6 +13,8 @@
 - [x] Fixture loaders reject missing required replay timestamps instead of defaulting them.
 - [x] Query-log and label loaders reject impossible open/close timestamp chronology.
 - [x] Query-log loaders reject status/timestamp mismatches for open and closed queries.
+- [x] Query-log loaders use a query-log-specific resolution enum and reject open/closed
+      status-resolution mismatches.
 - [x] Label loaders reject inconsistent `gold_query_needed`, `no_query`, and
       `no_query_needed` combinations.
 - [x] Task and workflow metrics match labels and database-lock issues by study, site, subject,

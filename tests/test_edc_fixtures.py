@@ -260,7 +260,7 @@ def test_fixture_bundle_rejects_unknown_query_log_categories(tmp_path):
                 "opened_at": "2026-03-02T09:00:00Z",
                 "closed_at": None,
                 "status": "open",
-                "resolution": "confirmed",
+                "resolution": "pending",
             }
         ],
     )
@@ -504,7 +504,7 @@ def test_fixture_bundle_rejects_query_log_status_timestamp_mismatches(tmp_path):
         "opened_at": "2026-03-03T09:00:00Z",
         "closed_at": None,
         "status": "open",
-        "resolution": "confirmed",
+        "resolution": "pending",
     }
     cases = [
         (
@@ -530,6 +530,52 @@ def test_fixture_bundle_rejects_query_log_status_timestamp_mismatches(tmp_path):
             assert expected_error in str(exc)
         else:
             raise AssertionError("expected query-log status timestamp rejection")
+
+
+def test_fixture_bundle_rejects_query_log_status_resolution_mismatches(tmp_path):
+    base_query = {
+        "query_id": "Q-BAD",
+        "snapshot_id": "snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "query_text": "Please confirm AE term.",
+        "query_category": "missing",
+        "opened_at": "2026-03-03T09:00:00Z",
+        "closed_at": None,
+        "status": "open",
+        "resolution": "pending",
+    }
+    cases = [
+        (
+            "open_confirmed",
+            {"status": "open", "closed_at": None, "resolution": "confirmed"},
+            "open query logs require pending resolution",
+        ),
+        (
+            "closed_pending",
+            {
+                "status": "closed",
+                "closed_at": "2026-03-04T09:00:00Z",
+                "resolution": "pending",
+            },
+            "closed query logs cannot have pending resolution",
+        ),
+    ]
+    for dirname, patch, expected_error in cases:
+        fixture_dir = tmp_path / dirname
+        query = dict(base_query)
+        query.update(patch)
+        _write_minimal_fixture_dir(fixture_dir, query_logs=[query])
+
+        try:
+            load_fixture_bundle(fixture_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected query-log status resolution rejection")
 
 
 def test_fixture_bundle_rejects_label_closed_without_opened(tmp_path):
@@ -606,7 +652,7 @@ def test_fixture_bundle_rejects_unknown_query_log_status_and_resolution(tmp_path
         "opened_at": "2026-03-03T09:00:00Z",
         "closed_at": None,
         "status": "open",
-        "resolution": "confirmed",
+        "resolution": "pending",
     }
     for field_name, invalid_value, expected_error in [
         ("status", "maybe_open", "query log status must be one of"),
@@ -750,7 +796,7 @@ def test_fixture_bundle_rejects_duplicate_query_log_ids(tmp_path):
         "opened_at": "2026-03-03T09:00:00Z",
         "closed_at": None,
         "status": "open",
-        "resolution": "confirmed",
+        "resolution": "pending",
     }
     _write_minimal_fixture_dir(fixture_dir, query_logs=[query, dict(query)])
 
@@ -813,7 +859,7 @@ def test_fixture_bundle_rejects_unknown_snapshot_references(tmp_path):
         "opened_at": "2026-03-03T09:00:00Z",
         "closed_at": None,
         "status": "open",
-        "resolution": "confirmed",
+        "resolution": "pending",
     }
     cases = [
         ("label_unknown_snapshot", {"labels": [base_label]}, "unknown label snapshot_id"),

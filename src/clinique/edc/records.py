@@ -21,6 +21,13 @@ ALLOWED_HUMAN_RESOLUTIONS = {
     "duplicate",
     "waived",
 }
+ALLOWED_QUERY_LOG_RESOLUTIONS = {
+    "pending",
+    "corrected",
+    "confirmed",
+    "duplicate",
+    "waived",
+}
 ALLOWED_QUERY_LOG_STATUSES = {"open", "closed"}
 ALLOWED_RULE_KINDS = {"required_field", "date_order", "future_date"}
 ALLOWED_DATE_ORDER_OPERATORS = {"<="}
@@ -201,7 +208,13 @@ class QueryLog:
             raw["status"],
             ALLOWED_QUERY_LOG_STATUSES,
         )
+        resolution = require_one_of(
+            "query log resolution",
+            raw["resolution"],
+            ALLOWED_QUERY_LOG_RESOLUTIONS,
+        )
         validate_query_log_status_timestamp(status=status, closed_at=closed_at)
+        validate_query_log_status_resolution(status=status, resolution=resolution)
         return cls(
             query_id=raw["query_id"],
             snapshot_id=raw["snapshot_id"],
@@ -219,11 +232,7 @@ class QueryLog:
             opened_at=opened_at,
             closed_at=closed_at,
             status=status,
-            resolution=require_one_of(
-                "query log resolution",
-                raw["resolution"],
-                ALLOWED_HUMAN_RESOLUTIONS,
-            ),
+            resolution=resolution,
         )
 
 
@@ -354,6 +363,13 @@ def validate_query_log_status_timestamp(*, status: str, closed_at: datetime | No
         raise ValueError("closed query logs require closed_at")
     if status == "open" and closed_at is not None:
         raise ValueError("open query logs cannot have closed_at")
+
+
+def validate_query_log_status_resolution(*, status: str, resolution: str) -> None:
+    if status == "open" and resolution != "pending":
+        raise ValueError("open query logs require pending resolution")
+    if status == "closed" and resolution == "pending":
+        raise ValueError("closed query logs cannot have pending resolution")
 
 
 def validate_query_label_semantics(

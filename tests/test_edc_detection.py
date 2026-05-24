@@ -60,7 +60,7 @@ def test_detect_candidate_queries_does_not_match_query_logs_across_sites():
         opened_at=datetime(2026, 3, 2, tzinfo=timezone.utc),
         closed_at=None,
         status="open",
-        resolution="confirmed",
+        resolution="pending",
     )
 
     candidates = detect_candidate_queries(evidence, existing_queries=(wrong_site_query,))
