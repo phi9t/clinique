@@ -57,6 +57,19 @@ PATIENT_SEX = frozenset({"male", "female"})
 DOC_SOURCE_TYPES = frozenset({"condition", "medication", "observation", "procedure", "note"})
 PATIENT_SOURCES = frozenset({SYNTHEA, PMC_PATIENTS, MIMIC_IV_DEMO})
 
+CRITERION_TYPES = frozenset({"inclusion", "exclusion"})
+PREDICTIONS = frozenset(
+    {"met", "not_met", "unknown", "not_applicable", "conflicting_evidence"}
+)
+RECOMMENDATIONS = frozenset({"likely_ineligible", "needs_review", "potentially_eligible"})
+
+
+@dataclass(frozen=True)
+class CriterionJudgment:
+    criterion_id: str
+    criterion_type: str
+    prediction: str
+
 # ClinicalTrials.gov age strings look like "18 Years", "6 Months", "2 Weeks". Convert to years so
 # numeric criteria (age >= 18) can compare against a single unit downstream.
 _AGE_RE = re.compile(r"(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>year|month|week|day)s?", re.IGNORECASE)

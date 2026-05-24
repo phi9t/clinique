@@ -25,9 +25,11 @@ From [primer §13](clinical-trials-for-ml.md#13-how-to-think-about-the-data-mode
 | Schema entity | Status in repo | Code |
 |---|---|---|
 | `Trial` + eligibility text | **Implemented (L0)** | [`src/clinique/prescreen/schemas.py`](../../src/clinique/prescreen/schemas.py) `Trial`, [`ingestion.py`](../../src/clinique/prescreen/ingestion.py) |
-| `Patient` / `PatientDocument` | **Implemented (L0)** | `PatientCorpus`, `PatientDocument`, [`normalizer.py`](../../src/clinique/prescreen/normalizer.py) |
+| `Patient` / `PatientDocument` | **Implemented (L0)** | `PatientCorpus`, `PatientDocument`, [`normalizer.py`](../../src/clinique/prescreen/normalizer.py), [`pmc_patients.py`](../../src/clinique/prescreen/pmc_patients.py), [`mimic_demo.py`](../../src/clinique/prescreen/mimic_demo.py) |
+| L0 conformance gate | **Implemented (L0)** | [`validation.py`](../../src/clinique/prescreen/validation.py) |
+| `CriterionJudgment` + aggregation | **Implemented (library)** | [`schemas.py`](../../src/clinique/prescreen/schemas.py) `CriterionJudgment`, [`aggregator.py`](../../src/clinique/prescreen/aggregator.py) |
 | `Criterion` (atomic) | Proposed | [trial-prescreening.md §Pipeline](../design/trial-prescreening.md#pipeline) |
-| `Evidence` / `Judgment` | Proposed | [trial-prescreening.md](../design/trial-prescreening.md) |
+| `Evidence` / per-criterion judge output | Proposed | [trial-prescreening.md](../design/trial-prescreening.md) |
 | Task labels (`met` / `not_met` / `unknown`) | Specified | [trial-prescreening.md §Decision labels](../design/trial-prescreening.md#decision-labels) |
 | Frozen eval corpus | **Implemented pattern** | [`tests/fixtures/prescreen/trials.jsonl`](../../tests/fixtures/prescreen/trials.jsonl), [`tests/fixtures/edc_query/`](../../tests/fixtures/edc_query/) |
 
@@ -171,6 +173,7 @@ uv sync
 # Prescreen L0: parsers + normalizer (offline, no network)
 uv run pytest tests/test_prescreen_ingestion.py tests/test_prescreen_normalizer.py -q
 uv run clinique prescreen show --fixtures tests/fixtures/prescreen/trials.jsonl
+uv run clinique prescreen validate --trials tests/fixtures/prescreen/trials.jsonl
 
 # EDC L0–L2: deterministic validation reports
 uv run clinique edc-query validate \
