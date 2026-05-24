@@ -7,6 +7,7 @@ from pathlib import Path
 
 from clinique.edc.audit import audit_release_checklist
 from clinique.edc.fixtures import load_fixture_bundle
+from clinique.edc.internal_import import load_internal_export_bundle
 from clinique.edc.internal_preflight import preflight_internal_manifest
 from clinique.edc.reports import build_offline_report, build_retrospective_report
 from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
@@ -123,3 +124,34 @@ def verify_workstream(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n"
     )
     return evidence
+
+
+def validate_internal_exports(
+    *,
+    manifest: str | Path,
+    labels: str | Path,
+    reports_dir: str | Path,
+    lock_issues: str | Path | None = None,
+    replayed_at: datetime = DEFAULT_REPLAY_AT,
+) -> dict[str, object]:
+    bundle = load_internal_export_bundle(
+        manifest,
+        labels_path=labels,
+        lock_issues_path=lock_issues,
+    )
+    output_dir = Path(reports_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    offline = build_offline_report(bundle, replayed_at=replayed_at, generated_at=replayed_at)
+    retrospective = build_retrospective_report(bundle, generated_at=replayed_at)
+    offline_path = output_dir / "internal-offline-benchmark.json"
+    retrospective_path = output_dir / "internal-retrospective-replay.json"
+    offline.write_json(offline_path)
+    retrospective.write_json(retrospective_path)
+    return {
+        "offline": asdict(offline),
+        "retrospective": asdict(retrospective),
+        "reports": {
+            "internal_offline_benchmark": str(offline_path),
+            "internal_retrospective_replay": str(retrospective_path),
+        },
+    }

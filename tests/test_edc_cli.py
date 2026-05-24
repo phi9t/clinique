@@ -1,6 +1,10 @@
 import json
+from pathlib import Path
 
 from clinique.cli import main
+
+
+FIXTURES = Path("tests/fixtures/edc_query")
 
 
 def _internal_manifest() -> dict[str, object]:
@@ -40,6 +44,25 @@ def _internal_manifest() -> dict[str, object]:
             },
         ],
     }
+
+
+def _write_internal_export_manifest(root: Path) -> Path:
+    for dirname in ["edc_snapshots", "query_logs", "edit_check_history"]:
+        (root / dirname).mkdir(parents=True)
+    (root / "edc_snapshots" / "snapshots.json").write_text((FIXTURES / "snapshots.json").read_text())
+    (root / "query_logs" / "query_logs.json").write_text((FIXTURES / "query_logs.json").read_text())
+    (root / "edit_check_history" / "rules.json").write_text((FIXTURES / "rules.json").read_text())
+    manifest = _internal_manifest()
+    for source in manifest["sources"]:
+        if source["source_type"] == "edc_snapshots":
+            source["export_path"] = str(root / "edc_snapshots")
+        elif source["source_type"] == "query_logs":
+            source["export_path"] = str(root / "query_logs")
+        elif source["source_type"] == "edit_check_history":
+            source["export_path"] = str(root / "edit_check_history")
+    path = root / "manifest.json"
+    path.write_text(json.dumps(manifest))
+    return path
 
 
 def test_edc_query_validate_writes_reports_and_audit_summary(tmp_path):
@@ -327,3 +350,29 @@ def test_edc_query_verify_workstream_writes_consolidated_evidence(tmp_path):
     assert "internal_data_validation__internal_edc_snapshots_approved_and_connected" in (
         evidence["blocked_requirements"]
     )
+
+
+def test_edc_query_validate_internal_exports_writes_l1_l2_reports(tmp_path):
+    manifest = _write_internal_export_manifest(tmp_path / "exports")
+    reports_dir = tmp_path / "reports"
+
+    exit_code = main(
+        [
+            "edc-query",
+            "validate-internal-exports",
+            "--manifest",
+            str(manifest),
+            "--labels",
+            "tests/fixtures/edc_query/labels.json",
+            "--lock-issues",
+            "tests/fixtures/edc_query/lock_issues.json",
+            "--reports-dir",
+            str(reports_dir),
+        ]
+    )
+
+    assert exit_code == 0
+    assert (reports_dir / "internal-offline-benchmark.json").exists()
+    assert (reports_dir / "internal-retrospective-replay.json").exists()
+    offline = json.loads((reports_dir / "internal-offline-benchmark.json").read_text())
+    assert offline["gates"]["no_write_back"] is True

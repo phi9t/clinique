@@ -10,7 +10,7 @@ from pathlib import Path
 from clinique.edc.internal_preflight import preflight_internal_manifest
 from clinique.edc.rollout import evaluate_rollout_gate, load_rollout_gate
 from clinique.edc.silent import evaluate_silent_log, load_silent_log
-from clinique.edc.validation import run_validation, verify_workstream
+from clinique.edc.validation import run_validation, validate_internal_exports, verify_workstream
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -38,6 +38,11 @@ def _build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--silent-log", required=True)
     verify.add_argument("--rollout-gate", required=True)
     verify.add_argument("--reports-dir", default="reports/edc-query")
+    internal = edc_subparsers.add_parser("validate-internal-exports")
+    internal.add_argument("--manifest", required=True)
+    internal.add_argument("--labels", required=True)
+    internal.add_argument("--lock-issues")
+    internal.add_argument("--reports-dir", default="reports/edc-query")
     return parser
 
 
@@ -97,6 +102,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(f"EDC query workstream evidence written to {args.reports_dir}")
         return 0 if evidence["goal_complete"] else 5
+    if args.command == "edc-query" and args.edc_command == "validate-internal-exports":
+        try:
+            validate_internal_exports(
+                manifest=args.manifest,
+                labels=args.labels,
+                lock_issues=args.lock_issues,
+                reports_dir=args.reports_dir,
+            )
+        except ValueError as exc:
+            print(f"edc-query internal export validation failed: {exc}", file=sys.stderr)
+            return 2
+        print(f"EDC query internal export reports written to {args.reports_dir}")
+        return 0
 
     print("clinique — biostatistician agent suite.")
     print("Design: docs/rfcs/  |  Workstreams: .workstreams/")

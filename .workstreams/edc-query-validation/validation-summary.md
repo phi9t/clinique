@@ -20,6 +20,11 @@ Evidence:
   .workstreams/edc-query-validation/internal-data-manifest.template.json --output
   reports/edc-query/internal-preflight-template.json` validates the internal-data manifest
   contract without reading PHI-bearing exports.
+- `uv run clinique edc-query validate-internal-exports --manifest
+  tests/fixtures/edc_query/internal_export_manifest.json --labels
+  tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
+  --reports-dir reports/edc-query` validates the approved-export import path on synthetic
+  fixture data.
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces false-positive burden, time-delta, and
@@ -36,7 +41,8 @@ Evidence:
   It exits nonzero while real internal/prospective blockers remain.
 - `uv run pytest` covers fixture loading, PHI/unblinded rejection, timestamp gating, no-write API
   exposure, detection, metrics, CLI execution, internal-data preflight, silent-log evaluation,
-  controlled-rollout gate evaluation, bundled workstream verification, and report serialization.
+  controlled-rollout gate evaluation, approved-export import, bundled workstream verification,
+  and report serialization.
 
 ## Not Yet Proven
 

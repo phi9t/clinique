@@ -18,6 +18,8 @@
       human approval path from structured evidence.
 - [x] Bundled workstream verifier regenerates all local reports and consolidates remaining
       blockers in `reports/edc-query/workstream-verification.json`.
+- [x] Approved-export import path is executable against synthetic fixture exports and generates
+      internal-style L1/L2 reports without claiming real operational validation.
 
 ## Internal Data Validation
 

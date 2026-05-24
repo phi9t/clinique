@@ -37,3 +37,18 @@ uv run clinique edc-query preflight-internal-data \
 
 The command requires `edc_snapshots`, `query_logs`, and `edit_check_history`, and it fails if any
 required source is missing, unblinded, incomplete, or not explicitly read-only.
+
+## Internal Export Validation Entry Point
+
+Once an approved manifest and adjudicated labels exist, run:
+
+```bash
+uv run clinique edc-query validate-internal-exports \
+  --manifest <approved-manifest.json> \
+  --labels <adjudicated-labels.json> \
+  --lock-issues <database-lock-issues.json> \
+  --reports-dir reports/edc-query
+```
+
+The synthetic fixture manifest `tests/fixtures/edc_query/internal_export_manifest.json` exercises
+the import path without using real operational data.

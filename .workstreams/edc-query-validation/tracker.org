@@ -39,6 +39,9 @@ participant, data-integrity, blinding, privacy, or compliance risk?
 - [X] Ship gates explicitly include false-query burden, duplicate-query burden, privacy,
       blinding, and auditability.
 - [X] Local synthetic validation is executable via =uv run clinique edc-query validate=.
+- [X] Synthetic approved-export validation is executable via
+      =uv run clinique edc-query validate-internal-exports= without claiming real operational
+      validation.
 
 * BLOCKED Milestone 0: Data inventory and access boundary
 :PROPERTIES:
@@ -207,6 +210,38 @@ open dates and database-lock issue dates. Quantify workflow usefulness and leaka
 See =reports/edc-query/retrospective-replay.json= and
 =reports/edc-query/audit-summary.json=. Regenerate with
 =uv run clinique edc-query validate --fixtures tests/fixtures/edc_query --reports-dir reports/edc-query=.
+
+* DONE Milestone 5A: Approved-export import path
+:PROPERTIES:
+:ID: edc-query-validation-m5a-internal-export-import
+:STATUS: DONE
+:OWNER: unassigned
+:BLOCKED_BY: edc-query-validation-m5-l2-replay
+:VALIDATION: L1 L2 import-boundary
+:ARTIFACTS: tests/fixtures/edc_query/internal_export_manifest.json; reports/edc-query/internal-offline-benchmark.json; reports/edc-query/internal-retrospective-replay.json
+:END:
+
+** Prompt
+Implement a guarded import path for approved internal EDC exports. The path must preflight the
+manifest, require read-only blinded sources, load snapshots/query logs/edit-check history from
+declared export directories, reject unblinded snapshot payloads, and generate L1/L2 reports from
+adjudicated labels. Exercise the path on synthetic fixture exports until real approved exports
+exist.
+
+** Acceptance criteria
+- [X] Manifest preflight must pass before any export payload is loaded.
+- [X] Snapshot payloads marked as unblinded are rejected even when manifest metadata is blinded.
+- [X] Import path accepts labels and optional database-lock issue logs separately from source
+      exports.
+- [X] CLI writes =internal-offline-benchmark.json= and
+      =internal-retrospective-replay.json=.
+- [X] Documentation states that fixture-based reports do not prove real operational validation.
+
+** Evidence
+Implemented by =src/clinique/edc/internal_import.py= and
+=uv run clinique edc-query validate-internal-exports --manifest
+tests/fixtures/edc_query/internal_export_manifest.json --labels tests/fixtures/edc_query/labels.json
+--lock-issues tests/fixtures/edc_query/lock_issues.json --reports-dir reports/edc-query=.
 
 * DONE Milestone 6: L3 silent prospective protocol
 :PROPERTIES:

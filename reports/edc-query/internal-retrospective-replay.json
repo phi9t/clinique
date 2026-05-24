@@ -1,0 +1,55 @@
+{
+  "gates": {
+    "leakage_checks_passed": true,
+    "no_write_back": true,
+    "timestamped_replay": true
+  },
+  "generated_at": "2026-03-08T00:00:00Z",
+  "inputs": {
+    "runs": [
+      {
+        "leakage_checks_passed": true,
+        "metrics": {
+          "candidates_total": 3,
+          "duplicate_queries": 1,
+          "duplicate_query_rate": 0.3333333333333333,
+          "evidence_support_accuracy": 1.0,
+          "false_queries": 0,
+          "false_query_rate": 0.0,
+          "median_days_earlier": 3.375,
+          "query_category_accuracy": 1.0,
+          "true_discrepancies_detected": 3
+        },
+        "replayed_at": "2026-03-01T00:00:00Z",
+        "snapshot_id": "snap-2026-03-01"
+      },
+      {
+        "leakage_checks_passed": true,
+        "metrics": {
+          "candidates_total": 4,
+          "duplicate_queries": 1,
+          "duplicate_query_rate": 0.25,
+          "evidence_support_accuracy": 1.0,
+          "false_queries": 0,
+          "false_query_rate": 0.0,
+          "median_days_earlier": 0.0,
+          "query_category_accuracy": 1.0,
+          "true_discrepancies_detected": 4
+        },
+        "replayed_at": "2026-03-08T00:00:00Z",
+        "snapshot_id": "snap-2026-03-08"
+      }
+    ],
+    "snapshot_ids": [
+      "snap-2026-03-01",
+      "snap-2026-03-08"
+    ]
+  },
+  "metrics": {
+    "database_lock_issue_early_detection_count": 1,
+    "false_alerts_per_true_discrepancy": 0.0,
+    "false_queries": 0,
+    "true_discrepancies_detected": 7
+  },
+  "report_type": "edc_query_retrospective_replay"
+}
