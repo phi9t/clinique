@@ -8,6 +8,8 @@ from typing import Any
 
 
 REQUIRED_SOURCES = ("edc_snapshots", "query_logs", "edit_check_history")
+ALLOWED_SENSITIVITY = {"phi", "pii", "no_phi"}
+ALLOWED_BLINDING_STATUS = {"blinded"}
 
 
 @dataclass(frozen=True)
@@ -91,6 +93,8 @@ def _source_complete(source: dict[str, Any]) -> bool:
     return (
         isinstance(source.get("schema_sketch"), list)
         and bool(source["schema_sketch"])
+        and source.get("sensitivity") in ALLOWED_SENSITIVITY
+        and source.get("blinding_status") in ALLOWED_BLINDING_STATUS
         and _date_coverage_complete(source.get("date_coverage"))
     )
 

@@ -100,3 +100,19 @@ def test_preflight_internal_manifest_rejects_invalid_date_coverage(tmp_path):
 
     assert result.ok is False
     assert result.incomplete_sources == ("edc_snapshots",)
+
+
+def test_preflight_internal_manifest_rejects_invalid_controlled_metadata_values(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "sensitivity": "unknown",
+        "blinding_status": "masked",
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.incomplete_sources == ("edc_snapshots",)

@@ -37,7 +37,8 @@ uv run clinique edc-query preflight-internal-data \
 
 The command requires exactly one each of `edc_snapshots`, `query_logs`, and `edit_check_history`.
 It fails if any required source is missing, duplicated, unblinded, incomplete, not explicitly
-read-only, or has malformed/reversed date coverage.
+read-only, has malformed/reversed date coverage, uses a sensitivity outside `phi`, `pii`, or
+`no_phi`, or uses a blinding status other than `blinded`.
 
 ## Internal Export Validation Entry Point
 
