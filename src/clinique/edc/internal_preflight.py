@@ -67,6 +67,7 @@ class InternalPreflightResult:
     missing_schema_fields: dict[str, tuple[str, ...]]
     duplicate_schema_fields: dict[str, tuple[str, ...]]
     escaped_export_paths: tuple[str, ...]
+    invalid_source_metadata: dict[str, tuple[str, ...]]
     invalid_metadata: tuple[str, ...]
 
     def as_dict(self) -> dict[str, object]:
@@ -88,6 +89,10 @@ class InternalPreflightResult:
                 for source_type, fields in self.duplicate_schema_fields.items()
             },
             "escaped_export_paths": list(self.escaped_export_paths),
+            "invalid_source_metadata": {
+                source_type: list(fields)
+                for source_type, fields in self.invalid_source_metadata.items()
+            },
             "invalid_metadata": list(self.invalid_metadata),
         }
 
@@ -112,6 +117,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
     incomplete: list[str] = []
     missing_schema_fields: dict[str, tuple[str, ...]] = {}
     duplicate_schema_fields: dict[str, tuple[str, ...]] = {}
+    invalid_source_metadata: dict[str, tuple[str, ...]] = {}
     escaped_export_paths: list[str] = []
     for source in sources:
         if not isinstance(source, dict):
@@ -138,6 +144,9 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         duplicate_fields = _duplicate_schema_fields(source.get("schema_sketch"), source_type)
         if duplicate_fields:
             duplicate_schema_fields[source_type] = duplicate_fields
+        invalid_fields = _invalid_source_metadata(source)
+        if invalid_fields:
+            invalid_source_metadata[source_type] = invalid_fields
         if _relative_export_path_escapes_manifest_dir(
             source.get("export_path"),
             manifest_path.parent,
@@ -155,6 +164,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         and not missing_schema_fields
         and not duplicate_schema_fields
         and not escaped_export_paths
+        and not invalid_source_metadata
         and not invalid_metadata
     )
     return InternalPreflightResult(
@@ -169,6 +179,7 @@ def preflight_internal_manifest(path: str | Path) -> InternalPreflightResult:
         missing_schema_fields=missing_schema_fields,
         duplicate_schema_fields=duplicate_schema_fields,
         escaped_export_paths=tuple(escaped_export_paths),
+        invalid_source_metadata=invalid_source_metadata,
         invalid_metadata=invalid_metadata,
     )
 
@@ -196,6 +207,17 @@ def _source_complete(source: dict[str, Any]) -> bool:
         and source.get("blinding_status") in ALLOWED_BLINDING_STATUS
         and _date_coverage_complete(source.get("date_coverage"))
     )
+
+
+def _invalid_source_metadata(source: dict[str, Any]) -> tuple[str, ...]:
+    invalid: list[str] = []
+    if source.get("sensitivity") not in ALLOWED_SENSITIVITY:
+        invalid.append("sensitivity")
+    if source.get("blinding_status") not in ALLOWED_BLINDING_STATUS:
+        invalid.append("blinding_status")
+    if not _date_coverage_complete(source.get("date_coverage")):
+        invalid.append("date_coverage")
+    return tuple(sorted(invalid))
 
 
 def _nonblank_string(value: Any) -> bool:

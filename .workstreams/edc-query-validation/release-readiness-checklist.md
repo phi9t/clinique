@@ -60,7 +60,8 @@
       metadata, and schema sketches must contain nonblank strings and the source-specific fields
       required by the approved-export importer; missing and duplicate schema fields are reported
       per normalized source type and fail the readiness gate directly, and manifest-relative
-      export paths that escape the manifest directory are rejected before payload reads.
+      export paths that escape the manifest directory are rejected before payload reads; invalid
+      sensitivity, blinding, and date-coverage metadata are reported by source type.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent
@@ -96,7 +97,7 @@
 - [x] Approved-export import failures preserve source-specific preflight diagnostics needed to
       remediate missing, duplicate, unknown, unblinded, non-read-only, incomplete, metadata, and
       access-boundary issues before payload review, including missing and duplicate schema
-      fields by source type.
+      fields and invalid source metadata by source type.
 
 ## Internal Data Validation
 

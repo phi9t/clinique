@@ -4,6 +4,7 @@
   "escaped_export_paths": [],
   "incomplete_sources": [],
   "invalid_metadata": [],
+  "invalid_source_metadata": {},
   "missing_required_sources": [],
   "missing_schema_fields": {},
   "non_read_only_sources": [],

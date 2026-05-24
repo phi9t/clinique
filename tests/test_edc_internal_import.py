@@ -157,6 +157,30 @@ def test_load_internal_export_bundle_names_schema_preflight_failures(tmp_path):
         raise AssertionError("expected schema-specific preflight diagnostics")
 
 
+def test_load_internal_export_bundle_names_source_metadata_preflight_failures(tmp_path):
+    manifest = _write_manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    payload["sources"][0]["sensitivity"] = "unknown"
+    payload["sources"][0]["blinding_status"] = "masked"
+    payload["sources"][0]["date_coverage"] = {"start": "not-a-date", "end": "2026-03-31"}
+    manifest.write_text(json.dumps(payload))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        message = str(exc)
+        assert (
+            "invalid_source_metadata.edc_snapshots=blinding_status,date_coverage,sensitivity"
+            in message
+        )
+    else:
+        raise AssertionError("expected source metadata preflight diagnostics")
+
+
 def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path):
     manifest = _write_manifest(
         tmp_path,

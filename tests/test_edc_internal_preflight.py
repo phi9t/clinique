@@ -383,6 +383,7 @@ def test_preflight_internal_manifest_rejects_invalid_controlled_metadata_values(
         **manifest["sources"][0],
         "sensitivity": "unknown",
         "blinding_status": "masked",
+        "date_coverage": {"start": "not-a-date", "end": "2026-03-31"},
     }
     path = tmp_path / "manifest.json"
     path.write_text(json.dumps(manifest))
@@ -391,3 +392,6 @@ def test_preflight_internal_manifest_rejects_invalid_controlled_metadata_values(
 
     assert result.ok is False
     assert result.incomplete_sources == ("edc_snapshots",)
+    assert result.invalid_source_metadata == {
+        "edc_snapshots": ("blinding_status", "date_coverage", "sensitivity")
+    }

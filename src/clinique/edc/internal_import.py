@@ -118,7 +118,7 @@ def _preflight_error_message(preflight: object) -> str:
                 )
                 continue
             details.append(f"{field}={','.join(values)}")
-    for field in ("missing_schema_fields", "duplicate_schema_fields"):
+    for field in ("missing_schema_fields", "duplicate_schema_fields", "invalid_source_metadata"):
         values_by_source = getattr(preflight, field, {})
         for source_type, values in values_by_source.items():
             if values:

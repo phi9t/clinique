@@ -26,7 +26,8 @@ Evidence:
   schema sketches to list nonblank source-specific fields needed by the approved-export importer,
   with missing and duplicate fields reported per normalized source type and treated as direct
   readiness gate failures. It also rejects manifest-relative export paths that escape the manifest
-  directory before reading any export payload.
+  directory before reading any export payload and reports invalid sensitivity, blinding, and
+  date-coverage metadata by source type.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json
@@ -36,7 +37,8 @@ Evidence:
   preflight when locating payload directories, and returns a controlled validation failure for
   missing, invalid, non-list, item-indexed non-object, malformed object, or structurally invalid
   export payloads. Import-time preflight failures preserve source-specific diagnostics, including
-  missing and duplicate schema fields, for remediation before payload review.
+  missing and duplicate schema fields plus invalid source metadata, for remediation before
+  payload review.
 - `uv run clinique edc-query evaluate-silent-log --log tests/fixtures/edc_query/silent_log.json
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces reviewer-week normalized false-positive
@@ -81,9 +83,9 @@ Evidence:
   detection, metrics, CLI execution,
   annotation-manual alignment, internal-data preflight object-shape, timezone-aware metadata,
   source identity, source-type, and source-specific schema-sketch enforcement, silent-log
-  query-category, schema-field missing/duplicate gate rejection, bundled verifier preflight
-  readiness failure, preflight path traversal rejection, manifest-relative export paths,
-  manifest-relative path traversal rejection, malformed
+  query-category, schema-field missing/duplicate gate rejection, source metadata diagnostics,
+  bundled verifier preflight readiness failure, preflight path traversal rejection,
+  manifest-relative export paths, manifest-relative path traversal rejection, malformed
   approved-export payload, preflight-normalized source identity during payload path resolution,
   item-indexed payload-object rejection, source-context structural validation errors,
   payload-file-context unblinded snapshot rejection, evidence, and recommendation-ID enforcement,
