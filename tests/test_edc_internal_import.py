@@ -181,3 +181,34 @@ def test_load_internal_export_bundle_rejects_duplicate_lock_issue_ids(tmp_path):
         assert "duplicate lock issue id" in str(exc)
     else:
         raise AssertionError("expected duplicate lock issue id rejection")
+
+
+def test_load_internal_export_bundle_rejects_unknown_snapshot_references(tmp_path):
+    manifest = _write_manifest(tmp_path)
+    label = {
+        "snapshot_id": "missing-snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "gold_query_needed": True,
+        "query_category": "missing",
+        "human_resolution": "corrected",
+        "opened_at": "2026-03-02T09:00:00Z",
+        "closed_at": None,
+        "evidence_available_at_agent_time": True,
+    }
+    labels_path = tmp_path / "labels.json"
+    labels_path.write_text(json.dumps([label]))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=labels_path,
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        assert "unknown label snapshot_id" in str(exc)
+    else:
+        raise AssertionError("expected unknown label snapshot reference rejection")

@@ -783,3 +783,49 @@ def test_fixture_bundle_rejects_duplicate_lock_issue_ids(tmp_path):
         assert "duplicate lock issue id" in str(exc)
     else:
         raise AssertionError("expected duplicate lock issue id rejection")
+
+
+def test_fixture_bundle_rejects_unknown_snapshot_references(tmp_path):
+    base_label = {
+        "snapshot_id": "missing-snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "gold_query_needed": True,
+        "query_category": "missing",
+        "human_resolution": "corrected",
+        "opened_at": "2026-03-02T09:00:00Z",
+        "closed_at": None,
+        "evidence_available_at_agent_time": True,
+    }
+    base_query = {
+        "query_id": "Q-BAD",
+        "snapshot_id": "missing-snap",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-01",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "query_text": "Please confirm AE term.",
+        "query_category": "missing",
+        "opened_at": "2026-03-03T09:00:00Z",
+        "closed_at": None,
+        "status": "open",
+        "resolution": "confirmed",
+    }
+    cases = [
+        ("label_unknown_snapshot", {"labels": [base_label]}, "unknown label snapshot_id"),
+        ("query_unknown_snapshot", {"query_logs": [base_query]}, "unknown query log snapshot_id"),
+    ]
+    for dirname, kwargs, expected_error in cases:
+        fixture_dir = tmp_path / dirname
+        _write_minimal_fixture_dir(fixture_dir, **kwargs)
+
+        try:
+            load_fixture_bundle(fixture_dir)
+        except ValueError as exc:
+            assert expected_error in str(exc)
+        else:
+            raise AssertionError("expected unknown snapshot reference rejection")

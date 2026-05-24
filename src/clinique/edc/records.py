@@ -418,6 +418,20 @@ def validate_unique_lock_issue_ids(lock_issues: tuple[DatabaseLockIssue, ...]) -
         seen.add(issue.issue_id)
 
 
+def validate_snapshot_references(
+    snapshots: tuple[EdcSnapshot, ...],
+    labels: tuple[QueryLabel, ...],
+    query_logs: tuple[QueryLog, ...],
+) -> None:
+    snapshot_ids = {snapshot.snapshot_id for snapshot in snapshots}
+    for label in labels:
+        if label.snapshot_id not in snapshot_ids:
+            raise ValueError(f"unknown label snapshot_id: {label.snapshot_id}")
+    for query in query_logs:
+        if query.snapshot_id not in snapshot_ids:
+            raise ValueError(f"unknown query log snapshot_id: {query.snapshot_id}")
+
+
 @dataclass(frozen=True)
 class SourceRef:
     source_type: str
