@@ -53,10 +53,10 @@ Evidence:
   typed privacy/blinding and label booleans, schema enum enforcement for query categories,
   query-log status, and human resolutions, required replay timestamps, query/label open-close
   chronology, study/site-scoped task and workflow metric attribution, evidence-availability
-  guards for true detections, duplicate adjudication-label rejection, detection, metrics, CLI
-  execution, annotation-manual alignment, internal-data preflight, silent-log evaluation,
-  controlled-rollout gate evaluation, approved-export import, bundled workstream verification,
-  and report serialization.
+  guards for true detections, duplicate source-record and adjudication-label rejection,
+  detection, metrics, CLI execution, annotation-manual alignment, internal-data preflight,
+  silent-log evaluation, controlled-rollout gate evaluation, approved-export import, bundled
+  workstream verification, and report serialization.
 
 ## Not Yet Proven
 

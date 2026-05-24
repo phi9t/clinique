@@ -439,3 +439,52 @@ def test_fixture_bundle_rejects_duplicate_label_keys(tmp_path):
         assert "duplicate label key" in str(exc)
     else:
         raise AssertionError("expected duplicate label rejection")
+
+
+def test_fixture_bundle_rejects_duplicate_snapshot_record_keys(tmp_path):
+    fixture_dir = tmp_path / "duplicate_record_keys"
+    fixture_dir.mkdir()
+    (fixture_dir / "snapshots.json").write_text(
+        """
+        [
+          {
+            "snapshot_id": "snap",
+            "snapshot_at": "2026-03-01T00:00:00Z",
+            "contains_phi": false,
+            "contains_unblinded": false,
+            "records": [
+              {
+                "record_id": "REC-001",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "",
+                "collected_at": "2026-03-01T00:00:00Z"
+              },
+              {
+                "record_id": "REC-002",
+                "study_id": "STUDY-EDC-001",
+                "site_id": "SITE-01",
+                "subject_id": "SUBJ-001",
+                "form": "AE",
+                "field": "term",
+                "value": "Headache",
+                "collected_at": "2026-03-01T00:00:00Z"
+              }
+            ]
+          }
+        ]
+        """
+    )
+    (fixture_dir / "rules.json").write_text("[]")
+    (fixture_dir / "query_logs.json").write_text("[]")
+    (fixture_dir / "labels.json").write_text("[]")
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "duplicate snapshot record key" in str(exc)
+    else:
+        raise AssertionError("expected duplicate snapshot record rejection")

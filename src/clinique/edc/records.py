@@ -105,6 +105,8 @@ class EdcSnapshot:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> "EdcSnapshot":
+        records = tuple(EdcRecord.from_json(record) for record in raw.get("records", []))
+        validate_unique_snapshot_record_keys(raw["snapshot_id"], records)
         return cls(
             snapshot_id=raw["snapshot_id"],
             snapshot_at=require_timestamp("snapshot_at", raw["snapshot_at"]),
@@ -113,7 +115,7 @@ class EdcSnapshot:
                 "contains_unblinded",
                 raw.get("contains_unblinded", False),
             ),
-            records=tuple(EdcRecord.from_json(record) for record in raw.get("records", [])),
+            records=records,
         )
 
 
@@ -294,6 +296,21 @@ class FixtureBundle:
     query_logs: tuple[QueryLog, ...]
     labels: tuple[QueryLabel, ...]
     lock_issues: tuple[DatabaseLockIssue, ...] = ()
+
+
+def validate_unique_snapshot_record_keys(snapshot_id: str, records: tuple[EdcRecord, ...]) -> None:
+    seen: set[tuple[str, str, str, str, str]] = set()
+    for record in records:
+        key = (
+            record.study_id,
+            record.site_id,
+            record.subject_id,
+            record.form,
+            record.field,
+        )
+        if key in seen:
+            raise ValueError(f"duplicate snapshot record key in {snapshot_id}: {key}")
+        seen.add(key)
 
 
 def validate_unique_label_keys(labels: tuple[QueryLabel, ...]) -> None:
