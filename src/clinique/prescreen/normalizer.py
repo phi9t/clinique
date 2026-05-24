@@ -137,3 +137,18 @@ def normalize_synthea(
         demographics=demographics,
         documents=tuple(documents),
     )
+
+
+def normalize_synthea_corpus(
+    tables: dict[str, list[dict[str, str]]], *, snapshot_date: str | None
+) -> list[PatientCorpus]:
+    """Normalize every patient in the export into a list of ``PatientCorpus`` (deterministic).
+
+    Delegates to ``normalize_synthea`` per patient so single- and corpus-wide paths share one
+    mapping. Patients are returned sorted by id, so the same export always yields the same order.
+    """
+    patient_ids = sorted({r.get("Id", "") for r in tables.get("patients", []) if r.get("Id")})
+    return [
+        normalize_synthea(tables, patient_id=pid, snapshot_date=snapshot_date)
+        for pid in patient_ids
+    ]

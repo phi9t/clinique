@@ -1,0 +1,63 @@
+{
+  "studies": [
+    {
+      "protocolSection": {
+        "identificationModule": {
+          "nctId": "NCT00000001",
+          "briefTitle": "Synthetic Phase 2 Study in Non-Small Cell Lung Cancer",
+          "orgStudyIdInfo": {"id": "SYN-001"}
+        },
+        "statusModule": {
+          "overallStatus": "RECRUITING",
+          "statusVerifiedDate": "2026-01"
+        },
+        "conditionsModule": {
+          "conditions": ["Non-Small Cell Lung Cancer"],
+          "keywords": ["NSCLC", "synthetic"]
+        },
+        "designModule": {"phases": ["PHASE2"], "studyType": "INTERVENTIONAL"},
+        "eligibilityModule": {
+          "eligibilityCriteria": "Inclusion Criteria:\n\n* Age 18 or older.\n\nExclusion Criteria:\n\n* Prior anti-PD-1 therapy.",
+          "healthyVolunteers": false,
+          "minimumAge": "18 Years",
+          "sex": "ALL",
+          "stdAges": ["ADULT", "OLDER_ADULT"]
+        },
+        "sponsorCollaboratorsModule": {
+          "leadSponsor": {"class": "OTHER", "name": "Synthetic Research Institute"}
+        }
+      }
+    },
+    {
+      "protocolSection": {
+        "identificationModule": {
+          "nctId": "NCT00000002",
+          "briefTitle": "Synthetic Phase 3 Study in Resectable NSCLC",
+          "orgStudyIdInfo": {"id": "SYN-002"}
+        },
+        "statusModule": {
+          "overallStatus": "COMPLETED",
+          "statusVerifiedDate": "2025-11"
+        },
+        "conditionsModule": {
+          "conditions": ["Non-Small Cell Lung Cancer", "Carcinoma"],
+          "keywords": ["NSCLC"]
+        },
+        "designModule": {"phases": ["PHASE3"], "studyType": "INTERVENTIONAL"},
+        "eligibilityModule": {
+          "eligibilityCriteria": "Inclusion Criteria:\n\n* Resectable disease.\n\nExclusion Criteria:\n\n* Distant metastases.",
+          "healthyVolunteers": false,
+          "minimumAge": "18 Years",
+          "maximumAge": "75 Years",
+          "sex": "ALL",
+          "stdAges": ["ADULT", "OLDER_ADULT"]
+        },
+        "sponsorCollaboratorsModule": {
+          "leadSponsor": {"class": "INDUSTRY", "name": "Synthetic Pharma LLC"}
+        }
+      }
+    }
+  ],
+  "nextPageToken": "SYN-PAGE-2",
+  "totalCount": 42
+}

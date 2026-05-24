@@ -6,10 +6,18 @@ without shipping a Synthea export. Synthetic, no PHI.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
-from clinique.prescreen.normalizer import normalize_synthea
+from clinique.prescreen.normalizer import (
+    normalize_synthea,
+    normalize_synthea_corpus,
+    read_synthea_csv_dir,
+)
 from clinique.prescreen.schemas import SYNTHEA
+
+SYNTHEA_FIXTURE = Path("tests/fixtures/prescreen/synthea")
 
 TABLES = {
     "patients": [
@@ -86,3 +94,23 @@ def test_documents_are_deterministic_and_stably_identified():
 def test_unknown_patient_raises():
     with pytest.raises(ValueError, match="not found"):
         normalize_synthea(TABLES, patient_id="P404", snapshot_date="2026-03-01")
+
+
+def test_corpus_wide_normalization_over_committed_fixture():
+    tables = read_synthea_csv_dir(SYNTHEA_FIXTURE)
+    corpora = normalize_synthea_corpus(tables, snapshot_date="2026-03-01")
+    # Every patient in the export, deterministically ordered by id.
+    assert [c.patient_id for c in corpora] == ["P1", "P2"]
+    # Each corpus only contains its own patient's documents.
+    for corpus in corpora:
+        assert all(doc.patient_id == corpus.patient_id for doc in corpus.documents)
+    # P1 carries the oncology evidence; P2 does not.
+    p1 = next(c for c in corpora if c.patient_id == "P1")
+    assert any("Non-small cell lung cancer" in doc.text for doc in p1.documents)
+
+
+def test_corpus_wide_normalization_is_deterministic():
+    tables = read_synthea_csv_dir(SYNTHEA_FIXTURE)
+    first = normalize_synthea_corpus(tables, snapshot_date="2026-03-01")
+    second = normalize_synthea_corpus(tables, snapshot_date="2026-03-01")
+    assert [c.to_dict() for c in first] == [c.to_dict() for c in second]

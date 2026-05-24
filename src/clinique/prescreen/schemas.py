@@ -16,6 +16,46 @@ from typing import Any
 
 CLINICALTRIALS_GOV = "clinicaltrials_gov"
 SYNTHEA = "synthea"
+PMC_PATIENTS = "pmc_patients"
+MIMIC_IV_DEMO = "mimic_iv_demo"
+
+# Controlled vocabularies — the single source of truth for "does this record conform to how we
+# model it". ``validation.py`` is the only consumer; keeping the enums here (next to the records
+# they constrain) means the model definition and its allowed values never drift apart.
+#
+# Trial-side enums are the ClinicalTrials.gov API v2 values for the fields the parser keeps. The
+# parser stores them verbatim (it does not coerce), so the vocabularies must match the upstream
+# spelling exactly — an unexpected value means the API changed or the parser mis-mapped, and that
+# is precisely what we want validation to surface.
+TRIAL_SEX = frozenset({"ALL", "MALE", "FEMALE"})
+TRIAL_PHASES = frozenset({"NA", "EARLY_PHASE1", "PHASE1", "PHASE2", "PHASE3", "PHASE4"})
+TRIAL_STATUS = frozenset(
+    {
+        "RECRUITING",
+        "NOT_YET_RECRUITING",
+        "ACTIVE_NOT_RECRUITING",
+        "ENROLLING_BY_INVITATION",
+        "COMPLETED",
+        "SUSPENDED",
+        "TERMINATED",
+        "WITHDRAWN",
+        "AVAILABLE",
+        "NO_LONGER_AVAILABLE",
+        "TEMPORARILY_NOT_AVAILABLE",
+        "APPROVED_FOR_MARKETING",
+        "WITHHELD",
+        "UNKNOWN",
+    }
+)
+STD_AGES = frozenset({"CHILD", "ADULT", "OLDER_ADULT"})
+
+# Patient-side enums are *our* normalized vocabulary — every source normalizer must emit these,
+# regardless of the upstream spelling (Synthea "M"/"F", MIMIC "M"/"F", PMC "M"/"F" all become
+# "male"/"female"). That convergence is the whole point: heterogeneous public sources land on one
+# internal model.
+PATIENT_SEX = frozenset({"male", "female"})
+DOC_SOURCE_TYPES = frozenset({"condition", "medication", "observation", "procedure", "note"})
+PATIENT_SOURCES = frozenset({SYNTHEA, PMC_PATIENTS, MIMIC_IV_DEMO})
 
 # ClinicalTrials.gov age strings look like "18 Years", "6 Months", "2 Weeks". Convert to years so
 # numeric criteria (age >= 18) can compare against a single unit downstream.
