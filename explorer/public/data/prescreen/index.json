@@ -1,0 +1,58 @@
+[
+  {
+    "count": 2,
+    "family": "trial",
+    "key": "trials",
+    "label": "ClinicalTrials.gov trials",
+    "provenance": {
+      "fixture_path": "tests/fixtures/prescreen/trials.jsonl",
+      "license": "Public domain (U.S. Government work); no API key or DUA.",
+      "record_command": "clinique prescreen ingest --nct-ids ... --out tests/fixtures/prescreen/trials.jsonl",
+      "snapshot_semantics": "Frozen API v2 single-study payloads; live API mutates over time."
+    },
+    "record_type": "Trial",
+    "source": "clinicaltrials_gov"
+  },
+  {
+    "count": 2,
+    "family": "patient",
+    "key": "patients_synthea",
+    "label": "Synthea patients",
+    "provenance": {
+      "fixture_path": "tests/fixtures/prescreen/synthea/",
+      "license": "Synthea output is fully synthetic (Apache-2.0); no PHI, no DUA.",
+      "record_command": "clinique prescreen normalize-synthea --csv-dir <export> --snapshot <date> --out ...",
+      "snapshot_semantics": "Age computed at snapshot_date; committed rows are synthetic-shaped."
+    },
+    "record_type": "PatientCorpus",
+    "source": "synthea"
+  },
+  {
+    "count": 2,
+    "family": "patient",
+    "key": "patients_pmc",
+    "label": "PMC-Patients",
+    "provenance": {
+      "fixture_path": "tests/fixtures/prescreen/pmc_patients.jsonl",
+      "license": "PMC Open Access subset (CC); honor per-article licenses.",
+      "record_command": "clinique prescreen ingest-pmc --limit N --out ...",
+      "snapshot_semantics": "Case reports have no as-of time; snapshot_date is None."
+    },
+    "record_type": "PatientCorpus",
+    "source": "pmc_patients"
+  },
+  {
+    "count": 2,
+    "family": "patient",
+    "key": "patients_mimic",
+    "label": "MIMIC-IV demo",
+    "provenance": {
+      "fixture_path": "tests/fixtures/prescreen/mimic_demo/",
+      "license": "MIMIC-IV demo (Open Database License); no DUA for the demo.",
+      "record_command": "download the PhysioNet demo, then read_mimic_csv_dir (real rows kept local)",
+      "snapshot_semantics": "Real de-identified data \u2014 only synthetic-shaped rows are committed; age is anchor_age."
+    },
+    "record_type": "PatientCorpus",
+    "source": "mimic_iv_demo"
+  }
+]

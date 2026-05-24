@@ -1,0 +1,188 @@
+{
+  "pipeline": [
+    {
+      "description": "Fetch raw payloads from a public source (network); record to a versioned fixture.",
+      "step": "ingest"
+    },
+    {
+      "description": "Pure, deterministic parse of raw payloads into typed Trial / PatientCorpus records.",
+      "step": "parse"
+    },
+    {
+      "description": "Run the conformance gate: controlled vocabularies, age-bound sanity, duplicate ids, no-leakage.",
+      "step": "validate"
+    },
+    {
+      "description": "The validated records \u2014 the inputs the (future) atomizer / retriever / judge will consume.",
+      "step": "corpus"
+    }
+  ],
+  "records": {
+    "AgeBound": {
+      "raw": {
+        "description": "Source age string, e.g. '18 Years'. None when the bound is absent.",
+        "type": "str | None"
+      },
+      "years": {
+        "description": "Age normalized to years for numeric comparison. None means 'no constraint' \u2014 never treat as 0.",
+        "type": "float | None"
+      }
+    },
+    "PatientCorpus": {
+      "demographics": {
+        "description": "Patient-level facts: age, sex, (and birthdate for Synthea).",
+        "type": "dict"
+      },
+      "documents": {
+        "description": "The searchable evidence units for this patient.",
+        "type": "list[PatientDocument]"
+      },
+      "patient_id": {
+        "description": "Stable identifier for one patient (one prescreening example).",
+        "type": "str"
+      },
+      "snapshot_date": {
+        "description": "As-of date. Retrieval/judging may only use documents dated on or before this (leakage-free eval). None for case reports.",
+        "type": "str | None"
+      },
+      "source": {
+        "description": "Which public source this corpus came from.",
+        "type": "str",
+        "vocab": [
+          "mimic_iv_demo",
+          "pmc_patients",
+          "synthea"
+        ]
+      }
+    },
+    "PatientDocument": {
+      "date": {
+        "description": "Document date (YYYY-MM-DD), anchoring temporal-window reasoning.",
+        "type": "str | None"
+      },
+      "doc_id": {
+        "description": "Stable id of the form <patient>:<source_type>:<NNNN>.",
+        "type": "str"
+      },
+      "patient_id": {
+        "description": "Owning patient id.",
+        "type": "str"
+      },
+      "source_type": {
+        "description": "Kind of evidence unit.",
+        "type": "str",
+        "vocab": [
+          "condition",
+          "medication",
+          "note",
+          "observation",
+          "procedure"
+        ]
+      },
+      "structured": {
+        "description": "Machine-parsed facts (code, description, value, unit) for deterministic threshold checks.",
+        "type": "dict"
+      },
+      "text": {
+        "description": "Human-readable rendering the retriever indexes and the judge cites.",
+        "type": "str"
+      }
+    },
+    "Trial": {
+      "accepts_healthy_volunteers": {
+        "description": "Whether healthy volunteers may enroll. None when unstated.",
+        "type": "bool | None"
+      },
+      "conditions": {
+        "description": "Conditions/diseases the trial targets.",
+        "type": "list[str]"
+      },
+      "eligibility_text": {
+        "description": "Verbatim inclusion/exclusion block \u2014 the raw model input the atomizer will later split into criteria.",
+        "type": "str"
+      },
+      "maximum_age": {
+        "description": "Upper age bound; commonly open-ended (years None).",
+        "type": "AgeBound"
+      },
+      "metadata": {
+        "description": "Extra provenance (org study id, status-verified date, keywords).",
+        "type": "dict"
+      },
+      "minimum_age": {
+        "description": "Lower age bound (raw string + normalized years).",
+        "type": "AgeBound"
+      },
+      "phase": {
+        "description": "Trial phase. None when unspecified (e.g. observational studies).",
+        "type": "str | None",
+        "vocab": [
+          "EARLY_PHASE1",
+          "NA",
+          "PHASE1",
+          "PHASE2",
+          "PHASE3",
+          "PHASE4"
+        ]
+      },
+      "recruitment_status": {
+        "description": "Overall recruitment status at record time.",
+        "type": "str | None",
+        "vocab": [
+          "ACTIVE_NOT_RECRUITING",
+          "APPROVED_FOR_MARKETING",
+          "AVAILABLE",
+          "COMPLETED",
+          "ENROLLING_BY_INVITATION",
+          "NOT_YET_RECRUITING",
+          "NO_LONGER_AVAILABLE",
+          "RECRUITING",
+          "SUSPENDED",
+          "TEMPORARILY_NOT_AVAILABLE",
+          "TERMINATED",
+          "UNKNOWN",
+          "WITHDRAWN",
+          "WITHHELD"
+        ]
+      },
+      "sex": {
+        "description": "Eligible biological sex.",
+        "type": "str | None",
+        "vocab": [
+          "ALL",
+          "FEMALE",
+          "MALE"
+        ]
+      },
+      "source": {
+        "description": "Origin of the record; always 'clinicaltrials_gov' for trials.",
+        "type": "str"
+      },
+      "sponsor": {
+        "description": "Lead sponsor organization name.",
+        "type": "str | None"
+      },
+      "std_ages": {
+        "description": "Standardized age groups the trial accepts.",
+        "type": "list[str]",
+        "vocab": [
+          "ADULT",
+          "CHILD",
+          "OLDER_ADULT"
+        ]
+      },
+      "title": {
+        "description": "Brief human-readable study title.",
+        "type": "str"
+      },
+      "trial_id": {
+        "description": "ClinicalTrials.gov NCT identifier (the task id).",
+        "type": "str"
+      }
+    }
+  },
+  "vocab_gloss": {
+    "leakage": "A document dated after the patient's snapshot_date \u2014 would leak the future into an as-of-time decision.",
+    "unknown": "Evidence absent or inconclusive \u2014 the safe default; never treated as clearance."
+  }
+}

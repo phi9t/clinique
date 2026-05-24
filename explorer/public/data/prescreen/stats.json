@@ -1,0 +1,426 @@
+{
+  "patients": {
+    "mimic": {
+      "age": [
+        {
+          "count": 0,
+          "label": "0\u201317"
+        },
+        {
+          "count": 1,
+          "label": "18\u201339"
+        },
+        {
+          "count": 1,
+          "label": "40\u201364"
+        },
+        {
+          "count": 0,
+          "label": "65\u201384"
+        },
+        {
+          "count": 0,
+          "label": "85+"
+        }
+      ],
+      "count": 2,
+      "docs_per_patient": [
+        {
+          "count": 1,
+          "label": "1"
+        },
+        {
+          "count": 1,
+          "label": "5"
+        }
+      ],
+      "document_date_present": [
+        {
+          "count": 6,
+          "label": "dated"
+        },
+        {
+          "count": 0,
+          "label": "undated"
+        }
+      ],
+      "missingness": [
+        {
+          "field": "patient_id",
+          "rate": 0.0
+        },
+        {
+          "field": "snapshot_date",
+          "rate": 0.0
+        },
+        {
+          "field": "source",
+          "rate": 0.0
+        },
+        {
+          "field": "demographics",
+          "rate": 0.0
+        },
+        {
+          "field": "documents",
+          "rate": 0.0
+        }
+      ],
+      "sex": [
+        {
+          "count": 1,
+          "label": "female"
+        },
+        {
+          "count": 1,
+          "label": "male"
+        }
+      ],
+      "source_type": [
+        {
+          "count": 2,
+          "label": "condition"
+        },
+        {
+          "count": 2,
+          "label": "observation"
+        },
+        {
+          "count": 1,
+          "label": "medication"
+        },
+        {
+          "count": 1,
+          "label": "procedure"
+        }
+      ]
+    },
+    "pmc": {
+      "age": [
+        {
+          "count": 0,
+          "label": "0\u201317"
+        },
+        {
+          "count": 1,
+          "label": "18\u201339"
+        },
+        {
+          "count": 1,
+          "label": "40\u201364"
+        },
+        {
+          "count": 0,
+          "label": "65\u201384"
+        },
+        {
+          "count": 0,
+          "label": "85+"
+        }
+      ],
+      "count": 2,
+      "docs_per_patient": [
+        {
+          "count": 2,
+          "label": "1"
+        }
+      ],
+      "document_date_present": [
+        {
+          "count": 0,
+          "label": "dated"
+        },
+        {
+          "count": 2,
+          "label": "undated"
+        }
+      ],
+      "missingness": [
+        {
+          "field": "patient_id",
+          "rate": 0.0
+        },
+        {
+          "field": "snapshot_date",
+          "rate": 1.0
+        },
+        {
+          "field": "source",
+          "rate": 0.0
+        },
+        {
+          "field": "demographics",
+          "rate": 0.0
+        },
+        {
+          "field": "documents",
+          "rate": 0.0
+        }
+      ],
+      "sex": [
+        {
+          "count": 1,
+          "label": "female"
+        },
+        {
+          "count": 1,
+          "label": "male"
+        }
+      ],
+      "source_type": [
+        {
+          "count": 2,
+          "label": "note"
+        }
+      ]
+    },
+    "synthea": {
+      "age": [
+        {
+          "count": 0,
+          "label": "0\u201317"
+        },
+        {
+          "count": 1,
+          "label": "18\u201339"
+        },
+        {
+          "count": 1,
+          "label": "40\u201364"
+        },
+        {
+          "count": 0,
+          "label": "65\u201384"
+        },
+        {
+          "count": 0,
+          "label": "85+"
+        }
+      ],
+      "count": 2,
+      "docs_per_patient": [
+        {
+          "count": 1,
+          "label": "1"
+        },
+        {
+          "count": 1,
+          "label": "5"
+        }
+      ],
+      "document_date_present": [
+        {
+          "count": 6,
+          "label": "dated"
+        },
+        {
+          "count": 0,
+          "label": "undated"
+        }
+      ],
+      "missingness": [
+        {
+          "field": "patient_id",
+          "rate": 0.0
+        },
+        {
+          "field": "snapshot_date",
+          "rate": 0.0
+        },
+        {
+          "field": "source",
+          "rate": 0.0
+        },
+        {
+          "field": "demographics",
+          "rate": 0.0
+        },
+        {
+          "field": "documents",
+          "rate": 0.0
+        }
+      ],
+      "sex": [
+        {
+          "count": 1,
+          "label": "female"
+        },
+        {
+          "count": 1,
+          "label": "male"
+        }
+      ],
+      "source_type": [
+        {
+          "count": 2,
+          "label": "condition"
+        },
+        {
+          "count": 2,
+          "label": "observation"
+        },
+        {
+          "count": 1,
+          "label": "medication"
+        },
+        {
+          "count": 1,
+          "label": "procedure"
+        }
+      ]
+    }
+  },
+  "trials": {
+    "age_bound_coverage": [
+      {
+        "count": 2,
+        "label": "minimum_age"
+      },
+      {
+        "count": 0,
+        "label": "maximum_age"
+      }
+    ],
+    "conditions_per_trial": [
+      {
+        "count": 2,
+        "label": "1"
+      }
+    ],
+    "count": 2,
+    "eligibility_text_length": [
+      {
+        "count": 0,
+        "label": "0"
+      },
+      {
+        "count": 0,
+        "label": "1\u2013500"
+      },
+      {
+        "count": 1,
+        "label": "501\u20132k"
+      },
+      {
+        "count": 1,
+        "label": "2k\u20135k"
+      },
+      {
+        "count": 0,
+        "label": "5k+"
+      }
+    ],
+    "minimum_age_years": [
+      {
+        "count": 0,
+        "label": "0\u201317"
+      },
+      {
+        "count": 2,
+        "label": "18\u201339"
+      },
+      {
+        "count": 0,
+        "label": "40\u201364"
+      },
+      {
+        "count": 0,
+        "label": "65\u201384"
+      },
+      {
+        "count": 0,
+        "label": "85+"
+      }
+    ],
+    "missingness": [
+      {
+        "field": "trial_id",
+        "rate": 0.0
+      },
+      {
+        "field": "source",
+        "rate": 0.0
+      },
+      {
+        "field": "title",
+        "rate": 0.0
+      },
+      {
+        "field": "conditions",
+        "rate": 0.0
+      },
+      {
+        "field": "phase",
+        "rate": 0.0
+      },
+      {
+        "field": "recruitment_status",
+        "rate": 0.0
+      },
+      {
+        "field": "eligibility_text",
+        "rate": 0.0
+      },
+      {
+        "field": "sex",
+        "rate": 0.0
+      },
+      {
+        "field": "accepts_healthy_volunteers",
+        "rate": 0.0
+      },
+      {
+        "field": "minimum_age",
+        "rate": 0.0
+      },
+      {
+        "field": "maximum_age",
+        "rate": 0.0
+      },
+      {
+        "field": "std_ages",
+        "rate": 0.0
+      },
+      {
+        "field": "sponsor",
+        "rate": 0.0
+      },
+      {
+        "field": "metadata",
+        "rate": 0.0
+      }
+    ],
+    "phase": [
+      {
+        "count": 2,
+        "label": "PHASE3"
+      }
+    ],
+    "recruitment_status": [
+      {
+        "count": 1,
+        "label": "COMPLETED"
+      },
+      {
+        "count": 1,
+        "label": "RECRUITING"
+      }
+    ],
+    "sex": [
+      {
+        "count": 2,
+        "label": "ALL"
+      }
+    ],
+    "std_ages": [
+      {
+        "count": 2,
+        "label": "ADULT"
+      },
+      {
+        "count": 2,
+        "label": "OLDER_ADULT"
+      }
+    ]
+  }
+}

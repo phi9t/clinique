@@ -104,15 +104,24 @@ See [validation summary](docs/edc-query-validation/validation-summary.md) for st
 
 ## Dataset explorer
 
-The [`explorer/`](explorer/) app is a Vite + React dashboard for browsing FDA-pilot CDISC ADaM
-datasets and Define-XML metadata under `explorer/public/data/`.
+The [`explorer/`](explorer/) app is a Vite + React dashboard with two dataset families:
+
+- **Regulatory CDISC** — FDA-pilot ADaM datasets and Define-XML metadata under `explorer/public/data/`
+- **Prescreen L0** — public trial/patient records, schema docs, distributions, and conformance reports under `explorer/public/data/prescreen/`
 
 ```bash
 cd explorer && npm install && npm run dev
 ```
 
-Build for production with `npm run build`. Regenerate JSON fixtures with the dataset conversion
-script before deploying if source SAS/define files change.
+Build for production with `npm run build`.
+
+Regenerate prescreen explorer JSON from committed fixtures:
+
+```bash
+uv run clinique prescreen export-explorer --out explorer/public/data/prescreen
+```
+
+Regenerate CDISC JSON fixtures with the dataset conversion script before deploying if source SAS/define files change.
 
 ## Releasing
 

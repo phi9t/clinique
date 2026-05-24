@@ -257,4 +257,5 @@ docs/primer/     # you are here
 2. Trace EDC `verify-workstream` and prescreen `record_studies` / `load_recorded_studies`
 3. Read [biostat-agent-suite.md](../design/biostat-agent-suite.md) for substrate invariants
 
-Return to [primer README](README.md) for the full reading order.
+Return to [primer README](README.md) for the full reading order. For jargon definitions, see the
+[terminology glossary](terminology-glossary.md).

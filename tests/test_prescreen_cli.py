@@ -57,3 +57,13 @@ def test_prescreen_validate_without_inputs_exits_two(capsys):
     exit_code = main(["prescreen", "validate"])
     capsys.readouterr()
     assert exit_code == 2
+
+
+def test_prescreen_export_explorer_exits_zero(tmp_path, capsys):
+    out_dir = tmp_path / "prescreen"
+    exit_code = main(["prescreen", "export-explorer", "--out", str(out_dir)])
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "exported" in captured.out
+    assert (out_dir / "index.json").is_file()
+    assert (out_dir / "trials.json").is_file()

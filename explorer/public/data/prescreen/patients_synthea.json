@@ -1,0 +1,96 @@
+[
+  {
+    "demographics": {
+      "age": 62,
+      "birthdate": "1963-07-01",
+      "sex": "male"
+    },
+    "documents": [
+      {
+        "date": "2025-09-10",
+        "doc_id": "P1:condition:0000",
+        "patient_id": "P1",
+        "source_type": "condition",
+        "structured": {
+          "code": "254637007",
+          "description": "Non-small cell lung cancer"
+        },
+        "text": "Non-small cell lung cancer (code 254637007)"
+      },
+      {
+        "date": "2025-10-01",
+        "doc_id": "P1:medication:0000",
+        "patient_id": "P1",
+        "source_type": "medication",
+        "structured": {
+          "code": "860975",
+          "description": "metformin"
+        },
+        "text": "metformin (code 860975)"
+      },
+      {
+        "date": "2026-02-20",
+        "doc_id": "P1:observation:0000",
+        "patient_id": "P1",
+        "source_type": "observation",
+        "structured": {
+          "code": "718-7",
+          "description": "Hemoglobin",
+          "unit": "g/dL",
+          "value": 11.2
+        },
+        "text": "Hemoglobin: 11.2 g/dL"
+      },
+      {
+        "date": "2026-02-20",
+        "doc_id": "P1:observation:0001",
+        "patient_id": "P1",
+        "source_type": "observation",
+        "structured": {
+          "code": "751-8",
+          "description": "Absolute Neutrophil Count",
+          "unit": "10*3/uL",
+          "value": 2.1
+        },
+        "text": "Absolute Neutrophil Count: 2.1 10*3/uL"
+      },
+      {
+        "date": "2025-09-15",
+        "doc_id": "P1:procedure:0000",
+        "patient_id": "P1",
+        "source_type": "procedure",
+        "structured": {
+          "code": "232717009",
+          "description": "Bronchoscopy"
+        },
+        "text": "Bronchoscopy (code 232717009)"
+      }
+    ],
+    "patient_id": "P1",
+    "snapshot_date": "2026-03-01",
+    "source": "synthea"
+  },
+  {
+    "demographics": {
+      "age": 36,
+      "birthdate": "1990-01-01",
+      "sex": "female"
+    },
+    "documents": [
+      {
+        "date": "2024-01-01",
+        "doc_id": "P2:condition:0000",
+        "patient_id": "P2",
+        "source_type": "condition",
+        "structured": {
+          "code": "999",
+          "description": "Other patient condition"
+        },
+        "text": "Other patient condition (code 999)"
+      }
+    ],
+    "patient_id": "P2",
+    "snapshot_date": "2026-03-01",
+    "source": "synthea"
+  }
+]

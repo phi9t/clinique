@@ -8,6 +8,7 @@ import sys
 import urllib.error
 from pathlib import Path
 
+from clinique.prescreen.explorer_export import export_explorer as write_explorer_json
 from clinique.prescreen.ingestion import (
     load_recorded_studies,
     record_search,
@@ -105,5 +106,13 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
                 f"{trial.trial_id}  [{trial.phase or '-'}] {trial.recruitment_status or '-'}  "
                 f"min_age={age if age is not None else '-'}  {trial.title[:70]}"
             )
+        return 0
+    if args.prescreen_command == "export-explorer":
+        try:
+            written = write_explorer_json(args.out)
+        except (OSError, ValueError) as exc:
+            print(f"prescreen export-explorer failed: {exc}", file=sys.stderr)
+            return 2
+        print(f"exported {len(written)} files to {args.out}: {', '.join(written)}")
         return 0
     return None

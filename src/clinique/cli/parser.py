@@ -68,4 +68,10 @@ def build_parser() -> argparse.ArgumentParser:
     validate_p.add_argument("--out", help="optional path to write the JSON report")
     show = prescreen_subparsers.add_parser("show")
     show.add_argument("--fixtures", default="tests/fixtures/prescreen/trials.jsonl")
+    export_explorer = prescreen_subparsers.add_parser("export-explorer")
+    export_explorer.add_argument(
+        "--out",
+        default="explorer/public/data/prescreen",
+        help="output directory for prescreen explorer JSON",
+    )
     return parser

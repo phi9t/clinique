@@ -1,0 +1,94 @@
+[
+  {
+    "demographics": {
+      "age": 62,
+      "sex": "male"
+    },
+    "documents": [
+      {
+        "date": "2180-07-23",
+        "doc_id": "10001:condition:0000",
+        "patient_id": "10001",
+        "source_type": "condition",
+        "structured": {
+          "code": "C3490",
+          "description": "Malignant neoplasm of unspecified part of bronchus or lung"
+        },
+        "text": "Malignant neoplasm of unspecified part of bronchus or lung (ICD C3490)"
+      },
+      {
+        "date": "2180-07-24",
+        "doc_id": "10001:observation:0000",
+        "patient_id": "10001",
+        "source_type": "observation",
+        "structured": {
+          "code": "51222",
+          "description": "Hemoglobin",
+          "unit": "g/dL",
+          "value": 11.2
+        },
+        "text": "Hemoglobin: 11.2 g/dL"
+      },
+      {
+        "date": "2180-07-24",
+        "doc_id": "10001:observation:0001",
+        "patient_id": "10001",
+        "source_type": "observation",
+        "structured": {
+          "code": "51256",
+          "description": "Neutrophils",
+          "unit": "K/uL",
+          "value": 2.1
+        },
+        "text": "Neutrophils: 2.1 K/uL"
+      },
+      {
+        "date": "2180-07-24",
+        "doc_id": "10001:medication:0000",
+        "patient_id": "10001",
+        "source_type": "medication",
+        "structured": {
+          "code": "012345",
+          "description": "Cisplatin"
+        },
+        "text": "Cisplatin"
+      },
+      {
+        "date": "2180-07-25",
+        "doc_id": "10001:procedure:0000",
+        "patient_id": "10001",
+        "source_type": "procedure",
+        "structured": {
+          "code": "0BJ08ZZ",
+          "description": "Inspection of tracheobronchial tree via natural or artificial opening endoscopic"
+        },
+        "text": "Inspection of tracheobronchial tree via natural or artificial opening endoscopic (ICD 0BJ08ZZ)"
+      }
+    ],
+    "patient_id": "10001",
+    "snapshot_date": "2180-12-31",
+    "source": "mimic_iv_demo"
+  },
+  {
+    "demographics": {
+      "age": 34,
+      "sex": "female"
+    },
+    "documents": [
+      {
+        "date": "2185-03-01",
+        "doc_id": "10002:condition:0000",
+        "patient_id": "10002",
+        "source_type": "condition",
+        "structured": {
+          "code": "J189",
+          "description": "Pneumonia unspecified organism"
+        },
+        "text": "Pneumonia unspecified organism (ICD J189)"
+      }
+    ],
+    "patient_id": "10002",
+    "snapshot_date": "2180-12-31",
+    "source": "mimic_iv_demo"
+  }
+]

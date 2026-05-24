@@ -1,0 +1,14 @@
+{
+  "error_count": 1,
+  "issues": [
+    {
+      "code": "leakage",
+      "message": "10002:condition:0000: dated 2185-03-01 is after snapshot_date 2180-12-31",
+      "record_id": "10002",
+      "severity": "error"
+    }
+  ],
+  "ok": false,
+  "records_checked": 8,
+  "warning_count": 0
+}

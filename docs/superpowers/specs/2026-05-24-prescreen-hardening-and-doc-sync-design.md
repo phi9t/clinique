@@ -213,10 +213,10 @@ Suggested commit sequence (implementation plan may refine):
 
 ## 11. Success Criteria
 
-- [ ] Design doc, README, primer, and `__init__.py` describe implemented L0 accurately
-- [ ] `aggregate()` implements design-doc rules with full test coverage
-- [ ] No `prescreen aggregate` CLI subcommand
-- [ ] Network prescreen commands catch only expected exception types
-- [ ] `tests/test_prescreen_cli.py` covers show, validate (0 and 7), and missing-args paths
-- [ ] CLI split complete; EDC CLI tests unchanged
-- [ ] Full pytest suite and ruff pass
+- [x] Design doc, README, primer, and `__init__.py` describe implemented L0 accurately
+- [x] `aggregate()` implements design-doc rules with full test coverage
+- [x] No `prescreen aggregate` CLI subcommand
+- [x] Network prescreen commands catch only expected exception types
+- [x] `tests/test_prescreen_cli.py` covers show, validate (0 and 7), and missing-args paths
+- [x] CLI split complete; EDC CLI tests unchanged
+- [x] Full pytest suite and ruff pass (236 tests; untracked `explorer_export.py` excluded)

@@ -1,0 +1,44 @@
+[
+  {
+    "demographics": {
+      "age": 62.0,
+      "sex": "male"
+    },
+    "documents": [
+      {
+        "date": null,
+        "doc_id": "SYN-PMC-1:note:0000",
+        "patient_id": "SYN-PMC-1",
+        "source_type": "note",
+        "structured": {
+          "title": "Synthetic case report of NSCLC"
+        },
+        "text": "A 62-year-old man presented with cough and weight loss. Imaging showed a right upper lobe mass. Biopsy confirmed non-small cell lung carcinoma. ANC was 2.1 K/uL. He had no prior immunotherapy."
+      }
+    ],
+    "patient_id": "SYN-PMC-1",
+    "snapshot_date": null,
+    "source": "pmc_patients"
+  },
+  {
+    "demographics": {
+      "age": 34.0,
+      "sex": "female"
+    },
+    "documents": [
+      {
+        "date": null,
+        "doc_id": "SYN-PMC-2:note:0000",
+        "patient_id": "SYN-PMC-2",
+        "source_type": "note",
+        "structured": {
+          "title": "Synthetic case report of pneumonia"
+        },
+        "text": "A 34-year-old woman presented with fever and dyspnea. Chest X-ray revealed lobar consolidation. She was treated with antibiotics and recovered."
+      }
+    ],
+    "patient_id": "SYN-PMC-2",
+    "snapshot_date": null,
+    "source": "pmc_patients"
+  }
+]

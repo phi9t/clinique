@@ -1,0 +1,72 @@
+[
+  {
+    "accepts_healthy_volunteers": false,
+    "conditions": [
+      "Non-Small-Cell Lung Carcinoma"
+    ],
+    "eligibility_text": "Inclusion Criteria:\n\n* Has a histologically-confirmed or cytologically confirmed diagnosis of stage IV nonsquamous NSCLC.\n* Has confirmation that epidermal growth factor receptor (EGFR) or anaplastic lymphoma kinase (ALK)-directed therapy is not indicated.\n* Has measurable disease.\n* Has not received prior systemic treatment for their advanced/metastatic NSCLC.\n* Can provide tumor tissue.\n* Has a life expectancy of at least 3 months.\n* Has a performance status of 0 or 1 on the Eastern Cooperative Oncology Group (ECOG) Performance Status.\n* Has adequate organ function\n* If female of childbearing potential, is willing to use adequate contraception for the course of the study through 120 days after the last dose of study medication or through 180 days after last dose of chemotherapeutic agents.\n* If male with a female partner(s) of child-bearing potential, must agree to use adequate contraception starting with the first dose of study medication through 120 days after the last dose of study medication or through 180 days after last dose of chemotherapeutic agents.\n\nExclusion Criteria:\n\n* Has predominantly squamous cell histology NSCLC.\n* Is currently participating and receiving study therapy or has participated in a study of an investigational agent and received study therapy or used an investigational device within 4 weeks prior to administration of pembrolizumab.\n* Before the first dose of study medication: a) Has received prior systemic cytotoxic chemotherapy for metastatic disease, b) Has received antineoplastic biological therapy (e.g., erlotinib, crizotinib, cetuximab), c) Had major surgery (\\<3 weeks prior to first dose)\n* Received radiation therapy to the lung that is \\>30 Gray (Gy) within 6 months of the first dose of study medication.\n* Completed palliative radiotherapy within 7 days of the first dose of study medication.\n* Is expected to require any other form of antineoplastic therapy while on study.\n* Received a live-virus vaccination within 30 days of planned start of study medication.\n* Has clinically active diverticulitis, intra-abdominal abscess, gastrointestinal obstruction, peritoneal carcinomatosis.\n* Known history of prior malignancy except if participant has undergone potentially curative therapy with no evidence of that disease recurrence for 5 years since initiation of that therapy, except for successful definitive resection of basal cell carcinoma of the skin, superficial bladder cancer, squamous cell carcinoma of the skin, in situ cervical cancer, or other in situ cancers.\n* Has known active central nervous system (CNS) metastases and/or carcinomatous meningitis.\n* Previously had a severe hypersensitivity reaction to treatment with another monoclonal antibody (mAb).\n* Known sensitivity to any component of cisplatin, carboplatin or pemetrexed.\n* Has active autoimmune disease that has required systemic treatment in past 2 years.\n* Is on chronic systemic steroids.\n* Is unable to interrupt aspirin or other nonsteroidal anti-inflammatory drugs (NSAIDs), other than an aspirin dose \u22641.3 g per day, for a 5-day period (8-day period for long-acting agents, such as piroxicam).\n* Is unable or unwilling to take folic acid or vitamin B12 supplementation.\n* Had prior treatment with any other anti-programmed cell death-1 (PD-1), or PD-ligand 1 (PD-L1) or PD-L2 agent or an antibody targeting other immuno-regulatory receptors or mechanisms. Has participated in any other pembrolizumab study and has been treated with pembrolizumab.\n* Has an active infection requiring therapy.\n* Has known history of Human Immunodeficiency Virus (HIV).\n* Has known active Hepatitis B or C.\n* Has known psychiatric or substance abuse disorder that would interfere with cooperation with the requirements of the trial.\n* Is a regular user (including \"recreational use\") of any illicit drugs or had a recent history (within the last year) of substance abuse (including alcohol).\n* Has symptomatic ascites or pleural effusion.\n* Has interstitial lung disease or a history of pneumonitis that required oral of IV glucocorticoids to assist with management.\n* Is pregnant or breastfeeding, or expecting to conceive or father children prior to 120 days after the last dose of study medication or through 180 days after last dose of chemotherapeutic agents.",
+    "maximum_age": {
+      "raw": null,
+      "years": null
+    },
+    "metadata": {
+      "keywords": [
+        "PD1",
+        "PD-1",
+        "PDL1",
+        "PD-L1",
+        "Non-Small-Cell Lung Cancer"
+      ],
+      "org_study_id": "3475-189",
+      "status_verified_date": "2024-09"
+    },
+    "minimum_age": {
+      "raw": "18 Years",
+      "years": 18.0
+    },
+    "phase": "PHASE3",
+    "recruitment_status": "COMPLETED",
+    "sex": "ALL",
+    "source": "clinicaltrials_gov",
+    "sponsor": "Merck Sharp & Dohme LLC",
+    "std_ages": [
+      "ADULT",
+      "OLDER_ADULT"
+    ],
+    "title": "Study of Pemetrexed+Platinum Chemotherapy With or Without Pembrolizumab (MK-3475) in Participants With First Line Metastatic Nonsquamous Non-small Cell Lung Cancer (MK-3475-189/KEYNOTE-189)",
+    "trial_id": "NCT02578680"
+  },
+  {
+    "accepts_healthy_volunteers": false,
+    "conditions": [
+      "Non-small Cell Lung Cancer"
+    ],
+    "eligibility_text": "Inclusion Criteria:\n\n1. Volunteer to participate and sign the informed consent form.\n2. Age \u2265 18 years old, regardless of gender.\n3. Histological and/or cytological diagnosis of resectable stage IIIA-IIIB (N2) NSCLC.\n4. Measurable lesions based on the response evaluation criteria in solid tumors version 1.1\uff08RECIST 1.1\uff09.\n5. Have an Eastern Cooperative Oncology Group (ECOG) performance status of 0 to 1.\n6. Subjects should provide tumor tissue for detection of PD-L1 expression level.\n7. Sufficient organ and bone marrow function.\n8. Expected survival \u22656 months.\n9. The surgeon assessed that total lung function is able to withstand the proposed pneumonectomy procedure.\n\nExclusion Criteria:\n\n1. Tumor histologically or cytologically confirmed or combined with neuroendocrine carcinoma components, or sarcomatous/sarcomatoid lesions, or adenosquamous carcinoma, or special pathological types.\n2. Previous treatment with another drug that targets T cell receptors (e.g. CTLA-4, OX-40, etc.);\n3. Participants with known EGFR mutation or ALK translocation, and non-squamous cell carcinoma subjects need to identify EGFR and ALK mutation status;\n4. Upper lung sulcus tumor or locally advanced unresectable or metastatic disease.\n5. Previous anti-tumor therapy for the disease.\n6. Subjects with known or suspected interstitial pneumonia.Radiation pneumonia or other moderate to severe lung disease that may interfere with the detection or management of drug-related pulmonary toxicity and seriously affect respiratory function.\n7. Any serious active infection.\n8. With uncontrolled or significant cardiovascular and cerebrovascular disease.\n9. Active autoimmune disease requiring systemic treatment.\n10. Immunosuppressant or systemic hormone therapy (dose \\>10 mg/ day prednisone or other therapeutic hormone) for immunosuppression within 14 days prior to randomization.",
+    "maximum_age": {
+      "raw": null,
+      "years": null
+    },
+    "metadata": {
+      "keywords": [
+        "Envafolimab"
+      ],
+      "org_study_id": "KN035-CN-017",
+      "status_verified_date": "2026-03"
+    },
+    "minimum_age": {
+      "raw": "18 Years",
+      "years": 18.0
+    },
+    "phase": "PHASE3",
+    "recruitment_status": "RECRUITING",
+    "sex": "ALL",
+    "source": "clinicaltrials_gov",
+    "sponsor": "3D Medicines (Sichuan) Co., Ltd.",
+    "std_ages": [
+      "ADULT",
+      "OLDER_ADULT"
+    ],
+    "title": "Phase III Study of Envafolimab Versus Placebo Plus Chemotherapy in Resectable Stage III NSCLC",
+    "trial_id": "NCT06123754"
+  }
+]
