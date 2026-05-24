@@ -78,10 +78,14 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as exc:
             print(f"edc-query silent-log evaluation failed: {exc}", file=sys.stderr)
             return 2
-        report = evaluate_silent_log(
-            entries,
-            false_positive_tolerance_per_reviewer_week=args.false_positive_tolerance,
-        )
+        try:
+            report = evaluate_silent_log(
+                entries,
+                false_positive_tolerance_per_reviewer_week=args.false_positive_tolerance,
+            )
+        except ValueError as exc:
+            print(f"edc-query silent-log evaluation failed: {exc}", file=sys.stderr)
+            return 2
         report.write_json(args.output)
         print(f"EDC query silent-log report written to {args.output}")
         silent_gates_passed = (

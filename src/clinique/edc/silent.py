@@ -77,6 +77,8 @@ def evaluate_silent_log(
     *,
     false_positive_tolerance_per_reviewer_week: float,
 ) -> ValidationReport:
+    if false_positive_tolerance_per_reviewer_week < 0:
+        raise ValueError("false_positive_tolerance_per_reviewer_week must be nonnegative")
     true_positives = sum(1 for entry in entries if entry.ground_truth == "true_positive")
     false_positives = sum(1 for entry in entries if entry.ground_truth == "false_positive")
     safety_risks = sum(1 for entry in entries if entry.safety_risk)

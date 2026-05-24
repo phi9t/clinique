@@ -246,6 +246,23 @@ def test_edc_query_evaluate_silent_log_returns_nonzero_when_operations_were_affe
     assert exit_code == 2
 
 
+def test_edc_query_evaluate_silent_log_rejects_negative_false_positive_tolerance(tmp_path):
+    exit_code = main(
+        [
+            "edc-query",
+            "evaluate-silent-log",
+            "--log",
+            "tests/fixtures/edc_query/silent_log.json",
+            "--output",
+            str(tmp_path / "silent-report.json"),
+            "--false-positive-tolerance",
+            "-0.1",
+        ]
+    )
+
+    assert exit_code == 2
+
+
 def test_edc_query_evaluate_rollout_gate_writes_report(tmp_path):
     output = tmp_path / "rollout-report.json"
 
