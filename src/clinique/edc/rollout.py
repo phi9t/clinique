@@ -32,6 +32,12 @@ REQUIRED_SAFETY_KEYS = {
     "blinding_breach",
     "excessive_reviewer_burden",
 }
+SAFETY_COUNT_KEYS = {
+    "unauthorized_write_back",
+    "unsupported_evidence",
+    "privacy_incident",
+    "blinding_breach",
+}
 
 
 @dataclass(frozen=True)
@@ -61,6 +67,8 @@ class RolloutGate:
             "excessive_reviewer_burden",
             safety["excessive_reviewer_burden"],
         )
+        for key in SAFETY_COUNT_KEYS:
+            safety[key] = _require_nonnegative_int(key, safety[key])
         return cls(
             gate_id=raw["gate_id"],
             evaluated_at=evaluated_at,
@@ -93,6 +101,12 @@ def _require_numeric_values(values: dict[str, Any]) -> dict[str, float]:
             raise ValueError(f"{key} must be numeric")
         parsed[key] = float(value)
     return parsed
+
+
+def _require_nonnegative_int(label: str, value: Any) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{label} must be a nonnegative integer")
+    return value
 
 
 def load_rollout_gate(path: str | Path) -> RolloutGate:
