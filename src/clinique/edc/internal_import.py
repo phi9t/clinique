@@ -34,9 +34,9 @@ def load_internal_export_bundle(
     sources = _source_paths(manifest_path)
     snapshots = tuple(
         sorted(
-            (
-                EdcSnapshot.from_json(raw)
-                for raw in _read_json(sources["edc_snapshots"] / "snapshots.json")
+            _parse_payload_items(
+                sources["edc_snapshots"] / "snapshots.json",
+                EdcSnapshot.from_json,
             ),
             key=lambda snapshot: snapshot.snapshot_at,
         )
@@ -48,22 +48,24 @@ def load_internal_export_bundle(
 
     lock_issues = ()
     if lock_issues_path is not None:
-        lock_issues = tuple(
-            DatabaseLockIssue.from_json(raw) for raw in _read_json(Path(lock_issues_path))
+        lock_issues = _parse_payload_items(
+            Path(lock_issues_path),
+            DatabaseLockIssue.from_json,
         )
     validate_unique_lock_issue_ids(lock_issues)
     validate_lock_issue_record_references(snapshots, lock_issues)
 
-    labels = tuple(QueryLabel.from_json(raw) for raw in _read_json(Path(labels_path)))
+    labels = _parse_payload_items(Path(labels_path), QueryLabel.from_json)
     validate_unique_label_keys(labels)
-    query_logs = tuple(
-        QueryLog.from_json(raw) for raw in _read_json(sources["query_logs"] / "query_logs.json")
+    query_logs = _parse_payload_items(
+        sources["query_logs"] / "query_logs.json",
+        QueryLog.from_json,
     )
     validate_unique_query_log_ids(query_logs)
     validate_snapshot_references(snapshots, labels, query_logs)
-    rules = tuple(
-        EditCheckRule.from_json(raw)
-        for raw in _read_json(sources["edit_check_history"] / "rules.json")
+    rules = _parse_payload_items(
+        sources["edit_check_history"] / "rules.json",
+        EditCheckRule.from_json,
     )
     validate_unique_rule_ids(rules)
 
@@ -124,6 +126,16 @@ def _source_paths(manifest_path: str | Path) -> dict[str, Path]:
             )
         paths[source["source_type"]] = resolved_export_path
     return paths
+
+
+def _parse_payload_items(path: Path, parser):
+    items = []
+    for raw in _read_json(path):
+        try:
+            items.append(parser(raw))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"invalid internal export payload: {path}: {exc}") from exc
+    return tuple(items)
 
 
 def _read_json(path: Path) -> list[dict]:

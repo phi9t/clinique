@@ -276,6 +276,27 @@ def test_load_internal_export_bundle_rejects_non_object_payload_entries(tmp_path
         raise AssertionError("expected non-object payload entry rejection")
 
 
+def test_load_internal_export_bundle_rejects_payload_objects_missing_required_fields(tmp_path):
+    manifest = _write_manifest(
+        tmp_path,
+        snapshot_payload='[{"snapshot_id":"missing-timestamp"}]',
+    )
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        message = str(exc)
+        assert "invalid internal export payload" in message
+        assert "snapshots.json" in message
+        assert "snapshot_at" in message
+    else:
+        raise AssertionError("expected missing required payload field rejection")
+
+
 def test_load_internal_export_bundle_builds_fixture_bundle_from_approved_exports(tmp_path):
     manifest = _write_manifest(tmp_path)
 
