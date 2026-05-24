@@ -57,7 +57,7 @@
       reading PHI-bearing exports, including top-level JSON object, manifest version/timestamp
       checks, and rejection of unknown source types outside `edc_snapshots`, `query_logs`, and
       `edit_check_history`; owner/export path metadata and schema sketches must contain
-      nonblank strings.
+      nonblank strings and the source-specific fields required by the approved-export importer.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent

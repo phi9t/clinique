@@ -12,7 +12,20 @@ def _valid_manifest() -> dict[str, object]:
                 "source_type": "edc_snapshots",
                 "owner": "data-management@example.test",
                 "export_path": "/approved/exports/edc_snapshots",
-                "schema_sketch": ["study_id", "site_id", "subject_id", "form", "field"],
+                "schema_sketch": [
+                    "snapshot_id",
+                    "snapshot_at",
+                    "contains_phi",
+                    "contains_unblinded",
+                    "record_id",
+                    "study_id",
+                    "site_id",
+                    "subject_id",
+                    "form",
+                    "field",
+                    "value",
+                    "collected_at",
+                ],
                 "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
                 "sensitivity": "phi",
                 "blinding_status": "blinded",
@@ -22,7 +35,21 @@ def _valid_manifest() -> dict[str, object]:
                 "source_type": "query_logs",
                 "owner": "data-management@example.test",
                 "export_path": "/approved/exports/query_logs",
-                "schema_sketch": ["query_id", "subject_id", "form", "field", "opened_at"],
+                "schema_sketch": [
+                    "query_id",
+                    "snapshot_id",
+                    "study_id",
+                    "site_id",
+                    "subject_id",
+                    "form",
+                    "field",
+                    "query_text",
+                    "query_category",
+                    "opened_at",
+                    "closed_at",
+                    "status",
+                    "resolution",
+                ],
                 "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
                 "sensitivity": "phi",
                 "blinding_status": "blinded",
@@ -32,7 +59,15 @@ def _valid_manifest() -> dict[str, object]:
                 "source_type": "edit_check_history",
                 "owner": "edc-build@example.test",
                 "export_path": "/approved/exports/edit_checks",
-                "schema_sketch": ["rule_id", "effective_at", "logic"],
+                "schema_sketch": [
+                    "rule_id",
+                    "kind",
+                    "form",
+                    "field",
+                    "query_category",
+                    "message",
+                    "effective_at",
+                ],
                 "date_coverage": {"start": "2026-01-01", "end": "2026-03-31"},
                 "sensitivity": "no_phi",
                 "blinding_status": "blinded",
@@ -169,6 +204,29 @@ def test_preflight_internal_manifest_rejects_malformed_schema_sketch_entries(tmp
 
     assert result.ok is False
     assert result.incomplete_sources == ("edc_snapshots", "query_logs")
+
+
+def test_preflight_internal_manifest_rejects_source_specific_schema_gaps(tmp_path):
+    manifest = _valid_manifest()
+    manifest["sources"][0] = {
+        **manifest["sources"][0],
+        "schema_sketch": ["snapshot_id", "snapshot_at", "study_id"],
+    }
+    manifest["sources"][1] = {
+        **manifest["sources"][1],
+        "schema_sketch": ["query_id", "opened_at", "status"],
+    }
+    manifest["sources"][2] = {
+        **manifest["sources"][2],
+        "schema_sketch": ["rule_id", "effective_at"],
+    }
+    path = tmp_path / "manifest.json"
+    path.write_text(json.dumps(manifest))
+
+    result = preflight_internal_manifest(path)
+
+    assert result.ok is False
+    assert result.incomplete_sources == ("edc_snapshots", "query_logs", "edit_check_history")
 
 
 def test_preflight_internal_manifest_rejects_malformed_source_identity_metadata(tmp_path):

@@ -12,6 +12,46 @@ REQUIRED_SOURCES = ("edc_snapshots", "query_logs", "edit_check_history")
 ALLOWED_SOURCES = set(REQUIRED_SOURCES)
 ALLOWED_SENSITIVITY = {"phi", "pii", "no_phi"}
 ALLOWED_BLINDING_STATUS = {"blinded"}
+REQUIRED_SCHEMA_FIELDS = {
+    "edc_snapshots": {
+        "snapshot_id",
+        "snapshot_at",
+        "contains_phi",
+        "contains_unblinded",
+        "record_id",
+        "study_id",
+        "site_id",
+        "subject_id",
+        "form",
+        "field",
+        "value",
+        "collected_at",
+    },
+    "query_logs": {
+        "query_id",
+        "snapshot_id",
+        "study_id",
+        "site_id",
+        "subject_id",
+        "form",
+        "field",
+        "query_text",
+        "query_category",
+        "opened_at",
+        "closed_at",
+        "status",
+        "resolution",
+    },
+    "edit_check_history": {
+        "rule_id",
+        "kind",
+        "form",
+        "field",
+        "query_category",
+        "message",
+        "effective_at",
+    },
+}
 
 
 @dataclass(frozen=True)
@@ -116,7 +156,7 @@ def _source_complete(source: dict[str, Any]) -> bool:
     if not all(source.get(key) for key in ("schema_sketch", "date_coverage", "read_only")):
         return False
     return (
-        _schema_sketch_complete(source.get("schema_sketch"))
+        _schema_sketch_complete(source.get("schema_sketch"), source.get("source_type"))
         and source.get("sensitivity") in ALLOWED_SENSITIVITY
         and source.get("blinding_status") in ALLOWED_BLINDING_STATUS
         and _date_coverage_complete(source.get("date_coverage"))
@@ -127,12 +167,17 @@ def _nonblank_string(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
 
-def _schema_sketch_complete(value: Any) -> bool:
-    return (
+def _schema_sketch_complete(value: Any, source_type: Any) -> bool:
+    if not (
         isinstance(value, list)
         and bool(value)
         and all(isinstance(field, str) and field.strip() for field in value)
-    )
+    ):
+        return False
+    required = REQUIRED_SCHEMA_FIELDS.get(source_type)
+    if required is None:
+        return True
+    return required.issubset({field.strip() for field in value})
 
 
 def _date_coverage_complete(value: Any) -> bool:

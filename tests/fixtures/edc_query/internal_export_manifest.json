@@ -6,7 +6,20 @@
       "source_type": "edc_snapshots",
       "owner": "synthetic-fixture",
       "export_path": "tests/fixtures/edc_query",
-      "schema_sketch": ["study_id", "site_id", "subject_id", "form", "field", "value", "snapshot_at"],
+      "schema_sketch": [
+        "snapshot_id",
+        "snapshot_at",
+        "contains_phi",
+        "contains_unblinded",
+        "record_id",
+        "study_id",
+        "site_id",
+        "subject_id",
+        "form",
+        "field",
+        "value",
+        "collected_at"
+      ],
       "date_coverage": {
         "start": "2026-01-01",
         "end": "2026-03-31"
@@ -19,7 +32,21 @@
       "source_type": "query_logs",
       "owner": "synthetic-fixture",
       "export_path": "tests/fixtures/edc_query",
-      "schema_sketch": ["query_id", "subject_id", "form", "field", "opened_at", "closed_at", "resolution"],
+      "schema_sketch": [
+        "query_id",
+        "snapshot_id",
+        "study_id",
+        "site_id",
+        "subject_id",
+        "form",
+        "field",
+        "query_text",
+        "query_category",
+        "opened_at",
+        "closed_at",
+        "status",
+        "resolution"
+      ],
       "date_coverage": {
         "start": "2026-01-01",
         "end": "2026-03-31"
@@ -32,7 +59,16 @@
       "source_type": "edit_check_history",
       "owner": "synthetic-fixture",
       "export_path": "tests/fixtures/edc_query",
-      "schema_sketch": ["rule_id", "effective_at", "retired_at", "logic", "query_category"],
+      "schema_sketch": [
+        "rule_id",
+        "kind",
+        "form",
+        "field",
+        "query_category",
+        "message",
+        "effective_at",
+        "retired_at"
+      ],
       "date_coverage": {
         "start": "2026-01-01",
         "end": "2026-03-31"
