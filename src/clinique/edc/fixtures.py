@@ -10,6 +10,7 @@ from clinique.edc.records import (
     FixtureBundle,
     QueryLabel,
     QueryLog,
+    validate_lock_issue_record_references,
     validate_unique_label_keys,
     validate_unique_lock_issue_ids,
     validate_unique_query_log_ids,
@@ -61,6 +62,7 @@ def load_fixture_bundle(path: str | Path) -> FixtureBundle:
         else ()
     )
     validate_unique_lock_issue_ids(lock_issues)
+    validate_lock_issue_record_references(snapshots, lock_issues)
 
     return FixtureBundle(
         snapshots=snapshots,

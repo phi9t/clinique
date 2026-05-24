@@ -831,6 +831,29 @@ def test_fixture_bundle_rejects_duplicate_lock_issue_ids(tmp_path):
         raise AssertionError("expected duplicate lock issue id rejection")
 
 
+def test_fixture_bundle_rejects_unknown_lock_issue_record_references(tmp_path):
+    fixture_dir = tmp_path / "unknown_lock_issue_record"
+    issue = {
+        "issue_id": "LOCK-BAD",
+        "study_id": "STUDY-EDC-001",
+        "site_id": "SITE-99",
+        "subject_id": "SUBJ-001",
+        "form": "AE",
+        "field": "term",
+        "severity": "major",
+        "discovered_at": "2026-03-05T09:00:00Z",
+        "description": "Database lock issue.",
+    }
+    _write_minimal_fixture_dir(fixture_dir, lock_issues=[issue])
+
+    try:
+        load_fixture_bundle(fixture_dir)
+    except ValueError as exc:
+        assert "unknown lock issue record key" in str(exc)
+    else:
+        raise AssertionError("expected unknown lock issue record reference rejection")
+
+
 def test_fixture_bundle_rejects_unknown_snapshot_references(tmp_path):
     base_label = {
         "snapshot_id": "missing-snap",

@@ -11,6 +11,7 @@ from clinique.edc.records import (
     FixtureBundle,
     QueryLabel,
     QueryLog,
+    validate_lock_issue_record_references,
     validate_snapshot_references,
     validate_unique_label_keys,
     validate_unique_lock_issue_ids,
@@ -51,6 +52,7 @@ def load_internal_export_bundle(
             DatabaseLockIssue.from_json(raw) for raw in _read_json(Path(lock_issues_path))
         )
     validate_unique_lock_issue_ids(lock_issues)
+    validate_lock_issue_record_references(snapshots, lock_issues)
 
     labels = tuple(QueryLabel.from_json(raw) for raw in _read_json(Path(labels_path)))
     validate_unique_label_keys(labels)

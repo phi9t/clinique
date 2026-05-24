@@ -448,6 +448,27 @@ def validate_snapshot_references(
             raise ValueError(f"unknown query log snapshot_id: {query.snapshot_id}")
 
 
+def validate_lock_issue_record_references(
+    snapshots: tuple[EdcSnapshot, ...],
+    lock_issues: tuple[DatabaseLockIssue, ...],
+) -> None:
+    record_keys = {
+        (
+            record.study_id,
+            record.site_id,
+            record.subject_id,
+            record.form,
+            record.field,
+        )
+        for snapshot in snapshots
+        for record in snapshot.records
+    }
+    for issue in lock_issues:
+        key = (issue.study_id, issue.site_id, issue.subject_id, issue.form, issue.field)
+        if key not in record_keys:
+            raise ValueError(f"unknown lock issue record key: {key}")
+
+
 @dataclass(frozen=True)
 class SourceRef:
     source_type: str

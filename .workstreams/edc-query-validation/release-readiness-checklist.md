@@ -31,6 +31,8 @@
       become ambiguous.
 - [x] Fixture and approved-export loaders reject duplicate adjudication label keys.
 - [x] Fixture and approved-export loaders reject duplicate database-lock issue IDs.
+- [x] Fixture and approved-export loaders reject database-lock issues that do not reference any
+      record key present in replay snapshots.
 - [x] Rule-history loaders reject duplicate rule IDs and impossible effective/retired chronology.
 - [x] Rule-history loaders reject unknown rule kinds and incomplete date-order rule parameters.
 - [x] Annotation manual defines the same study/site-scoped unit used by loaders and metrics.
