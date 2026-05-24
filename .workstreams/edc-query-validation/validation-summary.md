@@ -26,8 +26,8 @@ Evidence:
   schema sketches to list nonblank source-specific fields needed by the approved-export importer,
   with missing and duplicate fields reported per normalized source type and treated as direct
   readiness gate failures. It also rejects manifest-relative export paths that escape the manifest
-  directory before reading any export payload and reports invalid sensitivity, blinding, and
-  date-coverage metadata by source type.
+  directory before reading any export payload and reports invalid owner, export path, read-only,
+  sensitivity, blinding, and date-coverage metadata by source type.
 - `uv run clinique edc-query validate-internal-exports --manifest
   tests/fixtures/edc_query/internal_export_manifest.json --labels
   tests/fixtures/edc_query/labels.json --lock-issues tests/fixtures/edc_query/lock_issues.json

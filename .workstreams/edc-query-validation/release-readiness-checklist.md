@@ -61,7 +61,8 @@
       required by the approved-export importer; missing and duplicate schema fields are reported
       per normalized source type and fail the readiness gate directly, and manifest-relative
       export paths that escape the manifest directory are rejected before payload reads; invalid
-      sensitivity, blinding, and date-coverage metadata are reported by source type.
+      owner, export path, read-only, sensitivity, blinding, and date-coverage metadata are
+      reported by source type.
 - [x] Silent-log evaluator exists, requires typed boolean gate fields, writes reviewer-week
       burden gate reports, rejects empty logs, evidence-free recommendations, malformed or
       blank evidence citations, unknown query categories and ground-truth labels, inconsistent

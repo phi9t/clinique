@@ -181,6 +181,29 @@ def test_load_internal_export_bundle_names_source_metadata_preflight_failures(tm
         raise AssertionError("expected source metadata preflight diagnostics")
 
 
+def test_load_internal_export_bundle_names_source_identity_metadata_failures(tmp_path):
+    manifest = _write_manifest(tmp_path)
+    payload = json.loads(manifest.read_text())
+    payload["sources"][0]["owner"] = 123
+    payload["sources"][1]["export_path"] = " "
+    payload["sources"][2]["read_only"] = False
+    manifest.write_text(json.dumps(payload))
+
+    try:
+        load_internal_export_bundle(
+            manifest,
+            labels_path=FIXTURES / "labels.json",
+            lock_issues_path=FIXTURES / "lock_issues.json",
+        )
+    except ValueError as exc:
+        message = str(exc)
+        assert "invalid_source_metadata.edc_snapshots=owner" in message
+        assert "invalid_source_metadata.query_logs=export_path" in message
+        assert "invalid_source_metadata.edit_check_history=read_only" in message
+    else:
+        raise AssertionError("expected source identity metadata diagnostics")
+
+
 def test_load_internal_export_bundle_rejects_unblinded_snapshot_payload(tmp_path):
     manifest = _write_manifest(
         tmp_path,

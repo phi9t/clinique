@@ -358,6 +358,10 @@ def test_preflight_internal_manifest_rejects_malformed_source_identity_metadata(
 
     assert result.ok is False
     assert result.incomplete_sources == ("edc_snapshots", "query_logs")
+    assert result.invalid_source_metadata == {
+        "edc_snapshots": ("owner",),
+        "query_logs": ("export_path",),
+    }
 
 
 def test_preflight_internal_manifest_rejects_escaped_relative_export_paths(tmp_path):

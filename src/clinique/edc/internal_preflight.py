@@ -211,6 +211,12 @@ def _source_complete(source: dict[str, Any]) -> bool:
 
 def _invalid_source_metadata(source: dict[str, Any]) -> tuple[str, ...]:
     invalid: list[str] = []
+    if not _nonblank_string(source.get("owner")):
+        invalid.append("owner")
+    if not _nonblank_string(source.get("export_path")):
+        invalid.append("export_path")
+    if source.get("read_only") is not True:
+        invalid.append("read_only")
     if source.get("sensitivity") not in ALLOWED_SENSITIVITY:
         invalid.append("sensitivity")
     if source.get("blinding_status") not in ALLOWED_BLINDING_STATUS:
