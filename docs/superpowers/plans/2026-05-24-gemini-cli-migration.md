@@ -14,10 +14,19 @@
 
 | Task | Owner repo | Status |
 |------|------------|--------|
-| Task 1: Migration documentation | clinique | Done (`6b3c3a2`, polished in follow-up) |
+| Task 1: Migration documentation | clinique | Done (`6233dc8`) |
 | Task 2–5: Skill init, script, SKILL.md, validation | `~/.gemini/antigravity-cli` | Done (external) |
 
-clinique scope is complete after Task 1 polish and this plan update.
+**Status: Closed** — verified 2026-05-24.
+
+## Verification record (2026-05-24)
+
+| Check | Command | Result |
+|-------|---------|--------|
+| Skill schema | `quick_validate.py …/gemini-cli-migration` | `Skill is valid!` |
+| MCP migration | scratch `test_migrate.py` (Task 5 fixture) | `All tests passed successfully!` |
+| Script permissions | `test -x …/migrate.py` | executable |
+| clinique docs commit | `6233dc8` | migration guide + plan/spec closeout |
 
 ---
 

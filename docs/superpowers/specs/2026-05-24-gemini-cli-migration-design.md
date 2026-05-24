@@ -47,7 +47,10 @@ Contains clear, step-by-step instructions for the agent:
 4. Verify config validity and list the migrated resources.
 
 ## 3. Verification Plan
+
 - **Unit/Manual Tests**:
   - Run `migrate.py` with mock `settings.json` input containing remote and local MCP servers.
   - Run the `quick_validate.py` tool on the new skill to ensure it conforms to skill constraints.
   - Check that the output `mcp_config.json` validates as correct JSON with converted `serverUrl` keys.
+
+**Verified 2026-05-24:** all checks passed (see [implementation plan](../plans/2026-05-24-gemini-cli-migration.md) verification record).
