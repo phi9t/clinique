@@ -10,15 +10,15 @@
       {
         "leakage_checks_passed": true,
         "metrics": {
-          "candidates_total": 3,
-          "duplicate_queries": 1,
-          "duplicate_query_rate": 0.3333333333333333,
+          "candidates_total": 2,
+          "duplicate_queries": 0,
+          "duplicate_query_rate": 0.0,
           "evidence_support_accuracy": 1.0,
           "false_queries": 0,
           "false_query_rate": 0.0,
-          "median_days_earlier": 3.375,
+          "median_days_earlier": 3.8958333333333335,
           "query_category_accuracy": 1.0,
-          "true_discrepancies_detected": 3
+          "true_discrepancies_detected": 2
         },
         "replayed_at": "2026-03-01T00:00:00Z",
         "snapshot_id": "snap-2026-03-01"
@@ -49,7 +49,7 @@
     "database_lock_issue_early_detection_count": 1,
     "false_alerts_per_true_discrepancy": 0.0,
     "false_queries": 0,
-    "true_discrepancies_detected": 7
+    "true_discrepancies_detected": 6
   },
   "report_type": "edc_query_retrospective_replay"
 }

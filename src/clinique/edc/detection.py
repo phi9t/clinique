@@ -24,11 +24,16 @@ def _candidate(
     query_text: str,
     rule_id: str | None,
     is_duplicate: bool = False,
+    extra_sources: tuple[SourceRef, ...] = (),
 ) -> CandidateQuery:
-    sources = [_record_source(record), SourceRef("snapshot", evidence.snapshot.snapshot_id, evidence.snapshot.snapshot_at)]
+    sources = [
+        _record_source(record),
+        SourceRef("snapshot", evidence.snapshot.snapshot_id, evidence.snapshot.snapshot_at),
+    ]
     if rule_id is not None:
         rule = next(rule for rule in evidence.active_rules if rule.rule_id == rule_id)
         sources.append(SourceRef("rule", rule.rule_id, rule.effective_at))
+    sources.extend(extra_sources)
     return CandidateQuery(
         study_id=record.study_id,
         site_id=record.site_id,
@@ -98,6 +103,8 @@ def detect_candidate_queries(
                     )
 
     for query in existing_queries:
+        if query.opened_at > evidence.replayed_at:
+            continue
         key = (query.subject_id, query.form, query.field)
         record = records_by_key.get(key)
         if record is None:
@@ -110,6 +117,7 @@ def detect_candidate_queries(
                 query_text=f"Existing query {query.query_id} already covers {query.form}.{query.field}.",
                 rule_id=None,
                 is_duplicate=True,
+                extra_sources=(SourceRef("query_log", query.query_id, query.opened_at),),
             )
         )
 

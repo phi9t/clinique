@@ -63,7 +63,7 @@
       "database_lock_issue_early_detection_count": 1,
       "false_alerts_per_true_discrepancy": 0.0,
       "false_queries": 0,
-      "true_discrepancies_detected": 7
+      "true_discrepancies_detected": 6
     }
   },
   "reason_goal_not_complete": "Local synthetic validation is complete, but internal EDC data and prospective approval/run evidence are not available.",
