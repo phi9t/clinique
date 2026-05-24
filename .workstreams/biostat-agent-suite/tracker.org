@@ -9,11 +9,15 @@ Implements RFCs 0000-0006 (see docs/rfcs/). Order is by *validation feasibility*
 Stack: Python 3.14 via uv; R engines via pinned Docker image; tests via pytest.
 
 ** Status (2026-05-23)
-All RFCs implemented at scaffold+ level and green: =uv run pytest= -> 47 passed, 3 skipped
-(rpact Docker cross-checks skip until the daemon is up and the image is built). =ruff= clean.
-Done: substrate (0000), RFC-0003 (full), RFC-0001 (rules+seeded-defect), RFC-0002 side-lock,
-RFC-0005 data-wall, RFC-0004 conformance triage. Deferred: rpact cross-check (docker daemon),
-public-data fixture wiring (pharmaverse / CDISC Pilot / CORE), natural-defect benchmark (partner).
+All RFCs implemented and green with REAL validation: =uv run pytest= -> 55 passed, 0 skipped. ruff clean.
+Real infra + data now wired:
+- colima VM installed/running; docker daemon up (linux/aarch64).
+- R image built (rocker/r-ver:4.4.2 + rpact 4.1.0); rpact cross-check PASSES vs ReferenceEngine
+  for means/proportions/survival (real regulatory-validated engine confirms the oracle).
+- RFC-0001 validated on REAL FDA-pilot define.xml + adsl.xpt (RConsortium pilot): define-vs-ADSL
+  clean (FP=0), and 51 genuine dangling MethodDef refs detected in the real artifact.
+Deferred: pharmaverse ADaM reproduction (RFC-0002/0005), real CORE run (RFC-0004 uses sample
+report), natural-defect benchmark (partner data), gsDesign in image (ggplot2 build weight).
 
 Invariants enforced as hard pass/fail (not metrics):
 - numeric-provenance (RFC-0000 s7)
@@ -91,12 +95,12 @@ or events), and achieved_power. Sample-size is the minimal integer satisfying ta
 ** Implementation
 src/clinique/power/engines.py ; tests/test_power_engines.py
 
-* IN-PROGRESS RFC-0003: rpact Docker engine (canonical)
+* DONE RFC-0003: rpact Docker engine (canonical)
 :PROPERTIES:
 :RFC: 0003
 :END:
-Code complete; build + cross-check verification pending a running docker daemon
-(=colima start=, then =docker build -t clinique-r-engine:0.1.0 docker/r-engine=).
+Built and verified: colima up, image built (rpact 4.1.0), cross-check PASSES (3/3) vs the
+ReferenceEngine for means/proportions/survival. No ENTRYPOINT (adapter calls Rscript explicitly).
 ** Prompt
 Implement RpactDockerEngine that runs power.R inside the pinned R Docker image via =docker run=,
 passing params as JSON on stdin and parsing JSON from stdout. Record image ref/digest + rpact
@@ -105,9 +109,9 @@ version in the EngineResult/provenance. power.R wraps rpact for the same three d
 - [X] docker availability is detected; engine raises a clear error if daemon unreachable
 - [X] power.R returns valid JSON for the three design types (written)
 - [X] EngineResult.tools records {name: rpact, version} and image ref
-- [ ] cross-check test passes: rpact total N agrees with ReferenceEngine within tolerance
-      (BLOCKED: docker daemon down -> test currently skips)
-- [X] image build is reproducible (pinned base + PPM snapshot + pinned package versions)
+- [X] cross-check test PASSES (3/3): rpact total N agrees with ReferenceEngine within tolerance
+      (means 128 vs 126; t-based vs z-approx, within 5%)
+- [X] image build is reproducible (pinned base rocker/r-ver:4.4.2 + PPM dated snapshot)
 ** Implementation
 src/clinique/power/rpact_docker.py ; docker/r-engine/{Dockerfile,power.R} ; tests/test_rpact_docker.py
 
@@ -169,12 +173,14 @@ ground truth by running CORE on a known-good bundle with injected violations.
 src/clinique/conformance/{report,triage,draft}.py ; tests/test_conformance_triage.py ;
 tests/fixtures/sample_conformance_report.json
 
-* DONE RFC-0001: estimand-spine checker (scaffold)
+* DONE RFC-0001: estimand-spine checker (+ real define.xml validation)
 :PROPERTIES:
 :RFC: 0001
 :END:
-Validated on a synthetic matched bundle; CDISC Pilot / R-pilot bundles plug in at the same
-interface; natural-defect benchmark deferred to a partner-data milestone.
+Validated on a synthetic matched bundle AND on REAL FDA-pilot data (RConsortium define.xml +
+adsl.xpt): define-vs-ADSL clean (FP=0), 51 real dangling MethodDef refs detected. Added a
+stdlib XPT reader (src/clinique/io/xpt.py) and a real define.xml parser
+(src/clinique/estimand/define_xml.py). Natural-defect benchmark still needs partner data.
 ** Prompt
 Scaffold the artifact graph + claim model + deterministic rule engine. Implement seeded-defect
 validation: mutate a consistent matched bundle (CDISC Pilot / R-pilot) and assert detection.

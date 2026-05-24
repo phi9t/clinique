@@ -2,18 +2,16 @@
 # Base and packages are pinned so sample-size computations are reproducible across machines.
 FROM rocker/r-ver:4.4.2
 
-# Pin rpact + gsDesign to exact versions via Posit Package Manager dated snapshot.
+# Pin packages reproducibly via a Posit Package Manager dated snapshot (the date pins versions).
+# rpact is the engine power.R uses; gsDesign is omitted here because it drags the full ggplot2
+# source-compile tree on arm64. Add it back when group-sequential boundary plots are needed.
 ARG PPM_SNAPSHOT=2025-01-15
-ARG RPACT_VERSION=4.1.1
-ARG GSDESIGN_VERSION=3.6.5
 
-RUN R -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/${PPM_SNAPSHOT}')); \
-          install.packages('remotes'); \
-          remotes::install_version('jsonlite', upgrade='never'); \
-          remotes::install_version('rpact', version='${RPACT_VERSION}', upgrade='never'); \
-          remotes::install_version('gsDesign', version='${GSDESIGN_VERSION}', upgrade='never')"
+RUN R -q -e "options(repos = c(CRAN = 'https://packagemanager.posit.co/cran/${PPM_SNAPSHOT}'), Ncpus = 4); \
+          install.packages(c('jsonlite', 'rpact')); \
+          stopifnot(all(c('jsonlite','rpact') %in% rownames(installed.packages())))"
 
 COPY power.R /opt/clinique/power.R
 
-ENTRYPOINT ["Rscript"]
-CMD ["/opt/clinique/power.R"]
+# No ENTRYPOINT: the adapter invokes `Rscript /opt/clinique/power.R` explicitly.
+CMD ["Rscript", "/opt/clinique/power.R"]
