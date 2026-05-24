@@ -50,8 +50,11 @@ class SilentLogEntry:
             human_action_at=human_action_at,
             ground_truth=raw["ground_truth"],
             reviewer_id=raw["reviewer_id"],
-            affected_operations=bool(raw["affected_operations"]),
-            safety_risk=bool(raw["safety_risk"]),
+            affected_operations=_require_bool(
+                "affected_operations",
+                raw["affected_operations"],
+            ),
+            safety_risk=_require_bool("safety_risk", raw["safety_risk"]),
         )
 
 
@@ -120,3 +123,9 @@ def _evaluation_weeks(entries: tuple[SilentLogEntry, ...]) -> int:
     last = max(entry.logged_at for entry in entries)
     elapsed_weeks = (last - first).total_seconds() / (7 * 24 * 60 * 60)
     return max(ceil(elapsed_weeks), 1)
+
+
+def _require_bool(label: str, value: Any) -> bool:
+    if not isinstance(value, bool):
+        raise ValueError(f"{label} must be a boolean")
+    return value

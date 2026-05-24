@@ -29,7 +29,8 @@ Evidence:
   --output reports/edc-query/silent-log-evaluation.json --false-positive-tolerance 1.0`
   validates the silent-log evaluation path and produces reviewer-week normalized false-positive
   burden, time-delta, and stop-criteria metrics. It writes the report and exits nonzero when
-  silent gates fail, including safety-risk stop criteria.
+  silent gates fail, including safety-risk stop criteria, and rejects string values where
+  booleans are required.
 - `uv run clinique edc-query evaluate-rollout-gate --gate
   tests/fixtures/edc_query/controlled_rollout_gate.json --output
   reports/edc-query/controlled-rollout-gate.json` validates the controlled-rollout gate mechanics

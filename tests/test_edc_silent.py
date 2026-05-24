@@ -41,6 +41,41 @@ def test_load_silent_log_rejects_recommendations_that_affect_operations(tmp_path
         raise AssertionError("expected operational-impact rejection")
 
 
+def test_load_silent_log_rejects_string_boolean_values(tmp_path):
+    path = tmp_path / "string_boolean_silent_log.json"
+    path.write_text(
+        """
+        [
+          {
+            "recommendation_id": "SIL-STRING-BOOL",
+            "logged_at": "2026-04-01T00:00:00Z",
+            "study_id": "STUDY-EDC-001",
+            "site_id": "SITE-01",
+            "subject_id": "SUBJ-001",
+            "form": "AE",
+            "field": "term",
+            "query_category": "missing",
+            "agent_recommendation": "Draft query",
+            "agent_evidence": ["rec-ae-001"],
+            "human_action": "no_query",
+            "human_action_at": "2026-04-01T12:00:00Z",
+            "ground_truth": "false_positive",
+            "reviewer_id": "DM-001",
+            "affected_operations": false,
+            "safety_risk": "false"
+          }
+        ]
+        """
+    )
+
+    try:
+        load_silent_log(path)
+    except ValueError as exc:
+        assert "safety_risk must be a boolean" in str(exc)
+    else:
+        raise AssertionError("expected strict boolean rejection")
+
+
 def test_evaluate_silent_log_reports_burden_deltas_and_stop_criteria():
     entries = load_silent_log(SILENT_LOG)
 
