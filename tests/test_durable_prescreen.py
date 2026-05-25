@@ -18,6 +18,8 @@ from clinique.durable.activities.prescreen import (
     assert_evidence_provenance_activity as gate_activity,
     atomize_trial,
     evaluate_criterion,
+    judge_criterion,
+    retrieve_evidence,
 )
 from clinique.durable.converter import DATA_CONVERTER
 from clinique.durable.models import (
@@ -45,7 +47,7 @@ def _screen_input(trial, corpus) -> ScreenPatientInput:
 async def test_screen_workflow_matches_sync_orchestrator(trial_and_corpus):
     trial, corpus = trial_and_corpus
     sync_packet = PrescreenOrchestrator().screen(trial, corpus)
-    async with await WorkflowEnvironment.start_local(data_converter=DATA_CONVERTER) as env:
+    async with await WorkflowEnvironment.start_time_skipping(data_converter=DATA_CONVERTER) as env:
 
         async def run(client, task_queue):
             return await client.execute_workflow(
@@ -65,7 +67,7 @@ async def test_screen_workflow_matches_sync_orchestrator(trial_and_corpus):
 async def test_temporal_screen_surfaces_condition_evidence(trial_and_corpus):
     """Copilot Phase 10: Temporal path surfaces NSCLC evidence on I-002."""
     trial, corpus = trial_and_corpus
-    async with await WorkflowEnvironment.start_local(data_converter=DATA_CONVERTER) as env:
+    async with await WorkflowEnvironment.start_time_skipping(data_converter=DATA_CONVERTER) as env:
 
         async def run(client, task_queue):
             return await client.execute_workflow(
@@ -87,7 +89,7 @@ async def test_temporal_screen_surfaces_condition_evidence(trial_and_corpus):
 async def test_screen_workflow_is_deterministic(trial_and_corpus):
     trial, corpus = trial_and_corpus
     payload = _screen_input(trial, corpus)
-    async with await WorkflowEnvironment.start_local(data_converter=DATA_CONVERTER) as env:
+    async with await WorkflowEnvironment.start_time_skipping(data_converter=DATA_CONVERTER) as env:
 
         async def run(client, task_queue):
             first = await client.execute_workflow(
@@ -118,7 +120,7 @@ async def test_evidence_gate_failure_is_non_retryable(trial_and_corpus):
         raise ApplicationError("gate failed", type="EvidenceProvenanceError", non_retryable=True)
 
     activities = [a for a in ALL_ACTIVITIES if a is not gate_activity] + [failing_gate]
-    async with await WorkflowEnvironment.start_local(data_converter=DATA_CONVERTER) as env:
+    async with await WorkflowEnvironment.start_time_skipping(data_converter=DATA_CONVERTER) as env:
 
         async def run(client, task_queue):
             with pytest.raises(WorkflowFailureError):
@@ -148,6 +150,45 @@ def test_evaluate_criterion_activity_offline(trial_and_corpus):
     judgment = env.run(
         evaluate_criterion,
         criteria[0],
+        PatientCorpusModel.from_domain(corpus),
+    )
+    assert judgment.criterion_id == criteria[0].criterion_id
+    assert judgment.prediction in {
+        "met",
+        "not_met",
+        "unknown",
+        "not_applicable",
+        "conflicting_evidence",
+    }
+
+
+@pytest.mark.temporal
+def test_retrieve_evidence_activity_offline(trial_and_corpus):
+    trial, corpus = trial_and_corpus
+    env = ActivityEnvironment()
+    criteria = env.run(atomize_trial, TrialModel.from_domain(trial))
+    evidence = env.run(
+        retrieve_evidence,
+        criteria[0],
+        PatientCorpusModel.from_domain(corpus),
+    )
+    assert isinstance(evidence, list)
+
+
+@pytest.mark.temporal
+def test_judge_criterion_activity_offline(trial_and_corpus):
+    trial, corpus = trial_and_corpus
+    env = ActivityEnvironment()
+    criteria = env.run(atomize_trial, TrialModel.from_domain(trial))
+    evidence = env.run(
+        retrieve_evidence,
+        criteria[0],
+        PatientCorpusModel.from_domain(corpus),
+    )
+    judgment = env.run(
+        judge_criterion,
+        criteria[0],
+        evidence,
         PatientCorpusModel.from_domain(corpus),
     )
     assert judgment.criterion_id == criteria[0].criterion_id

@@ -347,6 +347,7 @@ class ScreenPatientInput(BaseModel):
     corpus: PatientCorpusModel
     append_ledger: bool = False
     ledger_path: str | None = None
+    judge: str = "rule"
 
 
 class BuildPacketInput(BaseModel):
@@ -357,6 +358,7 @@ class BuildPacketInput(BaseModel):
     criteria: tuple[CriterionModel, ...]
     judgments: tuple[CriterionJudgmentModel, ...]
     recommendation: str
+    judge: str = "rule"
 
 
 class GoldJudgmentModel(BaseModel):
@@ -440,3 +442,4 @@ class BatchEvalInput(BaseModel):
     pmc_patients_path: str | None = None
     mimic_patients_path: str | None = None
     reports_dir: str = "reports/prescreen"
+    judge: str = "rule"

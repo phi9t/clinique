@@ -106,9 +106,74 @@ def _best_quote(query_tokens: list[str], text: str) -> str:
         if overlap > best_score and sentence.strip():
             best_score = overlap
             best = sentence.strip()
+        if overlap > best_score and sentence.strip():
+            best_score = overlap
+            best = sentence.strip()
     if best not in text:
         return truncate_quote(text)
     return best
+
+
+class EmbeddingRetriever:
+    """Pure Python vector space model retriever using TF-IDF representation
+
+    and Cosine Similarity.
+    """
+
+    def score(
+        self, query_tokens: list[str], documents: list[PatientDocument]
+    ) -> list[tuple[PatientDocument, float]]:
+        if not query_tokens or not documents:
+            return []
+
+        # Tokenize documents
+        doc_tokens_list = [tokenize(d.text) for d in documents]
+
+        # Build terms vocabulary
+        all_terms = set(query_tokens)
+        for tokens in doc_tokens_list:
+            all_terms.update(tokens)
+
+        # Compute Document Frequency (DF)
+        doc_freq = Counter()
+        for tokens in doc_tokens_list:
+            doc_freq.update(set(tokens))
+
+        n_docs = len(documents)
+        idf = {}
+        for term in all_terms:
+            df = doc_freq[term]
+            idf[term] = math.log(1 + (n_docs / (df + 1)))
+
+        # Vectorize query
+        query_vector = {}
+        query_tf = Counter(query_tokens)
+        for term, tf in query_tf.items():
+            query_vector[term] = tf * idf.get(term, 0.0)
+
+        # Vectorize documents and compute cosine similarity
+        scored = []
+        for doc, doc_tokens in zip(documents, doc_tokens_list, strict=True):
+            doc_tf = Counter(doc_tokens)
+            doc_vector = {}
+            for term, tf in doc_tf.items():
+                if term in query_vector:
+                    doc_vector[term] = tf * idf[term]
+
+            dot_product = sum(
+                query_vector[t] * doc_vector.get(t, 0.0) for t in query_vector if t in doc_vector
+            )
+
+            query_norm = math.sqrt(sum(v**2 for v in query_vector.values()))
+            doc_norm = math.sqrt(sum((tf * idf[term]) ** 2 for term, tf in doc_tf.items()))
+
+            similarity = 0.0
+            if query_norm > 0 and doc_norm > 0:
+                similarity = dot_product / (query_norm * doc_norm)
+
+            scored.append((doc, similarity))
+
+        return scored
 
 
 def retrieve(
@@ -136,12 +201,19 @@ def retrieve(
         doc_freq.update(set(tokens))
     n_docs = len(eligible_docs)
 
+    embedding_retriever = EmbeddingRetriever()
+    emb_scores = {
+        doc.doc_id: score for doc, score in embedding_retriever.score(query_tokens, eligible_docs)
+    }
+
     scored: list[tuple[float, float, PatientDocument]] = []
     for doc, tokens in zip(eligible_docs, tokenized, strict=True):
         bm25 = _bm25_score(query_tokens, tokens, avg_dl=avg_dl, doc_freq=doc_freq, n_docs=n_docs)
+        emb = emb_scores.get(doc.doc_id, 0.0)
+        hybrid = 0.5 * bm25 + 0.5 * emb
         boost = STRUCTURED_BOOST if _structured_match(criterion, doc) else 0.0
-        if boost >= STRUCTURED_BOOST or bm25 >= MIN_BM25_SCORE:
-            scored.append((bm25 + boost, bm25, doc))
+        if boost >= STRUCTURED_BOOST or bm25 >= MIN_BM25_SCORE or emb >= 0.05:
+            scored.append((hybrid + boost, bm25, doc))
 
     scored.sort(key=lambda pair: (-pair[0], -pair[1], pair[2].doc_id))
     evidence: list[Evidence] = []

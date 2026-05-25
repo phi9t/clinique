@@ -126,3 +126,86 @@ def test_prescreen_export_explorer_exits_zero(tmp_path, capsys):
     assert "exported" in captured.out
     assert (out_dir / "index.json").is_file()
     assert (out_dir / "trials.json").is_file()
+
+
+def test_prescreen_agent_judge_exits_zero_with_mock(capsys):
+    from unittest.mock import patch
+
+    from clinique.prescreen.schemas import CriterionJudgment, Evidence
+
+    mock_judgment = CriterionJudgment(
+        criterion_id="I-002",
+        criterion_type="inclusion",
+        prediction="met",
+        evidence=(Evidence(criterion_id="I-002", doc_id="D1", quote="Stage IV NSCLC"),),
+        rationale="Matched NSCLC. [Agent: Codex CLI (gpt-5.4-mini)]",
+        confidence=0.9,
+    )
+
+    with (
+        patch("clinique.prescreen.judge.codex_available", return_value=True),
+        patch("clinique.prescreen.judge.LLMJudge.judge", return_value=mock_judgment),
+    ):
+        exit_code = main(
+            [
+                "prescreen",
+                "agent-judge",
+                "--criterion-id",
+                "I-002",
+                "--no-show-prompt",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    payload = json.loads(captured.out)
+    assert payload["trial_id"] == "NCT02578680"
+    assert payload["patient_id"] == "P1"
+    assert payload["agent"] == "codex"
+    assert len(payload["results"]) == 1
+    assert payload["results"][0]["judgment"]["prediction"] == "met"
+    assert "retrieved_evidence" in payload["results"][0]
+
+
+def test_prescreen_agent_judge_default_limit_without_criterion_filter(capsys):
+    from unittest.mock import patch
+
+    from clinique.prescreen.schemas import CriterionJudgment
+
+    def _mock_judge(criterion, evidence, corpus, **kwargs):
+        return CriterionJudgment(
+            criterion_id=criterion.criterion_id,
+            criterion_type=criterion.criterion_type,
+            prediction="unknown",
+            rationale=f"Checked {criterion.criterion_id}. [Agent: Codex CLI (gpt-5.4-mini)]",
+        )
+
+    with (
+        patch("clinique.prescreen.judge.codex_available", return_value=True),
+        patch("clinique.prescreen.judge.LLMJudge.judge", side_effect=_mock_judge),
+    ):
+        exit_code = main(
+            [
+                "prescreen",
+                "agent-judge",
+                "--limit",
+                "3",
+                "--no-show-prompt",
+                "--no-show-evidence",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    payload = json.loads(captured.out)
+    assert len(payload["results"]) == 3
+
+
+def test_prescreen_agent_judge_no_channels_exits_two(capsys):
+    from unittest.mock import patch
+
+    with patch("clinique.prescreen.judge.codex_available", return_value=False):
+        exit_code = main(["prescreen", "agent-judge", "--no-show-prompt"])
+
+    capsys.readouterr()
+    assert exit_code == 2

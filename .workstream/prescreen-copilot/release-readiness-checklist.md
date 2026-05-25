@@ -16,6 +16,17 @@ uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-c
 # goal_complete=True criterion_accuracy=1.000
 ```
 
+Verification record (2026-05-25, Phases 12–14):
+
+```bash
+uv run pytest -q
+# 310 passed, 4 skipped
+uv run clinique prescreen verify-workstream --workstream .workstream/prescreen-copilot
+# goal_complete=True criterion_accuracy=1.000
+uv run clinique prescreen troubleshoot-agents
+# codex CLI: READY
+```
+
 Report: `reports/prescreen/workstream-verification.json`
 
 ## Durable execution (Temporal.io)
@@ -27,6 +38,7 @@ prospective `eval-temporal` on scale corpus.
 - [x] `uv run pytest tests/test_durable_models.py tests/test_durable_prescreen.py tests/test_durable_prescreen_e2e.py -q` passes
 - [x] Walkthrough for ML researchers / MLsys in `docs/design/temporal-prescreen.md`
 - [x] `prescreen verify-workstream --temporal` runs eval-temporal and checks sync parity
+- [x] `tests/test_durable_resume.py` — LLM failure retry + resume CLI
 - [ ] Optional: prospective `prescreen verify-workstream --temporal` on scale corpus with live worker (manual)
 
 Quick durable smoke:
@@ -43,34 +55,41 @@ Tracker: `.workstream/prescreen-copilot/tracker.org`
 
 ### Tier 0 — Atomizer & retrieval (Phase 10)
 
-- [ ] Word-boundary domain classifier (fix I-002 `stage`→`age` misclassification)
-- [ ] Attach retrieved evidence to `unknown` judgments in packet output
-- [ ] Domain-filtered retrieval (clinical_domain ↔ doc source_type)
-- [ ] Min BM25 score threshold (drop spurious metformin/ANC hits)
-- [ ] Expanded `l0_cases.jsonl` + pytest regressions for P1 NSCLC criteria
+- [x] Word-boundary domain classifier (fix I-002 `stage`→`age` misclassification)
+- [x] Attach retrieved evidence to `unknown` judgments in packet output
+- [x] Domain-filtered retrieval (clinical_domain ↔ doc source_type)
+- [x] Min BM25 score threshold (drop spurious metformin/ANC hits)
+- [x] Expanded `l0_cases.jsonl` + pytest regressions for P1 NSCLC criteria
 
 ### Tier 1 — Structured matching (Phase 11)
 
-- [ ] Oncology synonym map (`vocab.py`)
-- [ ] Condition / diagnosis matcher with partial-match rationales
-- [ ] Medication history matcher (prior systemic therapy)
-- [ ] ECOG / performance status matcher
-- [ ] Absence exclusion handling (explicit negative evidence only)
-- [ ] Gold eval ≥ 0.90 on expanded cases
+- [x] Oncology synonym map (`vocab.py`)
+- [x] Condition / diagnosis matcher with partial-match rationales
+- [x] Medication history matcher (prior systemic therapy)
+- [x] ECOG / performance status matcher
+- [x] Absence exclusion handling (explicit negative evidence only)
+- [x] Gold eval ≥ 0.90 on expanded cases
 
 ### Tier 2 — Retrieval upgrade (Phase 12)
 
-- [ ] Query expansion from criterion metadata
-- [ ] Structured-first routing (code lookup before BM25)
-- [ ] Compound criterion splitting
-- [ ] Synthea narrative `note` document in normalizer
+- [x] Query expansion from criterion metadata
+- [x] Structured-first routing (code lookup before BM25)
+- [x] Compound criterion splitting
+- [x] Synthea narrative `note` document in normalizer
 
 ### Tier 3 — LLM judge & L1 (Phase 13)
 
-- [ ] `LLMJudge` behind `Judge` Protocol
-- [ ] `--judge rule|llm` CLI flag
-- [ ] n2c2 2018 judge-only harness (F1 ≥ 0.80)
-- [ ] Embedding retriever for PMC-Patients notes
+- [x] `LLMJudge` behind `Judge` Protocol (Codex CLI)
+- [x] `--judge rule|llm` CLI flag
+- [x] n2c2 2018 judge-only harness (F1 ≥ 0.80)
+- [x] Embedding retriever for PMC-Patients notes
+
+### Phase 14 — Temporal resume & LLM judge durability
+
+- [x] Judge option propagated through batch eval workflows
+- [x] Retryable `ApplicationError` when LLM judge fails all channels
+- [x] `prescreen resume --workflow-id` CLI command
+- [x] `tests/test_durable_resume.py` integration coverage
 
 ### Phase 10 smoke (KEY-NOTE P1)
 

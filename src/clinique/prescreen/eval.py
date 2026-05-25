@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import random
+import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -94,9 +95,10 @@ def run_eval_cases(
     *,
     trials: list[Trial],
     corpora_by_source: dict[str, list[PatientCorpus]],
+    judge: Any = None,
 ) -> EvalMetrics:
     metrics = EvalMetrics()
-    orchestrator = PrescreenOrchestrator()
+    orchestrator = PrescreenOrchestrator(judge=judge)
     trials_by_id = _index_trials(trials)
     corpora_index = {source: _index_corpora(items) for source, items in corpora_by_source.items()}
 
@@ -221,6 +223,7 @@ async def _run_temporal_batch_eval_async(
     dataset_paths: dict[str, Path],
     reports_dir: Path,
     temporal_host: str,
+    judge: str = "rule",
 ) -> dict[str, Any]:
     from clinique.durable.cli_runtime import connect_client
     from clinique.durable.client import execute_batch_eval
@@ -236,6 +239,7 @@ async def _run_temporal_batch_eval_async(
             pmc_patients_path=str(dataset_paths["pmc_patients"]),
             mimic_patients_path=str(dataset_paths["mimic_demo_patients"]),
             reports_dir=str(reports_dir),
+            judge=judge,
         ),
     )
 
@@ -246,6 +250,7 @@ def run_temporal_batch_eval(
     dataset_paths: dict[str, Path],
     reports_dir: Path,
     temporal_host: str = "localhost:7233",
+    judge: str = "rule",
 ) -> dict[str, Any]:
     import asyncio
 
@@ -255,6 +260,7 @@ def run_temporal_batch_eval(
             dataset_paths=dataset_paths,
             reports_dir=reports_dir,
             temporal_host=temporal_host,
+            judge=judge,
         )
     )
 
@@ -270,6 +276,7 @@ def verify_workstream(
     temporal: bool = False,
     temporal_host: str = "localhost:7233",
     temporal_eval_runner=run_temporal_batch_eval,
+    judge: Any = None,
 ) -> dict[str, Any]:
     ws = Path(workstream_dir)
     manifest_path = ws / "datasets.manifest.json"
@@ -306,6 +313,7 @@ def verify_workstream(
         cases,
         trials=trials,
         corpora_by_source={"synthea": synthea, "pmc": pmc, "mimic": mimic},
+        judge=judge,
     )
     gates.criterion_accuracy = eval_metrics.criterion_accuracy
     gates.evidence_violations = eval_metrics.evidence_violations
@@ -314,7 +322,7 @@ def verify_workstream(
     if eval_metrics.cases_run == 0 or eval_metrics.criterion_total == 0:
         eval_metrics.errors.append("no gold eval cases executed")
 
-    orchestrator = PrescreenOrchestrator()
+    orchestrator = PrescreenOrchestrator(judge=judge)
     rng = random.Random(seed)
     trial_sample = trials[:]
     patient_pool = synthea + pmc + mimic
@@ -343,11 +351,13 @@ def verify_workstream(
 
     temporal_block: dict[str, Any] = {"ran": False}
     if temporal:
+        judge_type = "llm" if judge and judge.name == "llm-judge" else "rule"
         temporal_eval = temporal_eval_runner(
             cases_path=cases_file,
             dataset_paths=paths,
             reports_dir=output_dir,
             temporal_host=temporal_host,
+            judge=judge_type,
         )
         parity_ok, parity_issues = eval_metrics_parity(eval_metrics, temporal_eval)
         temporal_block = {
@@ -437,3 +447,131 @@ def verify_workstream(
     summary_path = ws / "validation-summary.md"
     summary_path.write_text("\n".join(summary_lines), encoding="utf-8")
     return report
+
+
+_N2C2_CRITERIA_MAP = {
+    "DRUG-ABUSE": ("exclusion", "History of drug abuse", "medication"),
+    "ALCOHOL-ABUSE": ("exclusion", "History of alcohol abuse", "medication"),
+    "ENGLISH": ("inclusion", "Patient speaks English", "demographic"),
+    "MAKE-DECISIONS": ("inclusion", "Patient can make decisions and consent", "other"),
+    "ABD-SURGERY": ("exclusion", "History of major abdominal surgery", "procedure"),
+    "MI-6MOS": ("exclusion", "Myocardial infarction within the last 6 months", "condition"),
+    "DIARY": ("inclusion", "Patient can keep a diary", "other"),
+    "COGNITIVE": ("exclusion", "Advanced cognitive impairment", "other"),
+    "ADV-CANCER": ("exclusion", "Advanced cancer diagnosis", "condition"),
+    "ACTIVE-INFECT": ("exclusion", "Active infection requiring therapy", "condition"),
+    "HBA1C": ("exclusion", "HbA1c levels outside range", "laboratory"),
+    "DIASTOLIC": ("exclusion", "Diastolic blood pressure outside range", "laboratory"),
+    "KETOACIDOSIS": ("exclusion", "History of diabetic ketoacidosis", "condition"),
+}
+
+
+def load_n2c2_annotations(xml_dir: Path | str) -> list[dict[str, Any]]:
+    cases = []
+    xml_path = Path(xml_dir)
+    if not xml_path.exists():
+        return []
+    for file in xml_path.glob("*.xml"):
+        try:
+            tree = ET.parse(file)
+            root = tree.getroot()
+            text_elem = root.find("TEXT")
+            text = text_elem.text if text_elem is not None else ""
+            tags_elem = root.find("TAGS")
+            tags = {}
+            if tags_elem is not None:
+                for tag in tags_elem:
+                    met_val = tag.attrib.get("met", "unspecified")
+                    if met_val == "met":
+                        pred = "met"
+                    elif met_val == "not met":
+                        pred = "not_met"
+                    else:
+                        pred = "unknown"
+                    tags[tag.tag.upper()] = pred
+            cases.append({"patient_id": file.stem, "text": text, "gold_labels": tags})
+        except Exception:
+            pass
+    return sorted(cases, key=lambda c: c["patient_id"])
+
+
+def run_n2c2_eval(xml_dir: Path | str, judge: Any = None) -> dict[str, Any]:
+    from .retrieval import retrieve
+    from .schemas import Criterion, PatientCorpus, PatientDocument
+
+    cases = load_n2c2_annotations(xml_dir)
+    if not cases:
+        return {"error": "no n2c2 files found", "macro_f1": 0.0}
+
+    if judge is None:
+        from clinique.prescreen.judge import RuleJudge
+
+        judge = RuleJudge()
+
+    # Track TP, FP, FN for each of the 13 criteria
+    stats = {k: {"tp": 0, "fp": 0, "fn": 0} for k in _N2C2_CRITERIA_MAP}
+
+    for case in cases:
+        pid = case["patient_id"]
+        corpus = PatientCorpus(
+            patient_id=pid,
+            snapshot_date=None,
+            source="n2c2",
+            documents=(
+                PatientDocument(
+                    doc_id=f"{pid}_record",
+                    patient_id=pid,
+                    date=None,
+                    source_type="note",
+                    text=case["text"],
+                ),
+            ),
+        )
+
+        for tag, (crit_type, desc, domain) in _N2C2_CRITERIA_MAP.items():
+            expected = case["gold_labels"].get(tag, "unknown")
+            criterion = Criterion(
+                criterion_id=tag,
+                trial_id="n2c2_trial",
+                criterion_type=crit_type,
+                raw_text=desc,
+                clinical_domain=domain,
+            )
+            evidence = retrieve(criterion, corpus)
+            judgment = judge.judge(criterion, evidence, corpus)
+
+            # Map predictions to compare
+            pred = judgment.prediction
+
+            # Binary positive class is 'met'
+            if pred == "met" and expected == "met":
+                stats[tag]["tp"] += 1
+            elif pred == "met" and expected != "met":
+                stats[tag]["fp"] += 1
+            elif pred != "met" and expected == "met":
+                stats[tag]["fn"] += 1
+
+    # Compute precision, recall, f1 for each, and average
+    f1_scores = []
+    criterion_results = {}
+    for tag in _N2C2_CRITERIA_MAP:
+        tp = stats[tag]["tp"]
+        fp = stats[tag]["fp"]
+        fn = stats[tag]["fn"]
+
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+
+        f1_scores.append(f1)
+        criterion_results[tag] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+        }
+
+    macro_f1 = sum(f1_scores) / len(f1_scores) if f1_scores else 0.0
+    return {"macro_f1": macro_f1, "criteria": criterion_results, "cases_run": len(cases)}

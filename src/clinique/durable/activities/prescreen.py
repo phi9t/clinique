@@ -1,4 +1,4 @@
-"""Prescreen pipeline activities — thin wrappers over existing deterministic modules."""
+"""Prescreen pipeline activities — wrappers over prescreen modules."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from clinique.durable.models import (
     BuildPacketInput,
     CriterionJudgmentModel,
     CriterionModel,
+    EvidenceModel,
     PatientCorpusModel,
     PrescreeningPacketModel,
     ResolvedCase,
@@ -18,11 +19,35 @@ from clinique.durable.models import (
 from clinique.prescreen.aggregator import aggregate
 from clinique.prescreen.atomizer import ReferenceAtomizer
 from clinique.prescreen.evidence_gate import EvidenceProvenanceError, assert_evidence_provenance
-from clinique.prescreen.judge import RuleJudge
+from clinique.prescreen.judge import is_llm_agent_failure, make_judge
 from clinique.prescreen.orchestrator import default_prescreen_tools, packet_fingerprint
 from clinique.prescreen.retrieval import retrieve
-from clinique.prescreen.schemas import PrescreeningPacket
+from clinique.prescreen.schemas import Criterion, Evidence, PatientCorpus, PrescreeningPacket
 from clinique.substrate.provenance import HumanReview, LedgerRecord, ProvenanceLedger
+
+
+def _run_judge_activity(
+    crit: Criterion,
+    evidence: tuple[Evidence, ...],
+    corp: PatientCorpus,
+    judge_type: str,
+) -> CriterionJudgmentModel:
+    judge = make_judge(judge_type)
+    try:
+        judgment = judge.judge(crit, evidence, corp)
+    except Exception as exc:
+        raise ApplicationError(
+            f"Judge engine failure: {exc}",
+            non_retryable=False,
+        ) from exc
+
+    if judge_type == "llm" and is_llm_agent_failure(judgment):
+        raise ApplicationError(
+            f"LLM Judge failed via Codex CLI: {judgment.rationale}",
+            non_retryable=False,
+        )
+
+    return CriterionJudgmentModel.from_domain(judgment)
 
 
 @activity.defn
@@ -35,12 +60,36 @@ def atomize_trial(trial: TrialModel) -> list[CriterionModel]:
 def evaluate_criterion(
     criterion: CriterionModel,
     corpus: PatientCorpusModel,
+    judge_type: str = "rule",
 ) -> CriterionJudgmentModel:
     crit = criterion.to_domain()
     corp = corpus.to_domain()
     evidence = retrieve(crit, corp)
-    judgment = RuleJudge().judge(crit, evidence, corp)
-    return CriterionJudgmentModel.from_domain(judgment)
+    return _run_judge_activity(crit, evidence, corp, judge_type)
+
+
+@activity.defn
+def retrieve_evidence(
+    criterion: CriterionModel,
+    corpus: PatientCorpusModel,
+) -> list[EvidenceModel]:
+    crit = criterion.to_domain()
+    corp = corpus.to_domain()
+    evidence = retrieve(crit, corp)
+    return [EvidenceModel.from_domain(e) for e in evidence]
+
+
+@activity.defn
+def judge_criterion(
+    criterion: CriterionModel,
+    evidence: list[EvidenceModel],
+    corpus: PatientCorpusModel,
+    judge_type: str = "rule",
+) -> CriterionJudgmentModel:
+    crit = criterion.to_domain()
+    corp = corpus.to_domain()
+    ev_domain = tuple(e.to_domain() for e in evidence)
+    return _run_judge_activity(crit, ev_domain, corp, judge_type)
 
 
 @activity.defn
@@ -53,7 +102,8 @@ def aggregate_judgments(judgments: list[CriterionJudgmentModel]) -> str:
 def build_packet(payload: BuildPacketInput) -> PrescreeningPacketModel:
     trial = payload.trial.to_domain()
     corpus = payload.corpus.to_domain()
-    tools = default_prescreen_tools()
+    judge = make_judge(payload.judge)
+    tools = default_prescreen_tools(judge=judge)
     packet = PrescreeningPacket(
         trial_id=trial.trial_id,
         patient_id=corpus.patient_id,

@@ -134,6 +134,46 @@ def _parse_lab(text: str) -> tuple[str | None, Threshold | None, TemporalConstra
     return op, threshold, temporal
 
 
+_MARKER_RE = re.compile(r"\b([a-z]|\d+)[\)\.]\s+", re.I)
+
+
+def _split_compound_text(text: str) -> list[tuple[str, str]]:
+    matches = list(_MARKER_RE.finditer(text))
+    if len(matches) < 2:
+        return []
+
+    vals = [m.group(1).lower() for m in matches]
+    is_seq = False
+    if all(v.isdigit() for v in vals):
+        nums = [int(v) for v in vals]
+        is_seq = all(nums[i] == nums[i - 1] + 1 for i in range(1, len(nums)))
+    elif all(v.isalpha() and len(v) == 1 for v in vals):
+        chars = [ord(v) for v in vals]
+        is_seq = all(chars[i] == chars[i - 1] + 1 for i in range(1, len(chars)))
+
+    if not is_seq:
+        return []
+
+    prefix_end = matches[0].start()
+    prefix = text[:prefix_end].strip()
+
+    clauses = []
+    for i, match in enumerate(matches):
+        start = match.start()
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+        clause_content = text[start:end].strip().rstrip(",;.")
+
+        if prefix:
+            full_text = f"{prefix} {clause_content}"
+        else:
+            full_text = clause_content
+
+        suffix = match.group(1).lower()
+        clauses.append((suffix, full_text))
+
+    return clauses
+
+
 class ReferenceAtomizer:
     """Deterministic stand-in: split bullets + trial demographics + simple lab regex."""
 
@@ -183,25 +223,53 @@ class ReferenceAtomizer:
                 raw = bullet.strip()
                 if len(raw) < 5:
                     continue
-                domain = _domain_for_text(raw)
-                op, threshold, temporal = _parse_lab(raw)
-                requires_absence = bool(
-                    criterion_type == "exclusion" and _EXCLUSION_ABSENCE_RE.search(raw)
-                )
-                flags = _ambiguity_flags(raw)
-                criteria.append(
-                    Criterion(
-                        criterion_id=_next_id(prefix, counter),
-                        trial_id=trial.trial_id,
-                        criterion_type=criterion_type,
-                        raw_text=raw,
-                        clinical_domain=domain if domain in CLINICAL_DOMAINS else "other",
-                        operator=op,
-                        threshold=threshold,
-                        temporal_constraint=temporal,
-                        requires_absence_evidence=requires_absence,
-                        is_safety_critical=domain == "laboratory",
-                        ambiguity_flags=flags,
+
+                clauses = _split_compound_text(raw)
+                if clauses:
+                    parent_id = _next_id(prefix, counter)
+                    for suffix, clause_text in clauses:
+                        domain = _domain_for_text(clause_text)
+                        op, threshold, temporal = _parse_lab(clause_text)
+                        requires_absence = bool(
+                            criterion_type == "exclusion"
+                            and _EXCLUSION_ABSENCE_RE.search(clause_text)
+                        )
+                        flags = _ambiguity_flags(clause_text)
+                        criteria.append(
+                            Criterion(
+                                criterion_id=f"{parent_id}{suffix}",
+                                trial_id=trial.trial_id,
+                                criterion_type=criterion_type,
+                                raw_text=clause_text,
+                                clinical_domain=domain if domain in CLINICAL_DOMAINS else "other",
+                                operator=op,
+                                threshold=threshold,
+                                temporal_constraint=temporal,
+                                requires_absence_evidence=requires_absence,
+                                is_safety_critical=domain == "laboratory",
+                                ambiguity_flags=flags,
+                            )
+                        )
+                else:
+                    domain = _domain_for_text(raw)
+                    op, threshold, temporal = _parse_lab(raw)
+                    requires_absence = bool(
+                        criterion_type == "exclusion" and _EXCLUSION_ABSENCE_RE.search(raw)
                     )
-                )
+                    flags = _ambiguity_flags(raw)
+                    criteria.append(
+                        Criterion(
+                            criterion_id=_next_id(prefix, counter),
+                            trial_id=trial.trial_id,
+                            criterion_type=criterion_type,
+                            raw_text=raw,
+                            clinical_domain=domain if domain in CLINICAL_DOMAINS else "other",
+                            operator=op,
+                            threshold=threshold,
+                            temporal_constraint=temporal,
+                            requires_absence_evidence=requires_absence,
+                            is_safety_critical=domain == "laboratory",
+                            ambiguity_flags=flags,
+                        )
+                    )
         return tuple(criteria)

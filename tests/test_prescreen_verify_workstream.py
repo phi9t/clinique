@@ -113,3 +113,76 @@ def test_verify_workstream_temporal_with_mock_runner(tmp_path):
     assert report["eval"]["cases_run"] == sync_metrics.cases_run
     if report["goal_complete"]:
         assert report["verification_complete"]
+
+
+def test_verify_workstream_temporal_propagates_judge(tmp_path):
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    datasets = tmp_path / "datasets" / "prescreen-copilot"
+    datasets.mkdir(parents=True)
+
+    shutil.copy(
+        Path("tests/fixtures/prescreen/trials.jsonl"),
+        datasets / "trials.jsonl",
+    )
+    shutil.copy(
+        Path(".workstream/prescreen-copilot/l0_cases.jsonl"),
+        ws / "l0_cases.jsonl",
+    )
+    shutil.copy(
+        Path(".workstream/prescreen-copilot/datasets.manifest.json"),
+        ws / "datasets.manifest.json",
+    )
+
+    synthea_out = datasets / "synthea_patients.jsonl"
+    corpus = normalize_synthea(TABLES, patient_id="P1", snapshot_date="2026-03-01")
+    synthea_out.write_text(json.dumps(corpus.to_dict()) + "\n", encoding="utf-8")
+    shutil.copy(
+        Path("tests/fixtures/prescreen/pmc_patients.jsonl"),
+        datasets / "pmc_patients.jsonl",
+    )
+    shutil.copy(
+        Path("tests/fixtures/prescreen/pmc_patients.jsonl"),
+        datasets / "mimic_demo_patients.jsonl",
+    )
+
+    from clinique.prescreen.judge import LLMJudge
+
+    judge_instance = LLMJudge()
+
+    called_kwargs = {}
+
+    def mock_temporal_runner(**kwargs):
+        called_kwargs.update(kwargs)
+        return {
+            "criterion_accuracy": 1.0,
+            "cases_run": 1,
+            "criterion_total": 1,
+            "evidence_violations": 0,
+            "exclusion_false_negatives": 0,
+        }
+
+    from unittest.mock import patch
+
+    from clinique.prescreen.schemas import CriterionJudgment
+
+    mock_judgment = CriterionJudgment(
+        criterion_id="I-001",
+        criterion_type="inclusion",
+        prediction="met",
+        rationale="mocked",
+        evidence=(),
+        confidence=1.0,
+        human_review_required=False,
+    )
+
+    with patch("clinique.prescreen.judge.LLMJudge.judge", return_value=mock_judgment):
+        verify_workstream(
+            workstream_dir=ws,
+            datasets_dir=tmp_path / "datasets",
+            reports_dir=tmp_path / "reports",
+            temporal=True,
+            temporal_eval_runner=mock_temporal_runner,
+            judge=judge_instance,
+        )
+    assert called_kwargs.get("judge") == "llm"

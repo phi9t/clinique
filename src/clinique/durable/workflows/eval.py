@@ -44,7 +44,7 @@ class BatchEvalWorkflow:
             batch = cases[batch_start : batch_start + BATCH_EVAL_CONCURRENCY]
             batch_results = list(
                 await asyncio.gather(
-                    *[self._run_case(case, inputs, parent_id, retry) for case in batch]
+                    *[self._run_case(case, inputs, parent_id, retry, data.judge) for case in batch]
                 )
             )
             case_results.extend(batch_results)
@@ -62,6 +62,7 @@ class BatchEvalWorkflow:
         inputs: LoadEvalInputsResult,
         parent_id: str,
         retry: RetryPolicy,
+        judge: str,
     ) -> EvalCaseResult:
         case_id = case.case_id
         try:
@@ -80,6 +81,7 @@ class BatchEvalWorkflow:
                 ScreenPatientInput(
                     trial=resolved.trial,
                     corpus=resolved.corpus,
+                    judge=judge,
                 ),
                 id=f"{parent_id}/screen/{case_id}",
             )

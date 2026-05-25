@@ -20,10 +20,10 @@
     "trials": "/Users/phi9t/.clinique/datasets/prescreen-copilot/trials.jsonl"
   },
   "eval": {
-    "cases_run": 3,
+    "cases_run": 6,
     "criterion_accuracy": 1.0,
-    "criterion_correct": 3,
-    "criterion_total": 3,
+    "criterion_correct": 6,
+    "criterion_total": 6,
     "errors": [],
     "evidence_violations": 0,
     "exclusion_false_negatives": 0
@@ -43,5 +43,9 @@
     "pmc_patients": 2,
     "synthea_patients": 2,
     "trials": 1001
-  }
+  },
+  "temporal": {
+    "ran": false
+  },
+  "verification_complete": true
 }

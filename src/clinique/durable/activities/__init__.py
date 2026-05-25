@@ -10,12 +10,16 @@ from clinique.durable.activities.prescreen import (
     atomize_trial,
     build_packet,
     evaluate_criterion,
+    judge_criterion,
     resolve_screen_case,
+    retrieve_evidence,
 )
 
 ALL_ACTIVITIES = [
     atomize_trial,
     evaluate_criterion,
+    retrieve_evidence,
+    judge_criterion,
     aggregate_judgments,
     build_packet,
     assert_evidence_provenance_activity,

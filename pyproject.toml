@@ -15,7 +15,6 @@ keywords = [
 ]
 # Internal/private package — this classifier makes PyPI/twine refuse to upload it.
 classifiers = ["Private :: Do Not Upload"]
-dependencies = []
 dynamic = ["version"]
 
 [project.scripts]
@@ -51,6 +50,7 @@ asyncio_mode = "auto"
 markers = [
     "temporal: durable prescreen tests (requires uv sync --group temporal)",
     "temporal_e2e: prescreen durable tests against real temporal server start-dev",
+    "live_llm: integration tests that query live LLM APIs/CLIs (requires api keys/local installations)",
 ]
 
 [tool.ruff]

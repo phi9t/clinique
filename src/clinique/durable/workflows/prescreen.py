@@ -14,7 +14,8 @@ with workflow.unsafe.imports_passed_through():
         assert_evidence_provenance_activity,
         atomize_trial,
         build_packet,
-        evaluate_criterion,
+        judge_criterion,
+        retrieve_evidence,
     )
     from clinique.durable.config import (
         ACTIVITY_RETRY_MAX,
@@ -47,16 +48,28 @@ class ScreenPatientWorkflow:
             retry_policy=retry,
         )
 
+        evidences = await asyncio.gather(
+            *[
+                workflow.execute_activity(
+                    retrieve_evidence,
+                    args=[criterion, data.corpus],
+                    start_to_close_timeout=ACTIVITY_TIMEOUT,
+                    retry_policy=retry,
+                )
+                for criterion in criteria
+            ]
+        )
+
         judgments: list[CriterionJudgmentModel] = list(
             await asyncio.gather(
                 *[
                     workflow.execute_activity(
-                        evaluate_criterion,
-                        args=[criterion, data.corpus],
+                        judge_criterion,
+                        args=[criterion, evidence, data.corpus, data.judge],
                         start_to_close_timeout=ACTIVITY_TIMEOUT,
                         retry_policy=retry,
                     )
-                    for criterion in criteria
+                    for criterion, evidence in zip(criteria, evidences, strict=True)
                 ]
             )
         )
@@ -76,6 +89,7 @@ class ScreenPatientWorkflow:
                 criteria=tuple(criteria),
                 judgments=tuple(judgments),
                 recommendation=recommendation,
+                judge=data.judge,
             ),
             start_to_close_timeout=ACTIVITY_TIMEOUT,
             retry_policy=retry,

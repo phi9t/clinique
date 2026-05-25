@@ -11,7 +11,10 @@ from pathlib import Path
 
 from clinique.prescreen.atomizer import ReferenceAtomizer
 from clinique.prescreen.eval import load_eval_cases, run_eval_cases, verify_workstream
-from clinique.prescreen.explorer_export import export_explorer as write_explorer_json
+from clinique.prescreen.explorer_export import (
+    export_explorer as write_explorer_json,
+    find_repo_root,
+)
 from clinique.prescreen.ingestion import (
     load_recorded_studies,
     record_search,
@@ -21,7 +24,50 @@ from clinique.prescreen.mimic_demo import normalize_mimic_corpus, read_mimic_csv
 from clinique.prescreen.normalizer import normalize_synthea_corpus, read_synthea_csv_dir
 from clinique.prescreen.orchestrator import PrescreenOrchestrator
 from clinique.prescreen.pmc_patients import load_pmc_corpora, record_pmc
+from clinique.prescreen.retrieval import retrieve_for_criteria
+from clinique.prescreen.schemas import PatientCorpus, Trial
 from clinique.prescreen.validation import corpus_from_dict, report_for
+
+
+def _resolve_repo_path(path: str) -> Path:
+    candidate = Path(path)
+    if candidate.is_absolute():
+        return candidate
+    return find_repo_root() / candidate
+
+
+def _load_screen_case(
+    *,
+    trials_path: str,
+    trial_id: str,
+    patient_id: str,
+    patients_path: str | None = None,
+    source: str = "synthea",
+    synthea_csv_dir: str | None = None,
+    snapshot: str | None = None,
+) -> tuple[Trial, PatientCorpus]:
+    trials = load_recorded_studies(str(_resolve_repo_path(trials_path)))
+    trial = next((t for t in trials if t.trial_id == trial_id), None)
+    if trial is None:
+        raise ValueError("trial_id not found")
+
+    if patients_path:
+        resolved_patients = str(_resolve_repo_path(patients_path))
+        if source == "pmc":
+            corpora = load_pmc_corpora(resolved_patients)
+        else:
+            with Path(resolved_patients).open(encoding="utf-8") as handle:
+                corpora = [corpus_from_dict(json.loads(line)) for line in handle if line.strip()]
+    elif synthea_csv_dir is not None:
+        tables = read_synthea_csv_dir(_resolve_repo_path(synthea_csv_dir))
+        corpora = normalize_synthea_corpus(tables, snapshot_date=snapshot)
+    else:
+        raise ValueError("patients_path or synthea_csv_dir is required")
+
+    corpus = next((c for c in corpora if c.patient_id == patient_id), None)
+    if corpus is None:
+        raise ValueError("patient_id not found")
+    return trial, corpus
 
 
 def _run_temporal_screen(args: argparse.Namespace, trial, corpus) -> int:
@@ -147,26 +193,23 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
         return 0
     if args.prescreen_command == "screen":
         try:
-            trials = load_recorded_studies(args.trials)
-            if args.source == "pmc":
-                corpora = load_pmc_corpora(args.patients)
-            else:
-                with Path(args.patients).open(encoding="utf-8") as handle:
-                    corpora = [
-                        corpus_from_dict(json.loads(line)) for line in handle if line.strip()
-                    ]
+            trial, corpus = _load_screen_case(
+                trials_path=args.trials,
+                patients_path=args.patients,
+                trial_id=args.trial_id,
+                patient_id=args.patient_id,
+                source=args.source,
+            )
         except (OSError, ValueError) as exc:
             print(f"prescreen screen failed: {exc}", file=sys.stderr)
-            return 2
-        trial = next((t for t in trials if t.trial_id == args.trial_id), None)
-        corpus = next((c for c in corpora if c.patient_id == args.patient_id), None)
-        if trial is None or corpus is None:
-            print("prescreen screen: trial_id or patient_id not found", file=sys.stderr)
             return 2
         if args.temporal:
             return _run_temporal_screen(args, trial, corpus)
         try:
-            orchestrator = PrescreenOrchestrator()
+            from clinique.prescreen.judge import make_judge
+
+            j = make_judge(args.judge)
+            orchestrator = PrescreenOrchestrator(judge=j)
             if args.ledger:
                 from clinique.substrate.provenance import ProvenanceLedger
 
@@ -265,7 +308,12 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
                     corpora_by_source["mimic"] = [
                         corpus_from_dict(json.loads(line)) for line in handle if line.strip()
                     ]
-            metrics = run_eval_cases(cases, trials=trials, corpora_by_source=corpora_by_source)
+            from clinique.prescreen.judge import make_judge
+
+            j = make_judge(args.judge)
+            metrics = run_eval_cases(
+                cases, trials=trials, corpora_by_source=corpora_by_source, judge=j
+            )
         except (OSError, ValueError) as exc:
             print(f"prescreen eval failed: {exc}", file=sys.stderr)
             return 2
@@ -281,6 +329,9 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
         return 0
     if args.prescreen_command == "verify-workstream":
         try:
+            from clinique.prescreen.judge import make_judge
+
+            j = make_judge(args.judge)
             report = verify_workstream(
                 workstream_dir=args.workstream,
                 datasets_dir=args.datasets_dir,
@@ -288,6 +339,7 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
                 cases_path=args.cases,
                 temporal=args.temporal,
                 temporal_host=args.temporal_host,
+                judge=j,
             )
         except FileNotFoundError as exc:
             print(f"prescreen verify-workstream failed: {exc}", file=sys.stderr)
@@ -365,4 +417,182 @@ def handle_prescreen(args: argparse.Namespace) -> int | None:
         out_display = args.out or "explorer/public/data/prescreen"
         print(f"exported {len(written)} files to {out_display}: {', '.join(written)}")
         return 0
+    if args.prescreen_command == "troubleshoot-agents":
+        from clinique.prescreen.diagnostics import run_diagnostics
+
+        return run_diagnostics()
+    if args.prescreen_command == "agent-judge":
+        try:
+            if args.patients and args.source != "synthea":
+                raise ValueError("--patients with --source other than synthea is not supported yet")
+            trial, corpus = _load_screen_case(
+                trials_path=args.trials,
+                trial_id=args.trial_id,
+                patient_id=args.patient_id,
+                patients_path=args.patients,
+                source=args.source,
+                synthea_csv_dir=args.synthea_csv_dir if not args.patients else None,
+                snapshot=args.snapshot,
+            )
+        except (OSError, ValueError) as exc:
+            print(f"prescreen agent-judge failed: {exc}", file=sys.stderr)
+            return 2
+
+        from clinique.prescreen.judge import LLMJudge, codex_available, is_llm_agent_failure
+
+        if not codex_available():
+            print(
+                "prescreen agent-judge: Codex CLI not available "
+                "(install with: npm install -g @codex/cli; "
+                "run prescreen troubleshoot-agents)",
+                file=sys.stderr,
+            )
+            return 2
+
+        judge = LLMJudge()
+        criteria = ReferenceAtomizer().atomize(trial)
+        if args.criterion_id:
+            wanted = {item.strip() for item in args.criterion_id.split(",") if item.strip()}
+            criteria = [c for c in criteria if c.criterion_id in wanted]
+            if not criteria:
+                print(
+                    "prescreen agent-judge: no criteria matched "
+                    f"--criterion-id {args.criterion_id!r}",
+                    file=sys.stderr,
+                )
+                return 2
+        if args.limit is not None and args.limit < 1:
+            print("prescreen agent-judge: --limit must be >= 1", file=sys.stderr)
+            return 2
+        if not args.all:
+            criteria = criteria[: args.limit]
+
+        evidence_by_criterion = retrieve_for_criteria(criteria, corpus)
+        results: list[dict[str, object]] = []
+        failed = False
+        for criterion in criteria:
+            evidence = evidence_by_criterion[criterion.criterion_id]
+            prompt = judge._build_prompt(criterion, evidence, corpus)
+            if args.show_prompt:
+                print(
+                    f"--- prompt for {criterion.criterion_id} ---\n{prompt}\n",
+                    file=sys.stderr,
+                )
+            judgment = judge.judge(criterion, evidence, corpus, prompt=prompt)
+            if is_llm_agent_failure(judgment):
+                failed = True
+            entry: dict[str, object] = {
+                "criterion": criterion.to_dict(),
+                "judgment": judgment.to_dict(),
+            }
+            if args.show_evidence:
+                entry["retrieved_evidence"] = [item.to_dict() for item in evidence]
+            results.append(entry)
+
+        payload = {
+            "trial_id": trial.trial_id,
+            "patient_id": corpus.patient_id,
+            "snapshot_date": corpus.snapshot_date,
+            "agent": "codex",
+            "judge": {"name": judge.name, "version": judge.version},
+            "results": results,
+        }
+        text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        if args.out:
+            Path(args.out).write_text(text, encoding="utf-8")
+        else:
+            print(text, end="")
+
+        if failed:
+            print(
+                "prescreen agent-judge: one or more criteria failed via Codex CLI",
+                file=sys.stderr,
+            )
+            return 3
+        return 0
+    if args.prescreen_command == "resume":
+        try:
+            from temporalio.client import WorkflowFailureError
+
+            from clinique.durable.cli_runtime import (
+                connect_client,
+                ensure_temporalio,
+                temporal_import_error,
+            )
+        except ImportError as exc:
+            return temporal_import_error(exc)
+        ensure_temporalio()
+
+        async def _run_resume() -> int:
+            import shutil
+            import subprocess
+
+            client = await connect_client(args.host)
+            handle = client.get_workflow_handle(args.workflow_id)
+            try:
+                desc = await handle.describe()
+                status_str = desc.status.name
+            except Exception as exc:
+                print(
+                    f"Could not find workflow execution {args.workflow_id}: {exc}",
+                    file=sys.stderr,
+                )
+                return 2
+
+            print(f"Workflow {args.workflow_id} status is {status_str}.", file=sys.stderr)
+
+            if status_str == "RUNNING":
+                print("Workflow is already running. Awaiting completion...", file=sys.stderr)
+            elif status_str == "COMPLETED":
+                print("Workflow is already completed successfully.", file=sys.stderr)
+            else:
+                print(
+                    f"Workflow needs reset. Resetting workflow {args.workflow_id}...",
+                    file=sys.stderr,
+                )
+                if not shutil.which("temporal"):
+                    print(
+                        "Error: 'temporal' CLI is required to reset workflow execution.",
+                        file=sys.stderr,
+                    )
+                    return 2
+
+                cmd = [
+                    "temporal",
+                    "workflow",
+                    "reset",
+                    "--workflow-id",
+                    args.workflow_id,
+                    "--reset-type",
+                    "LastWorkflowTask",
+                    "--reason",
+                    "Resuming via clinique CLI",
+                ]
+                print(f"Executing: {' '.join(cmd)}", file=sys.stderr)
+                res = subprocess.run(cmd, capture_output=True, text=True, check=False)
+                if res.returncode != 0:
+                    print(f"Reset failed: {res.stderr}", file=sys.stderr)
+                    return 3
+                print("Reset successful. Awaiting workflow completion...", file=sys.stderr)
+
+            try:
+                packet = await handle.result()
+                from clinique.durable.models import PrescreeningPacketModel
+
+                if isinstance(packet, PrescreeningPacketModel):
+                    data = packet.model_dump()
+                elif hasattr(packet, "to_dict"):
+                    data = packet.to_dict()
+                else:
+                    data = packet
+                print(json.dumps(data, indent=2, sort_keys=True) + "\n")
+                return 0
+            except WorkflowFailureError as exc:
+                print(f"Workflow failed after resume: {exc.cause}", file=sys.stderr)
+                return 3
+            except Exception as exc:
+                print(f"Error awaiting workflow result: {exc}", file=sys.stderr)
+                return 3
+
+        return asyncio.run(_run_resume())
     return None

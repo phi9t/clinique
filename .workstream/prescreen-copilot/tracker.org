@@ -1,7 +1,7 @@
 #+TITLE: Prescreen Copilot Workstream
 #+STARTUP: overview indent
 
-* Prescreen Copilot [20/26]
+* Prescreen Copilot [29/30]
 ** DONE Bootstrap workstream directory
 ** DONE Phase 0 — Record scale corpus
 Evidence :: ~/.clinique/datasets/prescreen-copilot/ (1000 trials; PMC fallback documented)
@@ -31,14 +31,22 @@ Evidence :: vocab.py oncology synonyms; judge condition/medication/ECOG paths
 *** DONE Performance status (ECOG) matcher
 *** DONE Absence exclusion handling (attach evidence on unknown)
 *** DONE Expand gold cases + eval gates for structured matchers
-** TODO Phase 12 — Retrieval upgrade (Tier 2)
+** DONE Phase 12 — Retrieval upgrade (Tier 2)
+Evidence :: tests/test_prescreen_splitting.py; tests/test_prescreen_embedding.py
 *** DONE Query expansion from criterion / atomizer metadata
 *** DONE Structured-first routing (code lookup before BM25)
-*** TODO Compound criterion splitting (e.g. E-003 sub-clauses)
+*** DONE Compound criterion splitting (e.g. E-003 sub-clauses)
 *** DONE Synthea narrative note document in normalizer
-** TODO Phase 13 — LLM judge & L1 eval (Tier 3)
-*** TODO LLMJudge behind Judge Protocol with mandatory quotes
-*** TODO --judge rule|llm CLI flag (sync + Temporal unchanged graph)
-*** TODO n2c2 2018 judge-only eval harness
+** DONE Phase 13 — LLM judge & L1 eval (Tier 3)
+Evidence :: tests/test_prescreen_llm_judge.py; tests/test_n2c2_harness.py; Codex CLI only
+*** DONE LLMJudge behind Judge Protocol with mandatory quotes
+*** DONE --judge rule|llm CLI flag (sync + Temporal unchanged graph)
+*** DONE n2c2 2018 judge-only eval harness
 Target :: F1 ≥ 0.80 per design doc ship gate
-*** TODO Embedding retriever for PMC-Patients note-heavy sources
+*** DONE Embedding retriever for PMC-Patients note-heavy sources
+** DONE Phase 14 — Temporal durable execution & resume
+Evidence :: tests/test_durable_resume.py; prescreen resume CLI
+*** DONE Judge option propagation through batch eval workflows
+*** DONE Retryable ApplicationError on LLM judge failure
+*** DONE prescreen resume CLI command (temporal workflow reset)
+*** DONE Integration tests for failure retry and resume

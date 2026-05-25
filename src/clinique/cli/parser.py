@@ -107,6 +107,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="localhost:7233",
         help="Temporal server address when --temporal is set",
     )
+    screen.add_argument(
+        "--judge",
+        choices=["rule", "llm"],
+        default="rule",
+        help="Specify which judge engine to use",
+    )
     worker = prescreen_subparsers.add_parser("worker")
     worker.add_argument("--host", default="localhost:7233", help="Temporal server address")
     eval_temporal = prescreen_subparsers.add_parser("eval-temporal")
@@ -120,6 +126,12 @@ def build_parser() -> argparse.ArgumentParser:
     eval_temporal.add_argument("--mimic-patients", help="mimic patient JSONL")
     eval_temporal.add_argument("--reports-dir", default="reports/prescreen")
     eval_temporal.add_argument("--host", default="localhost:7233", help="Temporal server address")
+    eval_temporal.add_argument(
+        "--judge",
+        choices=["rule", "llm"],
+        default="rule",
+        help="Specify which judge engine to use",
+    )
     eval_p = prescreen_subparsers.add_parser("eval")
     eval_p.add_argument(
         "--cases",
@@ -131,6 +143,12 @@ def build_parser() -> argparse.ArgumentParser:
     eval_p.add_argument("--pmc-patients", help="pmc patient JSONL")
     eval_p.add_argument("--mimic-patients", help="mimic patient JSONL")
     eval_p.add_argument("--reports-dir", default="reports/prescreen")
+    eval_p.add_argument(
+        "--judge",
+        choices=["rule", "llm"],
+        default="rule",
+        help="Specify which judge engine to use",
+    )
     verify_ws = prescreen_subparsers.add_parser("verify-workstream")
     verify_ws.add_argument("--workstream", default=".workstream/prescreen-copilot")
     verify_ws.add_argument("--datasets-dir", help="defaults to ~/.clinique/datasets")
@@ -146,4 +164,81 @@ def build_parser() -> argparse.ArgumentParser:
         default="localhost:7233",
         help="Temporal server when --temporal is set (worker must be running)",
     )
+    verify_ws.add_argument(
+        "--judge",
+        choices=["rule", "llm"],
+        default="rule",
+        help="Specify which judge engine to use",
+    )
+    prescreen_subparsers.add_parser("troubleshoot-agents")
+
+    agent_judge = prescreen_subparsers.add_parser(
+        "agent-judge",
+        help=(
+            "run LLMJudge for fast iteration (default demo: P1 + NCT02578680 from repo fixtures)"
+        ),
+    )
+    agent_judge.add_argument(
+        "--trial-id",
+        default="NCT02578680",
+        help="trial NCT id (default: NCT02578680)",
+    )
+    agent_judge.add_argument(
+        "--patient-id",
+        default="P1",
+        help="patient id (default: P1)",
+    )
+    agent_judge.add_argument(
+        "--trials",
+        default="tests/fixtures/prescreen/trials.jsonl",
+        help="trials JSONL path (default: repo NSCLC demo trial)",
+    )
+    agent_judge.add_argument(
+        "--patients",
+        help="patient JSONL path (default: normalize --patient-id from --synthea-csv-dir)",
+    )
+    agent_judge.add_argument(
+        "--synthea-csv-dir",
+        default="tests/fixtures/prescreen/synthea",
+        help="Synthea CSV directory when --patients is omitted",
+    )
+    agent_judge.add_argument(
+        "--snapshot",
+        default="2026-03-01",
+        help="as-of date when loading from --synthea-csv-dir (default: 2026-03-01)",
+    )
+    agent_judge.add_argument("--source", choices=["synthea", "mimic", "pmc"], default="synthea")
+    agent_judge.add_argument(
+        "--criterion-id",
+        help="comma-separated criterion IDs to judge (default: all atomized criteria)",
+    )
+    agent_judge.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="judge at most this many criteria (default: 5; use --all for every criterion)",
+    )
+    agent_judge.add_argument(
+        "--all",
+        action="store_true",
+        help="judge all atomized criteria (ignores --limit)",
+    )
+    agent_judge.add_argument(
+        "--show-evidence",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="include retrieved evidence in JSON output (default: on)",
+    )
+    agent_judge.add_argument(
+        "--show-prompt",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="print the LLM prompt for each criterion to stderr (default: on)",
+    )
+    agent_judge.add_argument("--out", help="optional JSON output path")
+
+    resume = prescreen_subparsers.add_parser("resume")
+    resume.add_argument("--workflow-id", required=True, help="Workflow ID to resume")
+    resume.add_argument("--host", default="localhost:7233", help="Temporal server address")
+
     return parser
