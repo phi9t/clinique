@@ -56,13 +56,25 @@ test('PrescreenBench explorer displays case-level workflow and evidence highligh
     0,
   )
 
-  const firstCaseRowButton = caseSection.locator('tbody tr').first().locator('button')
-  await expect(firstCaseRowButton).toBeVisible()
-  await firstCaseRowButton.click()
+  const caseRowButtons = caseSection.locator('tbody tr').locator('button').filter({ hasText: /^PB-/ })
+  const caseCount = await caseRowButtons.count()
+  expect(caseCount).toBeGreaterThan(0)
 
-  await expect(page.getByRole('heading', { name: 'Trial' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Patient' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Criterion comparison by agent' })).toBeVisible()
+  let caseWithQuoteFound = false
+  for (let index = 0; index < caseCount; index += 1) {
+    await caseRowButtons.nth(index).click()
+
+    await expect(page.getByRole('heading', { name: 'Trial' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Patient' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Criterion comparison by agent' })).toBeVisible()
+    const quoteFoundCount = await page.getByRole('button', { name: /Quote found/i }).count()
+    if (quoteFoundCount > 0) {
+      caseWithQuoteFound = true
+      break
+    }
+  }
+
+  expect(caseWithQuoteFound).toBe(true)
   const criteriaPanel = page.locator('section.pb-criteria-panel')
   await expect(criteriaPanel.getByRole('columnheader', { name: 'Gold label' }).first()).toBeVisible()
   await expect(criteriaPanel.getByRole('columnheader', { name: 'Prediction' }).first()).toBeVisible()
