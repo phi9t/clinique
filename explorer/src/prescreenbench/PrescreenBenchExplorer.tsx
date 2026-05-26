@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Info } from 'lucide-react'
+import CaseTable from './CaseTable'
+import type { SliceFilter } from './CaseTable'
 import Overview from './Overview'
 import { fetchBenchmarkJson } from './types'
 import type { BenchmarkIndexEntry, DefinitionsPayload, SplitBundle } from './types'
@@ -27,6 +29,8 @@ export default function PrescreenBenchExplorer() {
   const [loadingCore, setLoadingCore] = useState(true)
   const [loadingBundle, setLoadingBundle] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeFilters, setActiveFilters] = useState<SliceFilter[]>([])
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadCore() {
@@ -60,10 +64,14 @@ export default function PrescreenBenchExplorer() {
         if (cancelled) return
         setBundle(bundleData)
         setSelectedAgents(bundleData.agents.map(({ agent }) => agent))
+        setSelectedCaseId(bundleData.cases[0]?.case?.case_id ?? null)
+        setActiveFilters([])
       } catch (err: unknown) {
         if (!cancelled) {
           setBundle(null)
           setSelectedAgents([])
+          setSelectedCaseId(null)
+          setActiveFilters([])
           setError(errorMessage(err))
         }
       } finally {
@@ -157,12 +165,28 @@ export default function PrescreenBenchExplorer() {
           <p>Loading {selectedSplit} split...</p>
         </div>
       ) : (
-        <Overview
-          bundle={bundle}
-          definitions={definitions}
-          selectedAgents={selectedAgents}
-          onToggleAgent={handleToggleAgent}
-        />
+        <>
+          <Overview
+            bundle={bundle}
+            definitions={definitions}
+            selectedAgents={selectedAgents}
+            onToggleAgent={handleToggleAgent}
+          />
+          <CaseTable
+            cases={bundle.cases}
+            selectedAgents={selectedAgents}
+            activeFilters={activeFilters}
+            onToggleFilter={(filter) =>
+              setActiveFilters((current) =>
+                current.includes(filter)
+                  ? current.filter((item) => item !== filter)
+                  : [...current, filter],
+              )
+            }
+            selectedCaseId={selectedCaseId}
+            onSelectCase={setSelectedCaseId}
+          />
+        </>
       )}
     </section>
   )
