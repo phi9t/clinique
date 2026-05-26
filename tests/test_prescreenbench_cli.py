@@ -1,4 +1,4 @@
-"""End-to-end CLI tests for `clinique benchmark prescreen run|score`."""
+"""End-to-end CLI tests for `clinique benchmark prescreen run|score|export-explorer`."""
 
 import json
 
@@ -163,3 +163,43 @@ def test_export_explorer_accepts_custom_prediction(tmp_path):
     assert rc == 0
     payload = json.loads((out / "synthetic.json").read_text())
     assert [agent["agent"] for agent in payload["agents"]] == ["custom"]
+
+
+def test_export_explorer_bad_mapping_errors(tmp_path, capsys):
+    rc = main(
+        [
+            "benchmark",
+            "prescreen",
+            "export-explorer",
+            "--split",
+            "synthetic",
+            "--prediction",
+            "badsyntax",
+            "--out",
+            str(tmp_path / "bundle"),
+        ]
+    )
+    assert rc == 2
+    assert "expected agent=path" in capsys.readouterr().err
+
+
+def test_export_explorer_report_without_prediction_errors(tmp_path, capsys):
+    report = tmp_path / "report.json"
+    report.write_text('{"agent": "orphan"}\n')
+    rc = main(
+        [
+            "benchmark",
+            "prescreen",
+            "export-explorer",
+            "--split",
+            "synthetic",
+            "--agents",
+            "",
+            "--report",
+            f"orphan={report}",
+            "--out",
+            str(tmp_path / "bundle"),
+        ]
+    )
+    assert rc == 2
+    assert "custom report without predictions" in capsys.readouterr().err

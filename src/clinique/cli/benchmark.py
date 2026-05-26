@@ -50,7 +50,11 @@ def _run(args: argparse.Namespace) -> int:
     if not rows:
         print("benchmark prescreen run produced no predictions", file=sys.stderr)
         return 2
-    write_predictions(rows, args.out)
+    try:
+        write_predictions(rows, args.out)
+    except OSError as exc:
+        print(f"benchmark prescreen run failed: {exc}", file=sys.stderr)
+        return 2
     print(
         f"wrote {len(rows)} predictions to {args.out} ({len(errors)} case errors)", file=sys.stderr
     )
@@ -70,9 +74,13 @@ def _score(args: argparse.Namespace) -> int:
         return 2
     report = score(split, predictions)
     out_path = Path(args.out) if args.out else Path("reports/prescreenbench") / f"{args.split}.json"
-    write_json(report, out_path, agent=args.agent)
-    if args.html:
-        write_html(report, args.html, agent=args.agent)
+    try:
+        write_json(report, out_path, agent=args.agent)
+        if args.html:
+            write_html(report, args.html, agent=args.agent)
+    except OSError as exc:
+        print(f"benchmark prescreen score failed: {exc}", file=sys.stderr)
+        return 2
     gate = "PASS" if report.passed_hard_gates else f"FAIL {report.hard_gate_breaches}"
     print(
         f"score={report.score:.3f} macro_f1={report.criterion_macro_f1:.3f} "

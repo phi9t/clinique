@@ -247,7 +247,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _add_benchmark_parser(subparsers: argparse._SubParsersAction) -> None:
-    """Wire `clinique benchmark prescreen run|score` (PrescreenBench)."""
+    """Wire `clinique benchmark prescreen run|score|export-explorer` (PrescreenBench)."""
     benchmark = subparsers.add_parser("benchmark", help="agent benchmarks")
     benchmark_sub = benchmark.add_subparsers(dest="benchmark_command")
     prescreen = benchmark_sub.add_parser("prescreen", help="PrescreenBench")
