@@ -199,6 +199,12 @@
     "fabricated_quote_count": {
       "plain": "Number of cited quotes not found verbatim in the cited document."
     },
+    "patient_level_metrics": {
+      "plain": "Case-level diagnostics for overall recommendation labels, including accuracy, per-class scores, and confusion counts."
+    },
+    "per_criterion_metrics": {
+      "plain": "Per-criterion aggregate diagnostics across the split, including support, overall accuracy, and safety-failure counts."
+    },
     "schema_valid_rate": {
       "plain": "Fraction of submitted case packets passing schema validation."
     },

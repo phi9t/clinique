@@ -52,6 +52,11 @@ Regenerate: `uv run python benchmarks/prescreenbench/build_seed.py`.
   as supported without a free-text quote — mirroring the substrate evidence gate
   (`prescreen/evidence_gate.py`), because age/sex are derived from structured demographics.
 - Score weights and gate thresholds: `clinique.prescreen.metrics.SCORE_WEIGHTS` / `HARD_GATES`.
+- Explorer-facing score payloads also include:
+  - `patient_level_metrics` (overall recommendation summary with overall accuracy, per-class support,
+    and a case-level confusion matrix).
+  - `per_criterion_metrics` (per-criterion `support`, classification quality, and safety-failure
+    counters).
 
 ## Roadmap
 

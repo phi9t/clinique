@@ -10,6 +10,15 @@
  .bad { color: #b00020; font-weight: 600; font-variant-numeric: tabular-nums; }
  .gate { font-size: 1.1rem; padding: .5rem 0; }
  .score { font-size: 2rem; font-weight: 700; }
+ .mono {
+   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+   font-size: 0.9rem;
+   background: #f9f9f9;
+   border: 1px solid #ddd;
+   padding: 0.8rem;
+   overflow: auto;
+   white-space: pre;
+ }
 </style></head><body>
 <h1>PrescreenBench — prescreenbench_v0 — synthetic — codex_cli</h1>
 <p class="score">0.636</p>
@@ -20,6 +29,138 @@
 <h2>Per-class F1</h2>
 <table><tr><th>label</th><th>F1</th><th>precision</th><th>recall</th><th>support</th></tr>
 <tr><td>met</td><td>0.000</td><td>0.000</td><td>0.000</td><td>1</td></tr><tr><td>unknown</td><td>0.909</td><td>0.833</td><td>1.000</td><td>5</td></tr></table>
+<h2>Patient-level metrics</h2>
+<pre class="mono">{
+  &quot;accuracy&quot;: 1.0,
+  &quot;confusion_matrix&quot;: {
+    &quot;needs_review&quot;: {
+      &quot;needs_review&quot;: 2
+    }
+  },
+  &quot;per_class&quot;: {
+    &quot;needs_review&quot;: {
+      &quot;f1&quot;: 1.0,
+      &quot;precision&quot;: 1.0,
+      &quot;recall&quot;: 1.0,
+      &quot;support&quot;: 2.0
+    }
+  },
+  &quot;total&quot;: 2
+}</pre>
+<h2>Per-criterion metrics</h2>
+<pre class="mono">[
+  {
+    &quot;accuracy&quot;: 1.0,
+    &quot;clinical_domain&quot;: &quot;condition&quot;,
+    &quot;criterion_id&quot;: &quot;E-001&quot;,
+    &quot;criterion_type&quot;: &quot;exclusion&quot;,
+    &quot;fabricated_quote_count&quot;: 0,
+    &quot;is_safety_critical&quot;: false,
+    &quot;macro_f1&quot;: 1.0,
+    &quot;per_class_f1&quot;: {
+      &quot;unknown&quot;: {
+        &quot;f1&quot;: 1.0,
+        &quot;precision&quot;: 1.0,
+        &quot;recall&quot;: 1.0,
+        &quot;support&quot;: 1.0
+      }
+    },
+    &quot;support&quot;: 1,
+    &quot;unsafe_clearance_count&quot;: 0,
+    &quot;unsafe_clearance_rate&quot;: 0.0,
+    &quot;unsupported_decision_count&quot;: 0
+  },
+  {
+    &quot;accuracy&quot;: 1.0,
+    &quot;clinical_domain&quot;: &quot;medication&quot;,
+    &quot;criterion_id&quot;: &quot;E-017&quot;,
+    &quot;criterion_type&quot;: &quot;exclusion&quot;,
+    &quot;fabricated_quote_count&quot;: 0,
+    &quot;is_safety_critical&quot;: false,
+    &quot;macro_f1&quot;: 1.0,
+    &quot;per_class_f1&quot;: {
+      &quot;unknown&quot;: {
+        &quot;f1&quot;: 1.0,
+        &quot;precision&quot;: 1.0,
+        &quot;recall&quot;: 1.0,
+        &quot;support&quot;: 1.0
+      }
+    },
+    &quot;support&quot;: 1,
+    &quot;unsafe_clearance_count&quot;: 0,
+    &quot;unsafe_clearance_rate&quot;: 0.0,
+    &quot;unsupported_decision_count&quot;: 0
+  },
+  {
+    &quot;accuracy&quot;: 0.0,
+    &quot;clinical_domain&quot;: &quot;demographic&quot;,
+    &quot;criterion_id&quot;: &quot;I-001&quot;,
+    &quot;criterion_type&quot;: &quot;inclusion&quot;,
+    &quot;fabricated_quote_count&quot;: 0,
+    &quot;is_safety_critical&quot;: false,
+    &quot;macro_f1&quot;: 0.0,
+    &quot;per_class_f1&quot;: {
+      &quot;met&quot;: {
+        &quot;f1&quot;: 0.0,
+        &quot;precision&quot;: 0.0,
+        &quot;recall&quot;: 0.0,
+        &quot;support&quot;: 1.0
+      },
+      &quot;unknown&quot;: {
+        &quot;f1&quot;: 0.0,
+        &quot;precision&quot;: 0.0,
+        &quot;recall&quot;: 0.0,
+        &quot;support&quot;: 0.0
+      }
+    },
+    &quot;support&quot;: 1,
+    &quot;unsafe_clearance_count&quot;: 0,
+    &quot;unsafe_clearance_rate&quot;: 0.0,
+    &quot;unsupported_decision_count&quot;: 0
+  },
+  {
+    &quot;accuracy&quot;: 1.0,
+    &quot;clinical_domain&quot;: &quot;condition&quot;,
+    &quot;criterion_id&quot;: &quot;I-002&quot;,
+    &quot;criterion_type&quot;: &quot;inclusion&quot;,
+    &quot;fabricated_quote_count&quot;: 0,
+    &quot;is_safety_critical&quot;: false,
+    &quot;macro_f1&quot;: 1.0,
+    &quot;per_class_f1&quot;: {
+      &quot;unknown&quot;: {
+        &quot;f1&quot;: 1.0,
+        &quot;precision&quot;: 1.0,
+        &quot;recall&quot;: 1.0,
+        &quot;support&quot;: 2.0
+      }
+    },
+    &quot;support&quot;: 2,
+    &quot;unsafe_clearance_count&quot;: 0,
+    &quot;unsafe_clearance_rate&quot;: 0.0,
+    &quot;unsupported_decision_count&quot;: 0
+  },
+  {
+    &quot;accuracy&quot;: 1.0,
+    &quot;clinical_domain&quot;: &quot;medication&quot;,
+    &quot;criterion_id&quot;: &quot;I-005&quot;,
+    &quot;criterion_type&quot;: &quot;inclusion&quot;,
+    &quot;fabricated_quote_count&quot;: 0,
+    &quot;is_safety_critical&quot;: false,
+    &quot;macro_f1&quot;: 1.0,
+    &quot;per_class_f1&quot;: {
+      &quot;unknown&quot;: {
+        &quot;f1&quot;: 1.0,
+        &quot;precision&quot;: 1.0,
+        &quot;recall&quot;: 1.0,
+        &quot;support&quot;: 1.0
+      }
+    },
+    &quot;support&quot;: 1,
+    &quot;unsafe_clearance_count&quot;: 0,
+    &quot;unsafe_clearance_rate&quot;: 0.0,
+    &quot;unsupported_decision_count&quot;: 0
+  }
+]</pre>
 <p style="color:#888;font-size:.85rem">unknown_actionability is proxied by unknown_recall
 (1.000) until human ratings exist.</p>
 </body></html>

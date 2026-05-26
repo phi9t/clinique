@@ -24,6 +24,11 @@ test('PrescreenBench explorer displays case-level workflow and evidence highligh
   await expect(page.getByRole('checkbox', { name: 'codex_cli' })).toBeVisible()
   await expect(page.locator('summary[aria-label^="score:"]').first()).toBeVisible()
   await expect(page.getByText('criterion macro f1').first()).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Patient-level metrics' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Per-criterion metrics' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Patient accuracy' }).first()).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Criterion' }).first()).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Unsafe clearances' }).first()).toBeVisible()
 
   const caseSection = page.locator('section.pb-case-section')
   await expect(caseSection).toBeVisible()
@@ -66,7 +71,7 @@ test('PrescreenBench explorer displays case-level workflow and evidence highligh
     await caseRowButtons.nth(index).click()
 
     await expect(page.getByRole('heading', { name: 'Trial' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Patient' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Patient', exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Criterion comparison by agent' })).toBeVisible()
     const quoteFoundCount = await page.getByRole('button', { name: /Quote found/i }).count()
     if (quoteFoundCount > 0) {

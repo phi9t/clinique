@@ -100,3 +100,33 @@ def test_clean_gates_pass():
         )
         == []
     )
+
+
+def test_multiclass_summary_reports_accuracy_per_label_and_confusion_matrix():
+    summary = M.multiclass_summary(
+        [("needs_review", "needs_review"), ("likely_ineligible", "needs_review")],
+        labels=("likely_ineligible", "needs_review", "potentially_eligible"),
+    )
+
+    assert summary["total"] == 2
+    assert summary["accuracy"] == 0.5
+    assert summary["per_class"]["needs_review"] == {
+        "precision": 0.5,
+        "recall": 1.0,
+        "f1": 2 * 0.5 * 1.0 / 1.5,
+        "support": 1.0,
+    }
+    assert summary["confusion_matrix"]["likely_ineligible"]["needs_review"] == 1
+    assert summary["confusion_matrix"]["needs_review"]["needs_review"] == 1
+
+
+def test_multiclass_summary_explicitly_reports_no_eligible_items():
+    summary = M.multiclass_summary(
+        [],
+        labels=("likely_ineligible", "needs_review", "potentially_eligible"),
+    )
+
+    assert summary["total"] == 0
+    assert summary["accuracy"] is None
+    assert summary["per_class"] == {}
+    assert summary["confusion_matrix"] == {}

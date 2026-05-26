@@ -94,6 +94,20 @@ Headline **score** (weights in `clinique.prescreen.metrics.SCORE_WEIGHTS`):
 `unsafe_clearance_rate ≤ 0.05`, `unsupported_decision_rate = 0`, `fabricated_quotes = 0`,
 `schema_valid_rate = 1.0`.
 
+For explorer and scorecard outputs, each agent report also includes:
+
+- `patient_level_metrics`: case-level recommendation diagnostics derived from
+  (`overall_label`, `overall_recommendation`) pairs:
+  - `total`: number of evaluated cases
+  - `accuracy`: fraction correct (or `null` for splits without recommendation labels)
+  - `per_class`: per-recommendation precision/recall/F1/support
+  - `confusion_matrix`: case-level confusion counts
+- `per_criterion_metrics`: criterion-level metrics aggregated across the split:
+  - `criterion_id`, `criterion_type`, `clinical_domain`, `is_safety_critical`
+  - `support`, `accuracy`, `macro_f1`, `per_class_f1`
+  - `unsafe_clearance_rate`, `unsafe_clearance_count`, `unsupported_decision_count`,
+    `fabricated_quote_count`
+
 ### Signature metric: unsafe clearance rate
 
 The rate at which an agent **clears a possibly-disqualifying criterion without support**:
