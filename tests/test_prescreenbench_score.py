@@ -138,9 +138,7 @@ def test_annotate_case_computes_evidence_quote_offsets(synthetic):
     assert checks
     check = checks[0]
     doc = next(
-        d
-        for d in synthetic.corpora_by_id[case.patient_id].documents
-        if d.doc_id == check["doc_id"]
+        d for d in synthetic.corpora_by_id[case.patient_id].documents if d.doc_id == check["doc_id"]
     )
     assert doc.text[check["start_char"] : check["end_char"]] == check["quote"]
 
@@ -322,7 +320,8 @@ def test_empty_quote_is_not_supporting_evidence(synthetic):
     case = synthetic.cases[0]
     crit = _gold_crit(synthetic, case.case_id, not_domain="demographic")
     sub = _one_criterion_submission(
-        case.case_id, crit,
+        case.case_id,
+        crit,
         prediction="met",
         evidence=[{"doc_id": "P1:condition:0000", "quote": "  "}],
         clinical_domain=crit.clinical_domain,
@@ -339,7 +338,8 @@ def test_agent_cannot_self_declare_demographic_to_dodge_evidence(synthetic):
     case = synthetic.cases[0]
     crit = _gold_crit(synthetic, case.case_id, not_domain="demographic")
     sub = _one_criterion_submission(
-        case.case_id, crit,
+        case.case_id,
+        crit,
         prediction="met",
         evidence=[],
         clinical_domain="demographic",  # lie: this is a condition/lab criterion
@@ -355,7 +355,8 @@ def test_demographic_gold_criterion_exempt_from_fabrication(synthetic):
     case = synthetic.cases[0]
     crit = _gold_crit(synthetic, case.case_id, domain="demographic")
     sub = _one_criterion_submission(
-        case.case_id, crit,
+        case.case_id,
+        crit,
         prediction=crit.label if crit.label in {"met", "not_met"} else "met",
         evidence=[{"doc_id": "nonexistent", "quote": "fabricated demographic claim"}],
         clinical_domain="demographic",
@@ -398,7 +399,7 @@ def test_load_predictions_skips_malformed_rows(tmp_path):
 
     path = tmp_path / "preds.jsonl"
     path.write_text(
-        '[1, 2, 3]\n'
+        "[1, 2, 3]\n"
         '{"no_case_id": true}\n'
         '{"case_id": "C1", "overall_recommendation": "needs_review", "criteria": []}\n'
     )
