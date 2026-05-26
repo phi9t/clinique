@@ -3,8 +3,9 @@ import { ArrowLeft } from 'lucide-react'
 import { REPO_HOME, logoMarkUrl } from './lib/assets'
 import CdiscExplorer from './cdisc/CdiscExplorer'
 import PrescreenExplorer from './prescreen/PrescreenExplorer'
+import PrescreenBenchExplorer from './prescreenbench/PrescreenBenchExplorer'
 
-export type DatasetFamily = 'cdisc' | 'prescreen'
+export type DatasetFamily = 'cdisc' | 'prescreen' | 'prescreenbench'
 
 export default function App() {
   const [family, setFamily] = useState<DatasetFamily>('cdisc')
@@ -41,7 +42,9 @@ export default function App() {
             <p>
               {family === 'cdisc'
                 ? 'FDA-pilot CDISC ADaM datasets & metadata validation dashboard'
-                : 'Prescreen L0 public data — schema, distributions, drill-down & conformance'}
+                : family === 'prescreen'
+                  ? 'Prescreen L0 public data — schema, distributions, drill-down & conformance'
+                  : 'PrescreenBench — agent comparison, evidence grounding, and grader analysis'}
             </p>
           </div>
 
@@ -66,11 +69,25 @@ export default function App() {
             >
               Prescreen L0
             </button>
+            <button
+              type="button"
+              className={`family-switch-btn ${family === 'prescreenbench' ? 'active' : ''}`}
+              aria-pressed={family === 'prescreenbench'}
+              onClick={() => setFamily('prescreenbench')}
+            >
+              PrescreenBench
+            </button>
           </div>
         </header>
 
         <div id="main-content">
-          {family === 'cdisc' ? <CdiscExplorer /> : <PrescreenExplorer />}
+          {family === 'cdisc' ? (
+            <CdiscExplorer />
+          ) : family === 'prescreen' ? (
+            <PrescreenExplorer />
+          ) : (
+            <PrescreenBenchExplorer />
+          )}
         </div>
       </div>
     </div>
