@@ -1,0 +1,6 @@
+{"case_id": "PB-LITE-000-I-001", "patient_id": "P1", "patient_source": "synthea", "snapshot_date": "2026-03-01", "task": "criterion_judgment", "trial_id": "NCT02578680"}
+{"case_id": "PB-LITE-001-I-002", "patient_id": "P1", "patient_source": "synthea", "snapshot_date": "2026-03-01", "task": "criterion_judgment", "trial_id": "NCT02578680"}
+{"case_id": "PB-LITE-002-E-001", "patient_id": "P1", "patient_source": "synthea", "snapshot_date": "2026-03-01", "task": "criterion_judgment", "trial_id": "NCT02578680"}
+{"case_id": "PB-LITE-003-I-005", "patient_id": "P1", "patient_source": "synthea", "snapshot_date": "2026-03-01", "task": "criterion_judgment", "trial_id": "NCT02578680"}
+{"case_id": "PB-LITE-004-E-017", "patient_id": "P1", "patient_source": "synthea", "snapshot_date": "2026-03-01", "task": "criterion_judgment", "trial_id": "NCT02578680"}
+{"case_id": "PB-LITE-005-I-002", "patient_id": "SYN-PMC-1", "patient_source": "pmc", "snapshot_date": "2026-01-15", "task": "criterion_judgment", "trial_id": "NCT02578680"}
