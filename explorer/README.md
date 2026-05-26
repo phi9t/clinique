@@ -18,4 +18,22 @@ npm install && npm run dev
 npm run build:pages
 ```
 
+## PrescreenBench explorer data
+
+Regenerate committed deterministic PrescreenBench explorer bundles:
+
+```bash
+uv run clinique benchmark prescreen export-explorer \
+  --split synthetic \
+  --split lite \
+  --agents always_unknown,keyword_rule,clinique_rule \
+  --out explorer/public/data/prescreenbench
+```
+
+Run the browser workflow check:
+
+```bash
+npm run test:e2e
+```
+
 See the root [README](../README.md) for regeneration commands and deploy setup.
