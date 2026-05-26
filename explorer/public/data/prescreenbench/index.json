@@ -1,0 +1,28 @@
+[
+  {
+    "agents": [
+      "always_unknown",
+      "clinique_rule",
+      "keyword_rule"
+    ],
+    "benchmark_id": "prescreenbench_v0",
+    "case_count": 2,
+    "split": "synthetic",
+    "task_types": [
+      "end_to_end_packet"
+    ]
+  },
+  {
+    "agents": [
+      "always_unknown",
+      "clinique_rule",
+      "keyword_rule"
+    ],
+    "benchmark_id": "prescreenbench_v0",
+    "case_count": 6,
+    "split": "lite",
+    "task_types": [
+      "criterion_judgment"
+    ]
+  }
+]

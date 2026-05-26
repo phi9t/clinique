@@ -10,6 +10,7 @@ from clinique.benchmarks.prescreenbench.explorer_export import (
     DEFAULT_DEMO_AGENTS,
     build_definitions,
     build_split_bundle,
+    default_out_dir,
     export_explorer,
 )
 from clinique.benchmarks.prescreenbench.load import load_split
@@ -82,6 +83,13 @@ def test_export_is_deterministic(tmp_path):
     export_explorer(b, splits=("synthetic", "lite"), agents=DEFAULT_DEMO_AGENTS)
     for name in EXPECTED_FILES:
         assert (a / name).read_bytes() == (b / name).read_bytes()
+
+
+def test_committed_prescreenbench_explorer_snapshot_matches_export(tmp_path):
+    export_explorer(tmp_path, splits=("synthetic", "lite"), agents=DEFAULT_DEMO_AGENTS)
+    committed = default_out_dir()
+    for name in EXPECTED_FILES:
+        assert (tmp_path / name).read_bytes() == (committed / name).read_bytes(), name
 
 
 def test_exported_quote_offsets_match_documents(tmp_path):
