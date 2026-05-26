@@ -3,6 +3,7 @@ import { Info } from 'lucide-react'
 import CaseTable from './CaseTable'
 import type { SliceFilter } from './CaseTable'
 import Overview from './Overview'
+import CaseDeepDive from './CaseDeepDive'
 import { fetchBenchmarkJson } from './types'
 import type { BenchmarkIndexEntry, DefinitionsPayload, SplitBundle } from './types'
 
@@ -98,6 +99,14 @@ export default function PrescreenBenchExplorer() {
     [selectedSplit, splitOptions],
   )
 
+  const selectedCase = useMemo(() => {
+    if (!bundle || !selectedCaseId) {
+      return null
+    }
+
+    return bundle.cases.find((caseRow) => caseRow.case.case_id === selectedCaseId) ?? null
+  }, [bundle, selectedCaseId])
+
   const handleToggleAgent = (agent: string) => {
     setSelectedAgents((current) =>
       current.includes(agent)
@@ -185,6 +194,11 @@ export default function PrescreenBenchExplorer() {
             }
             selectedCaseId={selectedCaseId}
             onSelectCase={setSelectedCaseId}
+          />
+          <CaseDeepDive
+            key={selectedCase?.case.case_id ?? 'no-case'}
+            caseRow={selectedCase}
+            selectedAgents={selectedAgents}
           />
         </>
       )}
