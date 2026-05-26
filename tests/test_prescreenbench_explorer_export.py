@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from clinique.benchmarks.prescreenbench.explorer_export import (
     DEFAULT_DEMO_AGENTS,
     build_definitions,
@@ -11,6 +13,7 @@ from clinique.benchmarks.prescreenbench.explorer_export import (
     export_explorer,
 )
 from clinique.benchmarks.prescreenbench.load import load_split
+from clinique.benchmarks.prescreenbench.score import run
 
 EXPECTED_FILES = {
     "index.json",
@@ -39,6 +42,30 @@ def test_build_split_bundle_contains_cases_agents_and_annotations():
         assert agent in first["agent_outputs"]
         assert agent in first["grader"]
         assert first["grader"][agent]["criteria"]
+
+
+def test_build_split_bundle_uses_custom_report_when_supplied():
+    split = load_split("synthetic")
+    rows, _ = run(split, "clinique_rule")
+    predictions = {row["case_id"]: row for row in rows}
+    custom_report = {"agent": "custom", "score": 0.123}
+    bundle = build_split_bundle(
+        split,
+        agents=(),
+        custom_predictions={"custom": predictions},
+        custom_reports={"custom": custom_report},
+    )
+    assert bundle["agents"] == [{"agent": "custom", "report": custom_report}]
+
+
+def test_build_split_bundle_rejects_report_without_predictions():
+    split = load_split("synthetic")
+    with pytest.raises(ValueError, match="custom report without predictions.*orphan"):
+        build_split_bundle(
+            split,
+            agents=(),
+            custom_reports={"orphan": {"agent": "orphan"}},
+        )
 
 
 def test_export_writes_expected_files(tmp_path):

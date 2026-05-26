@@ -115,6 +115,14 @@ def build_split_bundle(
     custom_reports: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Build one complete dataset bundle as UI-ready JSON."""
+    custom_predictions = custom_predictions or {}
+    custom_reports = custom_reports or {}
+
+    missing_report_agents = set(custom_reports) - set(custom_predictions)
+    if missing_report_agents:
+        missing_agent = sorted(missing_report_agents)[0]
+        raise ValueError(f"custom report without predictions for agent '{missing_agent}'")
+
     predictions_by_agent: dict[str, dict[str, dict[str, Any]]] = {}
     reports_by_agent: dict[str, dict[str, Any]] = {}
 
@@ -123,10 +131,12 @@ def build_split_bundle(
         predictions_by_agent[agent] = predictions
         reports_by_agent[agent] = report
 
-    for agent, predictions in (custom_predictions or {}).items():
+    for agent, predictions in custom_predictions.items():
         predictions_by_agent[agent] = predictions
-        report = custom_reports.get(agent) if custom_reports else None
-        reports_by_agent[agent] = report or to_json(score(split, predictions), agent=agent)
+        if agent in custom_reports:
+            reports_by_agent[agent] = custom_reports[agent]
+            continue
+        reports_by_agent[agent] = to_json(score(split, predictions), agent=agent)
 
     case_payloads: list[dict[str, Any]] = []
     for case in split.cases:
