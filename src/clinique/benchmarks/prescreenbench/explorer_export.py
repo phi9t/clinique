@@ -54,6 +54,18 @@ def build_definitions() -> dict[str, Any]:
             "criterion_macro_f1": {
                 "plain": "Unweighted mean F1 across labels present in gold or prediction."
             },
+            "patient_level_metrics": {
+                "plain": (
+                    "Case-level diagnostics for overall recommendation labels, including "
+                    "accuracy, per-class scores, and confusion counts."
+                )
+            },
+            "per_criterion_metrics": {
+                "plain": (
+                    "Per-criterion aggregate diagnostics across the split, including support, "
+                    "overall accuracy, and safety-failure counts."
+                )
+            },
             "evidence_support_accuracy": {
                 "plain": (
                     "Among met/not_met predictions, the fraction backed by present verbatim "

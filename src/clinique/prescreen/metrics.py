@@ -104,6 +104,67 @@ def accuracy(outcomes: Sequence[CriterionOutcome]) -> float:
     return _safe_ratio(sum(1 for o in outcomes if is_correct(o)), len(outcomes))
 
 
+def multiclass_summary(
+    pairs: Sequence[tuple[str, str]],
+    labels: Sequence[str] | None = None,
+) -> dict[str, object]:
+    """Summarize gold/prediction multiclass classification metrics.
+
+    The summary intentionally includes per-class metrics only for labels present in either gold or
+    prediction. ``accuracy`` is ``None`` when no pairs are provided so callers can distinguish
+    "empty denominator" from a perfect 1.0 score.
+    """
+    pairs = list(pairs)
+    total = len(pairs)
+
+    if total == 0:
+        return {"total": 0, "accuracy": None, "per_class": {}, "confusion_matrix": {}}
+
+    observed_labels: list[str] = []
+    observed_set: set[str] = set()
+    confusion_matrix: dict[str, dict[str, int]] = {}
+
+    for gold, pred in pairs:
+        for label in (gold, pred):
+            if label not in observed_set:
+                observed_set.add(label)
+                observed_labels.append(label)
+        row = confusion_matrix.setdefault(gold, {})
+        row[pred] = row.get(pred, 0) + 1
+
+    if labels is None:
+        target_labels = observed_labels
+    else:
+        target_labels = [label for label in labels if label in observed_set]
+
+    per_class: dict[str, dict[str, float]] = {}
+    correct = 0
+    for gold, pred in pairs:
+        if gold == pred:
+            correct += 1
+
+    for label in target_labels:
+        tp = sum(1 for gold, pred in pairs if gold == label and pred == label)
+        fp = sum(1 for gold, pred in pairs if gold != label and pred == label)
+        fn = sum(1 for gold, pred in pairs if gold == label and pred != label)
+        precision = _safe_ratio(tp, tp + fp, default=0.0)
+        recall = _safe_ratio(tp, tp + fn, default=0.0)
+        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+        per_class[label] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "support": float(tp + fn),
+        }
+
+    return {
+        "total": total,
+        "accuracy": correct / total if total else None,
+        "per_class": per_class,
+        "confusion_matrix": confusion_matrix,
+    }
+
+
 def per_class_f1(outcomes: Sequence[CriterionOutcome]) -> dict[str, dict[str, float]]:
     """Precision/recall/F1/support per label, over labels present in gold or prediction."""
     present = {o.gold for o in outcomes} | {o.pred for o in outcomes}

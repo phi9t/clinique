@@ -10,6 +10,7 @@ too for convenience, but it is a separate entry point from scoring.
 from __future__ import annotations
 
 import json
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -314,6 +315,8 @@ class ScoreReport:
     hard_gate_breaches: list[str] = field(default_factory=list)
     passed_hard_gates: bool = True
     per_class_f1: dict[str, dict[str, float]] = field(default_factory=dict)
+    patient_level_metrics: dict[str, Any] = field(default_factory=dict)
+    per_criterion_metrics: list[dict[str, Any]] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
@@ -326,9 +329,12 @@ def score(split_data: SplitData, predictions: dict[str, dict[str, Any]]) -> Scor
     report = ScoreReport(split=split_data.split)
     outcomes: list[M.CriterionOutcome] = []
     gate_outcomes: list[M.CriterionOutcome] = []
+    patient_outcomes: list[tuple[str, str]] = []
     schema_valid = 0
     overall_total = 0
     overall_correct = 0
+    criterion_outcomes_by_id: dict[str, list[M.CriterionOutcome]] = defaultdict(list)
+    criterion_specs: dict[str, tuple[str, str, bool]] = {}
 
     cases_with_gold = [c for c in split_data.cases if c.case_id in split_data.gold]
     for case in cases_with_gold:
@@ -400,6 +406,15 @@ def score(split_data: SplitData, predictions: dict[str, dict[str, Any]]) -> Scor
             )
             outcomes.append(outcome)
             gate_outcomes.append(outcome)
+            criterion_outcomes_by_id[gold_crit.criterion_id].append(outcome)
+            criterion_specs.setdefault(
+                gold_crit.criterion_id,
+                (
+                    gold_crit.criterion_type,
+                    gold_crit.clinical_domain,
+                    gold_crit.is_safety_critical,
+                ),
+            )
 
         if not schema_errors and case.task == "end_to_end_packet":
             for crit in predicted:
@@ -428,6 +443,7 @@ def score(split_data: SplitData, predictions: dict[str, dict[str, Any]]) -> Scor
                 )
 
         if case.task != "criterion_judgment" and not schema_errors:
+            patient_outcomes.append((gold.overall_label, overall_pred))
             overall_total += 1
             if overall_pred == gold.overall_label:
                 overall_correct += 1
@@ -449,6 +465,31 @@ def score(split_data: SplitData, predictions: dict[str, dict[str, Any]]) -> Scor
     report.unsupported_decision_count = M.unsupported_decision_count(gate_outcomes)
     report.fabricated_quote_count = M.fabricated_quote_count(gate_outcomes)
     report.per_class_f1 = M.per_class_f1(outcomes)
+    report.patient_level_metrics = M.multiclass_summary(
+        patient_outcomes,
+        labels=("likely_ineligible", "needs_review", "potentially_eligible"),
+    )
+    per_criterion: list[dict[str, Any]] = []
+    for criterion_id in sorted(criterion_outcomes_by_id):
+        spec_outcomes = criterion_outcomes_by_id[criterion_id]
+        spec = criterion_specs[criterion_id]
+        per_criterion.append(
+            {
+                "criterion_id": criterion_id,
+                "criterion_type": spec[0],
+                "clinical_domain": spec[1],
+                "is_safety_critical": spec[2],
+                "support": len(spec_outcomes),
+                "accuracy": M.accuracy(spec_outcomes),
+                "macro_f1": M.macro_f1(spec_outcomes),
+                "per_class_f1": M.per_class_f1(spec_outcomes),
+                "unsafe_clearance_rate": M.unsafe_clearance_rate(spec_outcomes),
+                "unsafe_clearance_count": M.unsafe_clearance_count(spec_outcomes),
+                "unsupported_decision_count": M.unsupported_decision_count(spec_outcomes),
+                "fabricated_quote_count": M.fabricated_quote_count(spec_outcomes),
+            }
+        )
+    report.per_criterion_metrics = per_criterion
 
     requiring = sum(1 for o in outcomes if M.requires_evidence(o.pred))
     unsupported_rate = report.unsupported_decision_count / requiring if requiring else 0.0

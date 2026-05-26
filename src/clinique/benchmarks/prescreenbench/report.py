@@ -77,6 +77,12 @@ def to_html(report: ScoreReport, *, agent: str | None = None) -> str:
         f"<td>{int(c['support'])}</td></tr>"
         for label, c in report.per_class_f1.items()
     )
+    patient_metrics = html.escape(
+        json.dumps(data.get("patient_level_metrics", {}), indent=2, sort_keys=True)
+    )
+    criterion_metrics = html.escape(
+        json.dumps(data.get("per_criterion_metrics", []), indent=2, sort_keys=True)
+    )
 
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>{html.escape(title)}</title>
@@ -90,6 +96,15 @@ def to_html(report: ScoreReport, *, agent: str | None = None) -> str:
  .bad {{ color: #b00020; font-weight: 600; font-variant-numeric: tabular-nums; }}
  .gate {{ font-size: 1.1rem; padding: .5rem 0; }}
  .score {{ font-size: 2rem; font-weight: 700; }}
+ .mono {{
+   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+   font-size: 0.9rem;
+   background: #f9f9f9;
+   border: 1px solid #ddd;
+   padding: 0.8rem;
+   overflow: auto;
+   white-space: pre;
+ }}
 </style></head><body>
 <h1>{html.escape(title)}</h1>
 <p class="score">{report.score:.3f}</p>
@@ -100,6 +115,10 @@ def to_html(report: ScoreReport, *, agent: str | None = None) -> str:
 <h2>Per-class F1</h2>
 <table><tr><th>label</th><th>F1</th><th>precision</th><th>recall</th><th>support</th></tr>
 {class_rows}</table>
+<h2>Patient-level metrics</h2>
+<pre class="mono">{patient_metrics}</pre>
+<h2>Per-criterion metrics</h2>
+<pre class="mono">{criterion_metrics}</pre>
 <p style="color:#888;font-size:.85rem">unknown_actionability is proxied by unknown_recall
 ({report.unknown_recall:.3f}) until human ratings exist.</p>
 </body></html>

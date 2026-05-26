@@ -23,6 +23,10 @@ function metricLabel(metric: string): string {
   return metric.replaceAll('_', ' ')
 }
 
+function formatOptionalMetric(value: number | null | undefined): string {
+  return typeof value === 'number' ? formatMetric(value) : 'n/a'
+}
+
 export default function Overview({
   bundle,
   definitions,
@@ -99,6 +103,112 @@ export default function Overview({
 
       {visibleAgents.length === 0 && (
         <p className="text-muted text-center">Select at least one agent to compare metrics.</p>
+      )}
+
+      {visibleAgents.length > 0 && (
+        <section className="pb-metric-detail" aria-label="Patient-level metrics">
+          <div className="pb-metric-detail-header">
+            <h3>Patient-level metrics</h3>
+            <MetricHelp definitions={definitions} metric="patient_level_metrics" />
+          </div>
+
+          <div className="pb-metric-table-wrapper">
+            <table className="pb-metric-table">
+              <thead>
+                <tr>
+                  <th scope="col">Agent</th>
+                  <th scope="col">Evaluated cases</th>
+                  <th scope="col">Patient accuracy</th>
+                  <th scope="col">Recommendation classes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleAgents.map(({ agent, report }) => {
+                  const patientMetrics = report.patient_level_metrics
+                  const perClass = patientMetrics?.per_class ?? {}
+                  const classLabels = Object.entries(perClass)
+                    .map(([label, metrics]) => `${label}: F1 ${formatMetric(metrics.f1)}`)
+                    .join(', ')
+
+                  return (
+                    <tr key={`patient-${agent}`}>
+                      <th scope="row">{agent}</th>
+                      <td>{patientMetrics?.total ?? 0}</td>
+                      <td>{formatOptionalMetric(patientMetrics?.accuracy)}</td>
+                      <td>{classLabels || 'No recommendation cases'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {visibleAgents.length > 0 && (
+        <section className="pb-metric-detail" aria-label="Per-criterion metrics">
+          <div className="pb-metric-detail-header">
+            <h3>Per-criterion metrics</h3>
+            <MetricHelp definitions={definitions} metric="per_criterion_metrics" />
+          </div>
+
+          <div className="pb-metric-table-wrapper">
+            <table className="pb-metric-table">
+              <thead>
+                <tr>
+                  <th scope="col">Agent</th>
+                  <th scope="col">Criterion</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Domain</th>
+                  <th scope="col">Support</th>
+                  <th scope="col">Accuracy</th>
+                  <th scope="col">Macro F1</th>
+                  <th scope="col">Unsafe clearances</th>
+                  <th scope="col">Unsupported</th>
+                  <th scope="col">Fabricated quotes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleAgents.flatMap(({ agent, report }) => {
+                  const rows = report.per_criterion_metrics ?? []
+
+                  if (rows.length === 0) {
+                    return [
+                      <tr key={`criterion-empty-${agent}`}>
+                        <th scope="row">{agent}</th>
+                        <td colSpan={9}>No criterion metrics available</td>
+                      </tr>,
+                    ]
+                  }
+
+                  return rows.map((criterion) => (
+                    <tr key={`criterion-${agent}-${criterion.criterion_id}`}>
+                      <th scope="row">{agent}</th>
+                      <td>
+                        <span className="pb-criterion-id">{criterion.criterion_id}</span>
+                        {criterion.is_safety_critical && (
+                          <span className="pb-safety-flag">safety</span>
+                        )}
+                      </td>
+                      <td>{criterion.criterion_type}</td>
+                      <td>{criterion.clinical_domain}</td>
+                      <td>{criterion.support}</td>
+                      <td>{formatMetric(criterion.accuracy)}</td>
+                      <td>{formatMetric(criterion.macro_f1)}</td>
+                      <td>
+                        {criterion.unsafe_clearance_count}
+                        {' / '}
+                        {formatMetric(criterion.unsafe_clearance_rate)}
+                      </td>
+                      <td>{criterion.unsupported_decision_count}</td>
+                      <td>{criterion.fabricated_quote_count}</td>
+                    </tr>
+                  ))
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </section>
   )

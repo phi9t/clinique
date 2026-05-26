@@ -22,6 +22,29 @@ export interface ScoreReport {
   passed_hard_gates: boolean
   per_class_f1: Record<string, { precision: number; recall: number; f1: number; support: number }>
   errors: string[]
+  patient_level_metrics?: {
+    total: number
+    accuracy: number | null
+    per_class: Record<
+      string,
+      { precision: number; recall: number; f1: number; support: number }
+    >
+    confusion_matrix: Record<string, Record<string, number>>
+  }
+  per_criterion_metrics?: Array<{
+    criterion_id: string
+    criterion_type: 'inclusion' | 'exclusion'
+    clinical_domain: string
+    is_safety_critical: boolean
+    support: number
+    accuracy: number
+    macro_f1: number
+    per_class_f1: Record<string, { precision: number; recall: number; f1: number; support: number }>
+    unsafe_clearance_rate: number
+    unsafe_clearance_count: number
+    unsupported_decision_count: number
+    fabricated_quote_count: number
+  }>
   agent?: string
 }
 

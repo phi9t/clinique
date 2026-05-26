@@ -71,6 +71,60 @@ def test_clinique_rule_is_perfect_and_passes_gates(synthetic):
     assert report.fabricated_quote_count == 0
 
 
+def test_score_reports_patient_level_recommendation_metrics(synthetic):
+    rows, errors = run(synthetic, "clinique_rule")
+    assert errors == []
+    report = score(synthetic, {r["case_id"]: r for r in rows})
+
+    patient_metrics = report.patient_level_metrics
+    assert patient_metrics["total"] == len(synthetic.cases)
+    assert patient_metrics["accuracy"] == report.overall_recommendation_accuracy
+    assert patient_metrics["per_class"]
+    assert patient_metrics["confusion_matrix"]
+
+    for case in synthetic.cases:
+        gold_label = synthetic.gold[case.case_id].overall_label
+        assert gold_label in patient_metrics["confusion_matrix"]
+
+
+def test_score_reports_no_patient_level_total_for_criterion_judgment_split(lite):
+    rows, errors = run(lite, "clinique_rule")
+    assert errors == []
+    report = score(lite, {r["case_id"]: r for r in rows})
+
+    assert report.overall_recommendation_accuracy == 1.0
+    assert report.patient_level_metrics["total"] == 0
+    assert report.patient_level_metrics["accuracy"] is None
+    assert report.patient_level_metrics["per_class"] == {}
+
+
+def test_score_reports_per_criterion_metrics(synthetic):
+    rows, errors = run(synthetic, "clinique_rule")
+    assert errors == []
+    report = score(synthetic, {r["case_id"]: r for r in rows})
+
+    by_id = {entry["criterion_id"]: entry for entry in report.per_criterion_metrics}
+    expected_ids = {
+        criterion.criterion_id
+        for gold in synthetic.gold.values()
+        for criterion in gold.criterion_labels
+    }
+    assert set(by_id) == expected_ids
+    first_gold = next(iter(synthetic.gold.values())).criterion_labels[0]
+    first = by_id[first_gold.criterion_id]
+    assert first["criterion_type"] == first_gold.criterion_type
+    assert first["clinical_domain"] == first_gold.clinical_domain
+    assert first["is_safety_critical"] == first_gold.is_safety_critical
+    assert first["support"] >= 1
+    assert first["accuracy"] == 1.0
+    assert first["macro_f1"] == 1.0
+    assert first["per_class_f1"]
+    assert first["unsafe_clearance_rate"] == 0.0
+    assert first["unsafe_clearance_count"] == 0
+    assert first["unsupported_decision_count"] == 0
+    assert first["fabricated_quote_count"] == 0
+
+
 def test_keyword_rule_unsafely_clears_and_fails_gate(synthetic):
     rows, _ = run(synthetic, "keyword_rule")
     report = score(synthetic, {r["case_id"]: r for r in rows})

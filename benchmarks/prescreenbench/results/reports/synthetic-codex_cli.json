@@ -12,6 +12,23 @@
   "hard_gate_breaches": [],
   "overall_recommendation_accuracy": 1.0,
   "passed_hard_gates": true,
+  "patient_level_metrics": {
+    "accuracy": 1.0,
+    "confusion_matrix": {
+      "needs_review": {
+        "needs_review": 2
+      }
+    },
+    "per_class": {
+      "needs_review": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "support": 2.0
+      }
+    },
+    "total": 2
+  },
   "per_class_f1": {
     "met": {
       "f1": 0.0,
@@ -26,6 +43,119 @@
       "support": 5.0
     }
   },
+  "per_criterion_metrics": [
+    {
+      "accuracy": 1.0,
+      "clinical_domain": "condition",
+      "criterion_id": "E-001",
+      "criterion_type": "exclusion",
+      "fabricated_quote_count": 0,
+      "is_safety_critical": false,
+      "macro_f1": 1.0,
+      "per_class_f1": {
+        "unknown": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 1.0
+        }
+      },
+      "support": 1,
+      "unsafe_clearance_count": 0,
+      "unsafe_clearance_rate": 0.0,
+      "unsupported_decision_count": 0
+    },
+    {
+      "accuracy": 1.0,
+      "clinical_domain": "medication",
+      "criterion_id": "E-017",
+      "criterion_type": "exclusion",
+      "fabricated_quote_count": 0,
+      "is_safety_critical": false,
+      "macro_f1": 1.0,
+      "per_class_f1": {
+        "unknown": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 1.0
+        }
+      },
+      "support": 1,
+      "unsafe_clearance_count": 0,
+      "unsafe_clearance_rate": 0.0,
+      "unsupported_decision_count": 0
+    },
+    {
+      "accuracy": 0.0,
+      "clinical_domain": "demographic",
+      "criterion_id": "I-001",
+      "criterion_type": "inclusion",
+      "fabricated_quote_count": 0,
+      "is_safety_critical": false,
+      "macro_f1": 0.0,
+      "per_class_f1": {
+        "met": {
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "support": 1.0
+        },
+        "unknown": {
+          "f1": 0.0,
+          "precision": 0.0,
+          "recall": 0.0,
+          "support": 0.0
+        }
+      },
+      "support": 1,
+      "unsafe_clearance_count": 0,
+      "unsafe_clearance_rate": 0.0,
+      "unsupported_decision_count": 0
+    },
+    {
+      "accuracy": 1.0,
+      "clinical_domain": "condition",
+      "criterion_id": "I-002",
+      "criterion_type": "inclusion",
+      "fabricated_quote_count": 0,
+      "is_safety_critical": false,
+      "macro_f1": 1.0,
+      "per_class_f1": {
+        "unknown": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 2.0
+        }
+      },
+      "support": 2,
+      "unsafe_clearance_count": 0,
+      "unsafe_clearance_rate": 0.0,
+      "unsupported_decision_count": 0
+    },
+    {
+      "accuracy": 1.0,
+      "clinical_domain": "medication",
+      "criterion_id": "I-005",
+      "criterion_type": "inclusion",
+      "fabricated_quote_count": 0,
+      "is_safety_critical": false,
+      "macro_f1": 1.0,
+      "per_class_f1": {
+        "unknown": {
+          "f1": 1.0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "support": 1.0
+        }
+      },
+      "support": 1,
+      "unsafe_clearance_count": 0,
+      "unsafe_clearance_rate": 0.0,
+      "unsupported_decision_count": 0
+    }
+  ],
   "schema_valid_rate": 1.0,
   "score": 0.6363636363636364,
   "split": "synthetic",

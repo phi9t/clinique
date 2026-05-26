@@ -65,6 +65,8 @@ def test_definitions_include_metric_and_label_help():
     assert definitions["labels"]["unknown"]["plain"]
     assert definitions["metrics"]["unsafe_clearance_rate"]["plain"]
     assert definitions["primer"]["eligibility_criteria"]
+    assert definitions["metrics"]["patient_level_metrics"]["plain"]
+    assert definitions["metrics"]["per_criterion_metrics"]["plain"]
 
 
 def test_build_split_bundle_contains_cases_agents_and_annotations():
