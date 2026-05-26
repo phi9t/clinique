@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 
+from clinique.cli.benchmark import handle_benchmark
 from clinique.cli.edc import handle_edc
 from clinique.cli.parser import build_parser
 from clinique.cli.prescreen import handle_prescreen
@@ -11,7 +12,7 @@ from clinique.cli.prescreen import handle_prescreen
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv if argv is not None else sys.argv[1:])
-    for handler in (handle_edc, handle_prescreen):
+    for handler in (handle_edc, handle_prescreen, handle_benchmark):
         code = handler(args)
         if code is not None:
             return code
