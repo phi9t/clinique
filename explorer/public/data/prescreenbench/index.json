@@ -3,6 +3,7 @@
     "agents": [
       "always_unknown",
       "clinique_rule",
+      "codex_cli",
       "keyword_rule"
     ],
     "benchmark_id": "prescreenbench_v0",
@@ -16,6 +17,7 @@
     "agents": [
       "always_unknown",
       "clinique_rule",
+      "codex_cli",
       "keyword_rule"
     ],
     "benchmark_id": "prescreenbench_v0",

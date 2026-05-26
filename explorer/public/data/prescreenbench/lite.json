@@ -81,6 +81,46 @@
       }
     },
     {
+      "agent": "codex_cli",
+      "report": {
+        "agent": "codex_cli",
+        "benchmark_id": "prescreenbench_v0",
+        "blocking_criterion_recall": 0.0,
+        "cases": 6,
+        "criterion_accuracy": 0.8333333333333334,
+        "criterion_macro_f1": 0.45454545454545453,
+        "criterion_total": 6,
+        "errors": [],
+        "evidence_support_accuracy": 1.0,
+        "fabricated_quote_count": 0,
+        "hard_gate_breaches": [],
+        "overall_recommendation_accuracy": 1.0,
+        "passed_hard_gates": true,
+        "per_class_f1": {
+          "met": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 1.0
+          },
+          "unknown": {
+            "f1": 0.9090909090909091,
+            "precision": 0.8333333333333334,
+            "recall": 1.0,
+            "support": 5.0
+          }
+        },
+        "schema_valid_rate": 1.0,
+        "score": 0.6363636363636364,
+        "split": "lite",
+        "unknown_precision": 0.8333333333333334,
+        "unknown_recall": 1.0,
+        "unsafe_clearance_count": 0,
+        "unsafe_clearance_rate": 0.0,
+        "unsupported_decision_count": 0
+      }
+    },
+    {
       "agent": "keyword_rule",
       "report": {
         "agent": "keyword_rule",
@@ -883,6 +923,21 @@
           ],
           "overall_recommendation": "needs_review"
         },
+        "codex_cli": {
+          "case_id": "PB-LITE-000-I-001",
+          "criteria": [
+            {
+              "clinical_domain": "demographic",
+              "criterion_id": "I-001",
+              "criterion_type": "inclusion",
+              "evidence": [],
+              "prediction": "unknown",
+              "rationale": "The patient documents provided do not include any age statement or date of birth, so age cannot be verified against the \"Age >= 18 Years\" criterion. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "raw_text": "Age >= 18 Years"
+            }
+          ],
+          "overall_recommendation": "needs_review"
+        },
         "keyword_rule": {
           "case_id": "PB-LITE-000-I-001",
           "criteria": [
@@ -1354,6 +1409,37 @@
               "prediction": "met",
               "quotes_verbatim": true,
               "rationale": "Patient age 62 vs minimum 18.0.",
+              "schema_errors": [],
+              "unsafe_clearance": false,
+              "unsupported_decision": false
+            }
+          ],
+          "overall_correct": false,
+          "overall_prediction": "needs_review",
+          "schema_errors": []
+        },
+        "codex_cli": {
+          "case_errors": [],
+          "case_id": "PB-LITE-000-I-001",
+          "criteria": [
+            {
+              "blocking_gold": false,
+              "blocking_pred": false,
+              "clinical_domain": "demographic",
+              "correct": false,
+              "counts_toward_core_metrics": true,
+              "counts_toward_gate_metrics": true,
+              "criterion_id": "I-001",
+              "criterion_text": "Age >= 18 Years",
+              "criterion_type": "inclusion",
+              "evidence_checks": [],
+              "evidence_present": false,
+              "fabricated_quote_count": 0,
+              "gold_label": "met",
+              "is_safety_critical": false,
+              "prediction": "unknown",
+              "quotes_verbatim": true,
+              "rationale": "The patient documents provided do not include any age statement or date of birth, so age cannot be verified against the \"Age >= 18 Years\" criterion. [Agent: Codex CLI (gpt-5.4-mini)]",
               "schema_errors": [],
               "unsafe_clearance": false,
               "unsupported_decision": false
@@ -2262,6 +2348,21 @@
               "prediction": "unknown",
               "rationale": "No deterministic rule applies; human review required.",
               "raw_text": "Is pregnant or breastfeeding, or expecting to conceive or father children prior to 120 days after the last dose of study medication or through 180 days after last dose of chemotherapeutic agents."
+            }
+          ],
+          "overall_recommendation": "needs_review"
+        },
+        "codex_cli": {
+          "case_id": "PB-LITE-001-I-002",
+          "criteria": [
+            {
+              "clinical_domain": "condition",
+              "criterion_id": "I-002",
+              "criterion_type": "inclusion",
+              "evidence": [],
+              "prediction": "unknown",
+              "rationale": "The documents show non-small cell lung cancer, but they do not confirm histology or cytology, nor do they specify stage IV or nonsquamous disease. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "raw_text": "Has a histologically-confirmed or cytologically confirmed diagnosis of stage IV nonsquamous NSCLC."
             }
           ],
           "overall_recommendation": "needs_review"
@@ -2756,6 +2857,37 @@
           "overall_prediction": "needs_review",
           "schema_errors": []
         },
+        "codex_cli": {
+          "case_errors": [],
+          "case_id": "PB-LITE-001-I-002",
+          "criteria": [
+            {
+              "blocking_gold": false,
+              "blocking_pred": false,
+              "clinical_domain": "condition",
+              "correct": true,
+              "counts_toward_core_metrics": true,
+              "counts_toward_gate_metrics": true,
+              "criterion_id": "I-002",
+              "criterion_text": "Has a histologically-confirmed or cytologically confirmed diagnosis of stage IV nonsquamous NSCLC.",
+              "criterion_type": "inclusion",
+              "evidence_checks": [],
+              "evidence_present": false,
+              "fabricated_quote_count": 0,
+              "gold_label": "unknown",
+              "is_safety_critical": false,
+              "prediction": "unknown",
+              "quotes_verbatim": true,
+              "rationale": "The documents show non-small cell lung cancer, but they do not confirm histology or cytology, nor do they specify stage IV or nonsquamous disease. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "schema_errors": [],
+              "unsafe_clearance": false,
+              "unsupported_decision": false
+            }
+          ],
+          "overall_correct": false,
+          "overall_prediction": "needs_review",
+          "schema_errors": []
+        },
         "keyword_rule": {
           "case_errors": [],
           "case_id": "PB-LITE-001-I-002",
@@ -3669,6 +3801,21 @@
           ],
           "overall_recommendation": "needs_review"
         },
+        "codex_cli": {
+          "case_id": "PB-LITE-002-E-001",
+          "criteria": [
+            {
+              "clinical_domain": "condition",
+              "criterion_id": "E-001",
+              "criterion_type": "exclusion",
+              "evidence": [],
+              "prediction": "unknown",
+              "rationale": "The patient is documented as having \"Non-small cell lung cancer\" but there is no histology detail stating predominantly squamous cell disease, so this exclusion cannot be determined from the available records. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "raw_text": "Has predominantly squamous cell histology NSCLC."
+            }
+          ],
+          "overall_recommendation": "needs_review"
+        },
         "keyword_rule": {
           "case_id": "PB-LITE-002-E-001",
           "criteria": [
@@ -4150,6 +4297,37 @@
               "prediction": "unknown",
               "quotes_verbatim": true,
               "rationale": "Lung cancer documented; squamous histology not confirmed.",
+              "schema_errors": [],
+              "unsafe_clearance": false,
+              "unsupported_decision": false
+            }
+          ],
+          "overall_correct": false,
+          "overall_prediction": "needs_review",
+          "schema_errors": []
+        },
+        "codex_cli": {
+          "case_errors": [],
+          "case_id": "PB-LITE-002-E-001",
+          "criteria": [
+            {
+              "blocking_gold": false,
+              "blocking_pred": false,
+              "clinical_domain": "condition",
+              "correct": true,
+              "counts_toward_core_metrics": true,
+              "counts_toward_gate_metrics": true,
+              "criterion_id": "E-001",
+              "criterion_text": "Has predominantly squamous cell histology NSCLC.",
+              "criterion_type": "exclusion",
+              "evidence_checks": [],
+              "evidence_present": false,
+              "fabricated_quote_count": 0,
+              "gold_label": "unknown",
+              "is_safety_critical": false,
+              "prediction": "unknown",
+              "quotes_verbatim": true,
+              "rationale": "The patient is documented as having \"Non-small cell lung cancer\" but there is no histology detail stating predominantly squamous cell disease, so this exclusion cannot be determined from the available records. [Agent: Codex CLI (gpt-5.4-mini)]",
               "schema_errors": [],
               "unsafe_clearance": false,
               "unsupported_decision": false
@@ -5072,6 +5250,21 @@
           ],
           "overall_recommendation": "needs_review"
         },
+        "codex_cli": {
+          "case_id": "PB-LITE-003-I-005",
+          "criteria": [
+            {
+              "clinical_domain": "medication",
+              "criterion_id": "I-005",
+              "criterion_type": "inclusion",
+              "evidence": [],
+              "prediction": "unknown",
+              "rationale": "The records show non-small cell lung cancer, but they do not state whether it is advanced/metastatic or whether the patient previously received systemic treatment for it. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "raw_text": "Has not received prior systemic treatment for their advanced/metastatic NSCLC."
+            }
+          ],
+          "overall_recommendation": "needs_review"
+        },
         "keyword_rule": {
           "case_id": "PB-LITE-003-I-005",
           "criteria": [
@@ -5553,6 +5746,37 @@
               "prediction": "unknown",
               "quotes_verbatim": true,
               "rationale": "No systemic oncology therapy in medication list; complete history not verified.",
+              "schema_errors": [],
+              "unsafe_clearance": false,
+              "unsupported_decision": false
+            }
+          ],
+          "overall_correct": false,
+          "overall_prediction": "needs_review",
+          "schema_errors": []
+        },
+        "codex_cli": {
+          "case_errors": [],
+          "case_id": "PB-LITE-003-I-005",
+          "criteria": [
+            {
+              "blocking_gold": false,
+              "blocking_pred": false,
+              "clinical_domain": "medication",
+              "correct": true,
+              "counts_toward_core_metrics": true,
+              "counts_toward_gate_metrics": true,
+              "criterion_id": "I-005",
+              "criterion_text": "Has not received prior systemic treatment for their advanced/metastatic NSCLC.",
+              "criterion_type": "inclusion",
+              "evidence_checks": [],
+              "evidence_present": false,
+              "fabricated_quote_count": 0,
+              "gold_label": "unknown",
+              "is_safety_critical": false,
+              "prediction": "unknown",
+              "quotes_verbatim": true,
+              "rationale": "The records show non-small cell lung cancer, but they do not state whether it is advanced/metastatic or whether the patient previously received systemic treatment for it. [Agent: Codex CLI (gpt-5.4-mini)]",
               "schema_errors": [],
               "unsafe_clearance": false,
               "unsupported_decision": false
@@ -6465,6 +6689,21 @@
           ],
           "overall_recommendation": "needs_review"
         },
+        "codex_cli": {
+          "case_id": "PB-LITE-004-E-017",
+          "criteria": [
+            {
+              "clinical_domain": "medication",
+              "criterion_id": "E-017",
+              "criterion_type": "exclusion",
+              "evidence": [],
+              "prediction": "unknown",
+              "rationale": "The provided patient documents do not mention any prior anti-PD-1, anti-PD-L1, anti-PD-L2, other immuno-regulatory antibody treatment, or pembrolizumab study participation. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "raw_text": "Had prior treatment with any other anti-programmed cell death-1 (PD-1), or PD-ligand 1 (PD-L1) or PD-L2 agent or an antibody targeting other immuno-regulatory receptors or mechanisms. Has participated in any other pembrolizumab study and has been treated with pembrolizumab."
+            }
+          ],
+          "overall_recommendation": "needs_review"
+        },
         "keyword_rule": {
           "case_id": "PB-LITE-004-E-017",
           "criteria": [
@@ -6936,6 +7175,37 @@
               "prediction": "unknown",
               "quotes_verbatim": true,
               "rationale": "No conclusive prior immunotherapy history found.",
+              "schema_errors": [],
+              "unsafe_clearance": false,
+              "unsupported_decision": false
+            }
+          ],
+          "overall_correct": false,
+          "overall_prediction": "needs_review",
+          "schema_errors": []
+        },
+        "codex_cli": {
+          "case_errors": [],
+          "case_id": "PB-LITE-004-E-017",
+          "criteria": [
+            {
+              "blocking_gold": false,
+              "blocking_pred": false,
+              "clinical_domain": "medication",
+              "correct": true,
+              "counts_toward_core_metrics": true,
+              "counts_toward_gate_metrics": true,
+              "criterion_id": "E-017",
+              "criterion_text": "Had prior treatment with any other anti-programmed cell death-1 (PD-1), or PD-ligand 1 (PD-L1) or PD-L2 agent or an antibody targeting other immuno-regulatory receptors or mechanisms. Has participated in any other pembrolizumab study and has been treated with pembrolizumab.",
+              "criterion_type": "exclusion",
+              "evidence_checks": [],
+              "evidence_present": false,
+              "fabricated_quote_count": 0,
+              "gold_label": "unknown",
+              "is_safety_critical": false,
+              "prediction": "unknown",
+              "quotes_verbatim": true,
+              "rationale": "The provided patient documents do not mention any prior anti-PD-1, anti-PD-L1, anti-PD-L2, other immuno-regulatory antibody treatment, or pembrolizumab study participation. [Agent: Codex CLI (gpt-5.4-mini)]",
               "schema_errors": [],
               "unsafe_clearance": false,
               "unsupported_decision": false
@@ -7899,6 +8169,21 @@
           ],
           "overall_recommendation": "needs_review"
         },
+        "codex_cli": {
+          "case_id": "PB-LITE-005-I-002",
+          "criteria": [
+            {
+              "clinical_domain": "condition",
+              "criterion_id": "I-002",
+              "criterion_type": "inclusion",
+              "evidence": [],
+              "prediction": "unknown",
+              "rationale": "The note confirms non-small cell lung carcinoma, but it does not state that the diagnosis is stage IV or that it is nonsquamous. [Agent: Codex CLI (gpt-5.4-mini)]",
+              "raw_text": "Has a histologically-confirmed or cytologically confirmed diagnosis of stage IV nonsquamous NSCLC."
+            }
+          ],
+          "overall_recommendation": "needs_review"
+        },
         "keyword_rule": {
           "case_id": "PB-LITE-005-I-002",
           "criteria": [
@@ -8440,6 +8725,37 @@
               "prediction": "unknown",
               "quotes_verbatim": true,
               "rationale": "NSCLC documented; stage/histology details not confirmed in record.",
+              "schema_errors": [],
+              "unsafe_clearance": false,
+              "unsupported_decision": false
+            }
+          ],
+          "overall_correct": false,
+          "overall_prediction": "needs_review",
+          "schema_errors": []
+        },
+        "codex_cli": {
+          "case_errors": [],
+          "case_id": "PB-LITE-005-I-002",
+          "criteria": [
+            {
+              "blocking_gold": false,
+              "blocking_pred": false,
+              "clinical_domain": "condition",
+              "correct": true,
+              "counts_toward_core_metrics": true,
+              "counts_toward_gate_metrics": true,
+              "criterion_id": "I-002",
+              "criterion_text": "Has a histologically-confirmed or cytologically confirmed diagnosis of stage IV nonsquamous NSCLC.",
+              "criterion_type": "inclusion",
+              "evidence_checks": [],
+              "evidence_present": false,
+              "fabricated_quote_count": 0,
+              "gold_label": "unknown",
+              "is_safety_critical": false,
+              "prediction": "unknown",
+              "quotes_verbatim": true,
+              "rationale": "The note confirms non-small cell lung carcinoma, but it does not state that the diagnosis is stage IV or that it is nonsquamous. [Agent: Codex CLI (gpt-5.4-mini)]",
               "schema_errors": [],
               "unsafe_clearance": false,
               "unsupported_decision": false

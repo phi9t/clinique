@@ -1,0 +1,37 @@
+{
+  "agent": "codex_cli",
+  "benchmark_id": "prescreenbench_v0",
+  "blocking_criterion_recall": 0.0,
+  "cases": 2,
+  "criterion_accuracy": 0.8333333333333334,
+  "criterion_macro_f1": 0.45454545454545453,
+  "criterion_total": 6,
+  "errors": [],
+  "evidence_support_accuracy": 1.0,
+  "fabricated_quote_count": 0,
+  "hard_gate_breaches": [],
+  "overall_recommendation_accuracy": 1.0,
+  "passed_hard_gates": true,
+  "per_class_f1": {
+    "met": {
+      "f1": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "support": 1.0
+    },
+    "unknown": {
+      "f1": 0.9090909090909091,
+      "precision": 0.8333333333333334,
+      "recall": 1.0,
+      "support": 5.0
+    }
+  },
+  "schema_valid_rate": 1.0,
+  "score": 0.6363636363636364,
+  "split": "synthetic",
+  "unknown_precision": 0.8333333333333334,
+  "unknown_recall": 1.0,
+  "unsafe_clearance_count": 0,
+  "unsafe_clearance_rate": 0.0,
+  "unsupported_decision_count": 0
+}

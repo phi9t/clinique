@@ -21,6 +21,7 @@ test('PrescreenBench explorer displays case-level workflow and evidence highligh
   await expect(page.getByRole('checkbox', { name: 'always_unknown' })).toBeVisible()
   await expect(page.getByRole('checkbox', { name: 'keyword_rule' })).toBeVisible()
   await expect(page.getByRole('checkbox', { name: 'clinique_rule' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: 'codex_cli' })).toBeVisible()
   await expect(page.locator('summary[aria-label^="score:"]').first()).toBeVisible()
   await expect(page.getByText('criterion macro f1').first()).toBeVisible()
 
@@ -78,6 +79,7 @@ test('PrescreenBench explorer displays case-level workflow and evidence highligh
   const criteriaPanel = page.locator('section.pb-criteria-panel')
   await expect(criteriaPanel.getByRole('columnheader', { name: 'Gold label' }).first()).toBeVisible()
   await expect(criteriaPanel.getByRole('columnheader', { name: 'Prediction' }).first()).toBeVisible()
+  await expect(criteriaPanel.getByText('Codex CLI').first()).toBeVisible()
 
   const quoteFoundButton = page.getByRole('button', { name: /Quote found/i }).first()
   await expect(quoteFoundButton).toBeVisible()

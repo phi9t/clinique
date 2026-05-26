@@ -1,0 +1,124 @@
+{
+  "benchmark_id": "prescreenbench_v0",
+  "codex_agent": "codex_cli",
+  "codex_model": "gpt-5.4-mini",
+  "note": "Seed split results are debugging fixtures, not clinical capability claims.",
+  "splits": {
+    "lite": {
+      "agents": [
+        {
+          "agent": "always_unknown",
+          "criterion_macro_f1": 0.45454545454545453,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [],
+          "passed_hard_gates": true,
+          "schema_valid_rate": 1.0,
+          "score": 0.6363636363636364,
+          "unsafe_clearance_rate": 0.0,
+          "unsupported_decision_count": 0
+        },
+        {
+          "agent": "clinique_rule",
+          "criterion_macro_f1": 1.0,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [],
+          "passed_hard_gates": true,
+          "schema_valid_rate": 1.0,
+          "score": 0.8,
+          "unsafe_clearance_rate": 0.0,
+          "unsupported_decision_count": 0
+        },
+        {
+          "agent": "codex_cli",
+          "criterion_macro_f1": 0.45454545454545453,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [],
+          "passed_hard_gates": true,
+          "schema_valid_rate": 1.0,
+          "score": 0.6363636363636364,
+          "unsafe_clearance_rate": 0.0,
+          "unsupported_decision_count": 0
+        },
+        {
+          "agent": "keyword_rule",
+          "criterion_macro_f1": 0.16666666666666666,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [
+            "unsafe_clearance_rate"
+          ],
+          "passed_hard_gates": false,
+          "schema_valid_rate": 1.0,
+          "score": 0.0,
+          "unsafe_clearance_rate": 0.5,
+          "unsupported_decision_count": 0
+        }
+      ],
+      "case_count": 6,
+      "task_types": [
+        "criterion_judgment"
+      ]
+    },
+    "synthetic": {
+      "agents": [
+        {
+          "agent": "always_unknown",
+          "criterion_macro_f1": 0.45454545454545453,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [],
+          "passed_hard_gates": true,
+          "schema_valid_rate": 1.0,
+          "score": 0.6363636363636364,
+          "unsafe_clearance_rate": 0.0,
+          "unsupported_decision_count": 0
+        },
+        {
+          "agent": "clinique_rule",
+          "criterion_macro_f1": 1.0,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [],
+          "passed_hard_gates": true,
+          "schema_valid_rate": 1.0,
+          "score": 0.8,
+          "unsafe_clearance_rate": 0.0,
+          "unsupported_decision_count": 0
+        },
+        {
+          "agent": "codex_cli",
+          "criterion_macro_f1": 0.45454545454545453,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [],
+          "passed_hard_gates": true,
+          "schema_valid_rate": 1.0,
+          "score": 0.6363636363636364,
+          "unsafe_clearance_rate": 0.0,
+          "unsupported_decision_count": 0
+        },
+        {
+          "agent": "keyword_rule",
+          "criterion_macro_f1": 0.16666666666666666,
+          "evidence_support_accuracy": 1.0,
+          "fabricated_quote_count": 0,
+          "hard_gate_breaches": [
+            "unsafe_clearance_rate"
+          ],
+          "passed_hard_gates": false,
+          "schema_valid_rate": 1.0,
+          "score": 0.0,
+          "unsafe_clearance_rate": 0.37037037037037035,
+          "unsupported_decision_count": 0
+        }
+      ],
+      "case_count": 2,
+      "task_types": [
+        "end_to_end_packet"
+      ]
+    }
+  }
+}

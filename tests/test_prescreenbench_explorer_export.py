@@ -24,6 +24,42 @@ EXPECTED_FILES = {
 }
 
 
+def _without_codex(payload):
+    """Remove live Codex benchmark outputs before deterministic snapshot comparison."""
+    if isinstance(payload, list):
+        return [
+            {
+                **entry,
+                "agents": [agent for agent in entry.get("agents", []) if agent != "codex_cli"],
+            }
+            for entry in payload
+        ]
+
+    if not isinstance(payload, dict) or "cases" not in payload:
+        return payload
+
+    cleaned = dict(payload)
+    cleaned["agents"] = [
+        agent for agent in cleaned.get("agents", []) if agent.get("agent") != "codex_cli"
+    ]
+    cleaned_cases = []
+    for case in cleaned.get("cases", []):
+        case_copy = dict(case)
+        case_copy["agent_outputs"] = {
+            agent: output
+            for agent, output in case_copy.get("agent_outputs", {}).items()
+            if agent != "codex_cli"
+        }
+        case_copy["grader"] = {
+            agent: grader
+            for agent, grader in case_copy.get("grader", {}).items()
+            if agent != "codex_cli"
+        }
+        cleaned_cases.append(case_copy)
+    cleaned["cases"] = cleaned_cases
+    return cleaned
+
+
 def test_definitions_include_metric_and_label_help():
     definitions = build_definitions()
     assert definitions["labels"]["unknown"]["plain"]
@@ -89,7 +125,25 @@ def test_committed_prescreenbench_explorer_snapshot_matches_export(tmp_path):
     export_explorer(tmp_path, splits=("synthetic", "lite"), agents=DEFAULT_DEMO_AGENTS)
     committed = default_out_dir()
     for name in EXPECTED_FILES:
-        assert (tmp_path / name).read_bytes() == (committed / name).read_bytes(), name
+        exported = json.loads((tmp_path / name).read_text())
+        checked_in = json.loads((committed / name).read_text())
+        assert exported == _without_codex(checked_in), name
+
+
+def test_committed_prescreenbench_explorer_includes_codex_outputs():
+    committed = default_out_dir()
+    for split_name in ("synthetic", "lite"):
+        bundle = json.loads((committed / f"{split_name}.json").read_text())
+        assert "codex_cli" in {agent["agent"] for agent in bundle["agents"]}
+        first = bundle["cases"][0]
+        assert "codex_cli" in first["agent_outputs"]
+        assert "codex_cli" in first["grader"]
+        rationales = [
+            criterion["rationale"]
+            for case in bundle["cases"]
+            for criterion in case["grader"]["codex_cli"]["criteria"]
+        ]
+        assert any("Codex CLI" in rationale for rationale in rationales)
 
 
 def test_exported_quote_offsets_match_documents(tmp_path):
