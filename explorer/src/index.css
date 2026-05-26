@@ -1811,10 +1811,14 @@ button.codelist-tag {
 
 .pb-help {
   position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.pb-help summary {
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  flex-shrink: 0;
   inline-size: 18px;
   block-size: 18px;
   border: 1px solid var(--border-color);
@@ -1825,6 +1829,14 @@ button.codelist-tag {
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
+}
+
+.pb-help summary::-webkit-details-marker {
+  display: none;
+}
+
+.pb-help summary::marker {
+  content: "";
 }
 
 .pb-help-tooltip {
@@ -1852,8 +1864,7 @@ button.codelist-tag {
     transform 0.15s ease;
 }
 
-.pb-help:hover .pb-help-tooltip,
-.pb-help:focus-visible .pb-help-tooltip {
+.pb-help[open] .pb-help-tooltip {
   opacity: 1;
   pointer-events: auto;
   transform: translate(-50%, 0);
