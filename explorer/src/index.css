@@ -1843,7 +1843,7 @@ button.codelist-tag {
   font-weight: 500;
   line-height: 1.4;
   opacity: 0;
-  pointer-events: auto;
+  pointer-events: none;
   text-align: left;
   text-transform: none;
   transform: translate(-50%, 4px);
@@ -1855,6 +1855,7 @@ button.codelist-tag {
 .pb-help:hover .pb-help-tooltip,
 .pb-help:focus-visible .pb-help-tooltip {
   opacity: 1;
+  pointer-events: auto;
   transform: translate(-50%, 0);
 }
 
