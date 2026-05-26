@@ -7,10 +7,11 @@ export default defineConfig({
     timeout: 5_000,
   },
   webServer: {
-    command: 'npm run dev -- --host 127.0.0.1',
+    command: 'npm run dev -- --host 127.0.0.1 --port 5173 --strictPort',
     url: 'http://127.0.0.1:5173',
     reuseExistingServer: true,
   },
+  outputDir: 'test-results',
   use: {
     baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',

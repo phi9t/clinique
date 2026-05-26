@@ -67,15 +67,8 @@ test('PrescreenBench explorer displays case-level workflow and evidence highligh
   await expect(criteriaPanel.getByRole('columnheader', { name: 'Gold label' }).first()).toBeVisible()
   await expect(criteriaPanel.getByRole('columnheader', { name: 'Prediction' }).first()).toBeVisible()
 
-  const evidenceButton = page.getByRole('button', {
-    name: /(Quote found|Quote missing|Document missing|Empty quote)/i,
-  })
-  if ((await evidenceButton.count()) > 0) {
-    const firstEvidence = evidenceButton.first()
-    const buttonLabel = (await firstEvidence.innerText()).toLowerCase()
-    await firstEvidence.click()
-    if (buttonLabel.includes('quote found')) {
-      await expect(page.locator('mark')).toBeVisible()
-    }
-  }
+  const quoteFoundButton = page.getByRole('button', { name: /Quote found/i }).first()
+  await expect(quoteFoundButton).toBeVisible()
+  await quoteFoundButton.click()
+  await expect(page.locator('mark')).toBeVisible()
 })
