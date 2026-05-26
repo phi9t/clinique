@@ -241,4 +241,54 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--workflow-id", required=True, help="Workflow ID to resume")
     resume.add_argument("--host", default="localhost:7233", help="Temporal server address")
 
+    _add_benchmark_parser(subparsers)
+
     return parser
+
+
+def _add_benchmark_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Wire `clinique benchmark prescreen run|score` (PrescreenBench)."""
+    benchmark = subparsers.add_parser("benchmark", help="agent benchmarks")
+    benchmark_sub = benchmark.add_subparsers(dest="benchmark_command")
+    prescreen = benchmark_sub.add_parser("prescreen", help="PrescreenBench")
+    pb_sub = prescreen.add_subparsers(dest="prescreenbench_command")
+
+    run = pb_sub.add_parser("run", help="run an agent over a split → predictions.jsonl")
+    run.add_argument("--split", default="lite", help="benchmark split (synthetic|lite)")
+    run.add_argument(
+        "--agent",
+        default="clinique_rule",
+        help="baseline name: always_unknown|keyword_rule|clinique_rule|clinique_llm|one_shot_llm",
+    )
+    run.add_argument("--out", required=True, help="output predictions JSONL path")
+    run.add_argument("--data-dir", help="override split base dir (default: repo benchmarks data)")
+
+    score = pb_sub.add_parser("score", help="score predictions.jsonl against gold labels")
+    score.add_argument("--split", default="lite", help="benchmark split (synthetic|lite)")
+    score.add_argument("--pred", required=True, help="predictions JSONL produced by `run`")
+    score.add_argument("--out", help="output JSON report path (default: reports/prescreenbench)")
+    score.add_argument("--html", help="optional HTML scorecard output path")
+    score.add_argument("--agent", help="optional agent label recorded in the report")
+    score.add_argument("--data-dir", help="override split base dir (default: repo benchmarks data)")
+
+    export = pb_sub.add_parser("export-explorer", help="export PrescreenBench explorer JSON")
+    export.add_argument("--split", action="append", help="split to export; repeatable")
+    export.add_argument(
+        "--agents",
+        default="always_unknown,keyword_rule,clinique_rule",
+        help="comma-separated deterministic baselines to run",
+    )
+    export.add_argument(
+        "--prediction",
+        action="append",
+        default=[],
+        help="custom prediction as agent=path; repeatable",
+    )
+    export.add_argument(
+        "--report",
+        action="append",
+        default=[],
+        help="optional custom report as agent=path; repeatable",
+    )
+    export.add_argument("--out", help="output directory")
+    export.add_argument("--data-dir", help="override split base dir")
