@@ -145,9 +145,10 @@ export default function PrescreenBenchExplorer() {
       </div>
 
       <p className="pb-caveat">
-        Scores summarize grader output for {selectedEntry?.benchmark_id ?? 'PrescreenBench'}.
-        Hard gates protect against schema failures, unsupported decisions, fabricated quotes, and
-        unsafe clearance; benchmark packets are review aids, not enrollment decisions.
+        {selectedEntry?.benchmark_id ?? 'PrescreenBench'} seed splits support benchmark debugging,
+        not clinical capability claims. Hard gates summarize schema failures, unsupported decisions,
+        fabricated quotes, and unsafe clearance; benchmark packets are review aids, not enrollment
+        decisions.
       </p>
 
       {loadingBundle || !bundle ? (

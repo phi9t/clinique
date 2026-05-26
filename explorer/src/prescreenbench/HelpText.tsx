@@ -7,10 +7,15 @@ export function HelpText({
   title: string
   text: string
 }) {
+  const label = `${title}: ${text}`
+
   return (
-    <span className="pb-help" title={`${title}: ${text}`} aria-label={`${title}: ${text}`}>
+    <button className="pb-help" type="button" title={label} aria-label={label}>
       ?
-    </span>
+      <span className="pb-help-tooltip" role="tooltip">
+        {text}
+      </span>
+    </button>
   )
 }
 

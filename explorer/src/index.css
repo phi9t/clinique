@@ -1714,7 +1714,7 @@ button.codelist-tag {
 
 .pb-metric-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 16px;
 }
 
@@ -1810,6 +1810,7 @@ button.codelist-tag {
 }
 
 .pb-help {
+  position: relative;
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -1820,9 +1821,41 @@ button.codelist-tag {
   border-radius: 50%;
   color: var(--text-secondary);
   background: rgba(255, 255, 255, 0.04);
+  cursor: help;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
+}
+
+.pb-help-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  z-index: 10;
+  width: min(260px, 80vw);
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #111827;
+  color: var(--text-primary);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  opacity: 0;
+  pointer-events: none;
+  text-align: left;
+  text-transform: none;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.pb-help:hover .pb-help-tooltip,
+.pb-help:focus-visible .pb-help-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 @media (max-width: 768px) {
